@@ -9,7 +9,8 @@ namespace Domain.Models
         public required string Description { get; set; }
         public DateTime ActiveFrom { get; set; }
         public DateTime ActiveTo { get; set; }
-        public string? Emoji { get; set; }
+        public string? Emoji { get; set; } = null;
+        public bool IsImportant { get; set; } = false;
 
         public bool IsActive { get; private set; }
 
@@ -20,15 +21,13 @@ namespace Domain.Models
             string title,
             string description,
             DateTime activeFrom,
-            DateTime activeTo,
-            string? emoji = null)
+            DateTime activeTo)
         {
             SeasonalQuestId = seasonalQuestId;
             Title = title;
             Description = description;
             ActiveFrom = activeFrom;
             ActiveTo = activeTo;
-            Emoji = emoji;
         }
     }
 

@@ -10,7 +10,8 @@ namespace Domain.Models
         public required string Description { get; set; }
         public TimeOnly RepeatTime { get; set; }
         public required string RepeatIntervalJson { get; set; }
-        public string? Emoji { get; set; }
+        public string? Emoji { get; set; } = null;
+        public bool IsImportant { get; set; } = false;
 
         public Account Account { get; set; } = null!;
         public RecurringQuest() { }
@@ -19,8 +20,7 @@ namespace Domain.Models
             string title,
             string description,
             TimeOnly repeatTime,
-            string repeatIntervalJson,
-            string? emoji = null)
+            string repeatIntervalJson)
         {
             RecurringQuestId = recurringQuestId;
             AccountId = accountId;
@@ -28,7 +28,6 @@ namespace Domain.Models
             Description = description;
             RepeatTime = repeatTime;
             RepeatIntervalJson = repeatIntervalJson;
-            Emoji = emoji;
         }
     }
 }
