@@ -1,0 +1,40 @@
+﻿using Domain.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Infrastructure.Persistence.Configuration
+{
+    internal class RecurringQuestConfiguration : IEntityTypeConfiguration<RecurringQuest>
+    {
+        public void Configure(EntityTypeBuilder<RecurringQuest> builder)
+        {
+            builder.ToTable("Recurring_Quests");
+
+            builder.HasKey(rq => rq.RecurringQuestId);
+
+            builder.Property(rq => rq.Title)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            builder.Property(rq => rq.Description)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(rq => rq.Emoji)
+                .HasMaxLength(10)
+                .HasColumnType("NVARCHAR");
+
+            builder.Property(rq => rq.RepeatTime)
+                .IsRequired();
+
+            builder.Property(rq => rq.RepeatIntervalJson)
+                .IsRequired()
+                .HasColumnType("NVARCHAR(MAX)"); // Store JSON data
+
+            builder.HasOne(rq => rq.Account)
+                .WithMany(a => a.RecurringQuests)
+                .HasForeignKey(rq => rq.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}
