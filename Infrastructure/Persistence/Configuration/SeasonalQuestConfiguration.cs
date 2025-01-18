@@ -32,6 +32,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(sq => sq.Emoji)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
+
+            builder.Property(q => q.IsImportant)
+                .HasDefaultValue(false);
         }
     }
 }

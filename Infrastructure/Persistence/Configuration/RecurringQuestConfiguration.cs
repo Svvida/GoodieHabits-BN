@@ -24,6 +24,9 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
+            builder.Property(q => q.IsImportant)
+                .HasDefaultValue(false);
+
             builder.Property(rq => rq.RepeatTime)
                 .IsRequired();
 

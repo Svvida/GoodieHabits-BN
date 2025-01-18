@@ -8,24 +8,22 @@ namespace Domain.Models
         public int AccountId { get; set; }
         public required string Title { get; set; }
         public required string Description { get; set; }
-        public DateTime? EndDate { get; set; }
-        public string? Emoji { get; set; }
+        public DateTime? EndDate { get; set; } = null;
+        public string? Emoji { get; set; } = null;
+        public bool IsImportant { get; set; } = false;
 
         public Account Account { get; set; } = null!;
         public OneTimeQuest() { }
-        public OneTimeQuest(int oneTimeQuestId,
+        public OneTimeQuest(
+            int oneTimeQuestId,
             int accountId,
             string title,
-            string description,
-            DateTime? endDate = null,
-            string? emoji = null)
+            string description)
         {
             OneTimeQuestId = oneTimeQuestId;
             AccountId = accountId;
             Title = title;
             Description = description;
-            EndDate = endDate;
-            Emoji = emoji;
         }
     }
 }
