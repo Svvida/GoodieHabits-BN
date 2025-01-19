@@ -8,6 +8,8 @@ namespace Domain.Models
         public int AccountId { get; set; }
         public required string Title { get; set; }
         public required string Description { get; set; }
+        public DateTime? StartDate { get; set; } = null;
+        public DateTime? EndDate { get; set; } = null;
         public TimeOnly RepeatTime { get; set; }
         public required string RepeatIntervalJson { get; set; }
         public string? Emoji { get; set; } = null;

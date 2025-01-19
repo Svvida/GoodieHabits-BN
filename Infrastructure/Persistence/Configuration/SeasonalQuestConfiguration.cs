@@ -14,11 +14,11 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(sq => sq.Title)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(100);
 
             builder.Property(sq => sq.Description)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(1000);
 
             builder.Property(sq => sq.ActiveFrom)
                 .IsRequired();
