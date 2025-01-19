@@ -14,11 +14,14 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(otq => otq.Title)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(100);
 
             builder.Property(otq => otq.Description)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(1000);
+
+            builder.Property(otq => otq.StartDate)
+                .IsRequired(false);
 
             builder.Property(otq => otq.EndDate)
                 .IsRequired(false);

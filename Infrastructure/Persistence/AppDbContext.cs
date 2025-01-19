@@ -21,7 +21,7 @@ namespace Infrastructure.Persistence
             return base.SaveChanges();
         }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateTimestamps();
             return await base.SaveChangesAsync(cancellationToken);

@@ -14,11 +14,11 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(rq => rq.Title)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(100);
 
             builder.Property(rq => rq.Description)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(1000);
 
             builder.Property(rq => rq.Emoji)
                 .HasMaxLength(10)
@@ -26,6 +26,12 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(q => q.IsImportant)
                 .HasDefaultValue(false);
+
+            builder.Property(otq => otq.StartDate)
+                .IsRequired(false);
+
+            builder.Property(otq => otq.EndDate)
+                .IsRequired(false);
 
             builder.Property(rq => rq.RepeatTime)
                 .IsRequired();
