@@ -2,17 +2,12 @@
 
 namespace Domain.Models
 {
-    public class OneTimeQuest : BaseEntity
+    public class OneTimeQuest : QuestBase
     {
         public int OneTimeQuestId { get; set; }
         public int AccountId { get; set; }
-        public required string Title { get; set; }
-        public required string Description { get; set; }
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public string? Emoji { get; set; } = null;
-        public bool IsImportant { get; set; } = false;
-
         public Account Account { get; set; } = null!;
         public OneTimeQuest() { }
         public OneTimeQuest(

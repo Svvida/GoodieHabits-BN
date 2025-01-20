@@ -2,16 +2,11 @@
 
 namespace Domain.Models
 {
-    public class SeasonalQuest : BaseEntity
+    public class SeasonalQuest : QuestBase
     {
         public int SeasonalQuestId { get; set; }
-        public required string Title { get; set; }
-        public required string Description { get; set; }
         public DateTime ActiveFrom { get; set; }
         public DateTime ActiveTo { get; set; }
-        public string? Emoji { get; set; } = null;
-        public bool IsImportant { get; set; } = false;
-
         public bool IsActive { get; private set; }
 
         public ICollection<UserSeasonalQuest> UserSeasonalQuests { get; set; } = new List<UserSeasonalQuest>();

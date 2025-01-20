@@ -15,12 +15,5 @@ namespace Infrastructure.Repositories
                 .Where(quest => quest.IsActive)
                 .ToListAsync(cancellationToken);
         }
-
-        public async Task<IEnumerable<SeasonalQuest>> GetImportantQuestsAsync(CancellationToken cancellationToken = default)
-        {
-            return await _context.Set<SeasonalQuest>()
-                .Where(quest => quest.IsImportant)
-                .ToListAsync(cancellationToken);
-        }
     }
 }
