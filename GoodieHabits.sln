@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{1ABBAB81-019D-4A02-AA9A-267A2756184F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "Api\Api.csproj", "{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{14C72A89-786D-4886-9169-1E70AE38296B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14C72A89-786D-4886-9169-1E70AE38296B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14C72A89-786D-4886-9169-1E70AE38296B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14C72A89-786D-4886-9169-1E70AE38296B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14C72A89-786D-4886-9169-1E70AE38296B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

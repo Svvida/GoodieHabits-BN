@@ -20,7 +20,6 @@ namespace Infrastructure.Persistence
 
             try
             {
-                    _logger.LogInformation("No accounts found in the database. Generating new accounts.");
                     var accounts = AccountSeeder.GenerateAccounts(10);
                     _logger.LogInformation("Generated {Count} accounts.", accounts.Count);
 
