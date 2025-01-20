@@ -1,5 +1,8 @@
+using Application.Interfaces;
+using Application.Services;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Seeders;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -66,6 +69,9 @@ namespace Api
             builder.Services.AddScoped<IRecurringQuestRepository, RecurringQuestRepository>();
             builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
             builder.Services.AddScoped<IUserSeasonalQuestRepository, UserSeasonalQuestRepository>();
+
+            // Register Services
+            builder.Services.AddScoped<IAccountService, AccountService>();
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();
