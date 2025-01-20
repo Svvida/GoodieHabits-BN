@@ -7,7 +7,6 @@ namespace Domain.Interfaces
     {
         Task<IEnumerable<OneTimeQuest>> GetByAccountIdAsync(int accountId, CancellationToken cancellationToken = default);
         Task<IEnumerable<OneTimeQuest>> GetOverdueQuestsAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<OneTimeQuest>> GetImportantQuestsAsync(CancellationToken cancellationToken = default);
 
     }
 }

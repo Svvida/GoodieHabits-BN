@@ -10,7 +10,7 @@ namespace Domain.Models
         public required string Email { get; set; }
 
         public ICollection<OneTimeQuest> OneTimeQuests { get; set; } = new List<OneTimeQuest>();
-        public ICollection<RecurringQuest> RecurringQuests { get; set; } = new List<RecurringQuest>();
+        public ICollection<RepeatableQuest> RecurringQuests { get; set; } = new List<RepeatableQuest>();
         public ICollection<UserSeasonalQuest> UserSeasonalQuests { get; set; } = new List<UserSeasonalQuest>();
 
         public Account() { }

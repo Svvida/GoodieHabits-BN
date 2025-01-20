@@ -1,10 +1,5 @@
 ﻿using Bogus;
 using Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Seeders
 {
@@ -20,7 +15,6 @@ namespace Infrastructure.Persistence.Seeders
                 .RuleFor(q => q.Description, f => f.Lorem.Paragraph())
                 .RuleFor(q => q.EndDate, f => f.Date.Past(1))
                 .RuleFor(q => q.EndDate, f => f.Date.Future(1))
-                .RuleFor(q => q.IsImportant, f => f.Random.Bool())
                 .RuleFor(q => q.Emoji, f => f.PickRandom(emojis));
 
             return faker.Generate(count);

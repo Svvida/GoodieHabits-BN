@@ -22,13 +22,5 @@ namespace Infrastructure.Repositories
                 .Where(quest => quest.EndDate.HasValue && quest.EndDate < DateTime.UtcNow)
                 .ToListAsync(cancellationToken);
         }
-
-        public async Task<IEnumerable<OneTimeQuest>> GetImportantQuestsAsync(CancellationToken cancellationToken = default)
-        {
-            return await _context.Set<OneTimeQuest>()
-                .Where(quest => quest.IsImportant)
-                .ToListAsync(cancellationToken);
-        }
-
     }
 }

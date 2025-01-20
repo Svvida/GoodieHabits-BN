@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence
 
         public DbSet<Account> Accounts { get; set; }
         public DbSet<OneTimeQuest> OneTimeQuests { get; set; }
-        public DbSet<RecurringQuest> RecurringQuests { get; set; }
+        public DbSet<RepeatableQuest> RecurringQuests { get; set; }
         public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
         public DbSet<UserSeasonalQuest> UserSeasonalQuests { get; set; }
 
@@ -47,7 +47,7 @@ namespace Infrastructure.Persistence
         {
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
             modelBuilder.ApplyConfiguration(new OneTimeQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new RecurringQuestConfiguration());
+            modelBuilder.ApplyConfiguration(new RepeatableQuestConfiguration());
             modelBuilder.ApplyConfiguration(new SeasonalQuestConfiguration());
             modelBuilder.ApplyConfiguration(new UserSeasonalQuestConfiguration());
         }

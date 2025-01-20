@@ -1,8 +1,8 @@
 using Application.Interfaces;
 using Application.Services;
 using Domain.Interfaces;
+using Domain.Models;
 using Infrastructure.Persistence;
-using Infrastructure.Persistence.Seeders;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -29,7 +29,7 @@ namespace Api
             var app = builder.Build();
 
             // Seed Data
-            await SeedDatabaseAsync(app);
+            //await SeedDatabaseAsync(app);
 
             // Configure Middleware
             ConfigureMiddleware(app);
@@ -61,12 +61,24 @@ namespace Api
 
             // Add Swagger for API Documentation
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.UseAllOfToExtendReferenceSchemas();
+
+                c.SelectSubTypesUsing(type =>
+                {
+                    if (type == typeof(RepeatInterval))
+                    {
+                        return new[] { typeof(DailyRepeatInterval), typeof(WeeklyRepeatInterval), typeof(MonthlyRepeatInterval) };
+                    }
+                    return Enumerable.Empty<Type>();
+                });
+            });
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
-            builder.Services.AddScoped<IRecurringQuestRepository, RecurringQuestRepository>();
+            builder.Services.AddScoped<IRepeatableQuestRepository, RepeatableQuestRepository>();
             builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
             builder.Services.AddScoped<IUserSeasonalQuestRepository, UserSeasonalQuestRepository>();
 

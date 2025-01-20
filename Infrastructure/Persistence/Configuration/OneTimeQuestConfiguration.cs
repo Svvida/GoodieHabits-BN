@@ -30,9 +30,6 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
-            builder.Property(q => q.IsImportant)
-                .HasDefaultValue(false);
-
             builder.HasOne(otq => otq.Account)
                 .WithMany(a => a.OneTimeQuests)
                 .HasForeignKey(otq => otq.AccountId)
