@@ -19,8 +19,18 @@ namespace Api
 
             var builder = WebApplication.CreateBuilder(args);
 
+            Log.Information("Active Environment: {Environment}", builder.Environment.EnvironmentName);
+            Log.Information("Using Connection String: {ConnectionString}", builder.Configuration.GetConnectionString("DefaultConnection"));
+
             // Configure Host
             ConfigureHost(builder);
+
+            // Load configuration for the current environment
+            builder.Configuration
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
 
             // Configure Services
             ConfigureServices(builder);
@@ -29,7 +39,7 @@ namespace Api
             var app = builder.Build();
 
             // Seed Data
-            //await SeedDatabaseAsync(app);
+            await SeedDatabaseAsync(app);
 
             // Configure Middleware
             ConfigureMiddleware(app);
@@ -97,6 +107,18 @@ namespace Api
         {
             using var scope = app.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+
+            // Check if seeding is enabled
+            var seedData = configuration.GetValue<bool>("SeedData");
+            if (!seedData)
+            {
+                Log.Information("Seeding is disabled in the configuration.");
+                return;
+            }
+
+            Log.Information("Seeding is enabled. Starting seeding process...");
+
             var seeder = serviceProvider.GetRequiredService<DataSeeder>();
             await seeder.SeedAsync();
         }
@@ -104,11 +126,15 @@ namespace Api
         private static void ConfigureMiddleware(WebApplication app)
         {
             // Enable Swagger in Development
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
+
+            // Enable Swagger in all environments
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             // Enable HTTPS Redirection
             app.UseHttpsRedirection();
