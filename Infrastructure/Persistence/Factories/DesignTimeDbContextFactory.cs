@@ -8,18 +8,40 @@ namespace Infrastructure.Persistence.Factories
     {
         public AppDbContext CreateDbContext(string[] args)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            // Default environment
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
-            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Api");
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(basePath)
+            // Parse command-line arguments
+            if (args != null && args.Length > 0)
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddCommandLine(args)
+                    .Build();
+
+                environment = configuration["environment"] ?? environment; // Override if --environment is provided
+            }
+
+            Console.WriteLine($"Using environment: {environment}");
+
+            var configurationBuilder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configurationBuilder.GetConnectionString("DefaultConnection");
+
+            if (connectionString is not null && connectionString.Contains("Template"))
+            {
+                throw new InvalidOperationException(
+                    $"Connection string 'DefaultConnection' is missing or invalid. Ensure the correct environment is set.");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
+
     }
 }
