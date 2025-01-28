@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.MappingProfiles;
 using Application.Services;
 using Domain.Interfaces;
 using Domain.Models;
@@ -88,19 +89,25 @@ namespace Api
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
-            builder.Services.AddScoped<IRepeatableQuestRepository, RepeatableQuestRepository>();
-            builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
-            builder.Services.AddScoped<IUserSeasonalQuestRepository, UserSeasonalQuestRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
+
+            // Register AutoMapper profiles
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<OneTimeQuestProfile>();
+            });
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .EnableSensitiveDataLogging()
+                .LogTo(Console.WriteLine, LogLevel.Information));
         }
 
         private static async Task SeedDatabaseAsync(WebApplication app)
@@ -125,19 +132,13 @@ namespace Api
 
         private static void ConfigureMiddleware(WebApplication app)
         {
-            // Enable Swagger in Development
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseSwagger();
-            //    app.UseSwaggerUI();
-            //}
-
             // Enable Swagger in all environments
             app.UseSwagger();
             app.UseSwaggerUI();
 
             // Enable HTTPS Redirection
             app.UseHttpsRedirection();
+
 
             // Enable Authorization
             app.UseAuthorization();

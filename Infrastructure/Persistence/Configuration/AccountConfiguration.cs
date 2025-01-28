@@ -10,7 +10,7 @@ namespace Infrastructure.Persistence.Configuration
         {
             builder.ToTable("Accounts");
 
-            builder.HasKey(a => a.AccountId);
+            builder.HasKey(a => a.Id);
 
             builder.HasIndex(a => a.Email).IsUnique();
             builder.HasIndex(a => a.Username).IsUnique();
@@ -26,6 +26,12 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(a => a.Email)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            builder.Property(a => a.CreatedAt)
+                .IsRequired();
+
+            builder.Property(a => a.UpdatedAt)
+                .IsRequired(false);
         }
     }
 }

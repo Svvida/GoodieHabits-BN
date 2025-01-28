@@ -10,10 +10,10 @@ namespace Infrastructure.Persistence
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<Quest> Quests { get; set; }
         public DbSet<OneTimeQuest> OneTimeQuests { get; set; }
         public DbSet<RepeatableQuest> RecurringQuests { get; set; }
         public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
-        public DbSet<UserSeasonalQuest> UserSeasonalQuests { get; set; }
 
         public override int SaveChanges()
         {
@@ -49,7 +49,7 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new OneTimeQuestConfiguration());
             modelBuilder.ApplyConfiguration(new RepeatableQuestConfiguration());
             modelBuilder.ApplyConfiguration(new SeasonalQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new UserSeasonalQuestConfiguration());
+            modelBuilder.ApplyConfiguration(new QuestConfiguration());
         }
     }
 }

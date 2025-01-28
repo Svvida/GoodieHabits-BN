@@ -18,7 +18,6 @@ namespace Application.Services
             var accounts = await _accountRepository.GetAllAsync();
             return accounts.Select(a => new AccountDto
             {
-                AccountId = a.AccountId,
                 Username = a.Username,
                 Email = a.Email,
             });
@@ -34,7 +33,6 @@ namespace Application.Services
 
             return new AccountDto
             {
-                AccountId = account.AccountId,
                 Username = account.Username,
                 Email = account.Email,
             };
