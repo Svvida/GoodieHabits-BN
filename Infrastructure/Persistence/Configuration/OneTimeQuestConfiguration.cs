@@ -10,7 +10,7 @@ namespace Infrastructure.Persistence.Configuration
         {
             builder.ToTable("One_Time_Quests");
 
-            builder.HasKey(otq => otq.OneTimeQuestId);
+            builder.HasKey(otq => otq.Id);
 
             builder.Property(otq => otq.Title)
                 .IsRequired()
@@ -30,9 +30,21 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
-            builder.HasOne(otq => otq.Account)
-                .WithMany(a => a.OneTimeQuests)
-                .HasForeignKey(otq => otq.AccountId)
+            builder.Property(otq => otq.IsCompleted)
+                .IsRequired();
+
+            builder.Property(otq => otq.PriorityLevel)
+                .IsRequired();
+
+            builder.Property(otq => otq.CreatedAt)
+                .IsRequired();
+
+            builder.Property(otq => otq.UpdatedAt)
+                .IsRequired(false);
+
+            builder.HasOne(otq => otq.Quest)
+                .WithOne()
+                .HasForeignKey<OneTimeQuest>(otq => otq.Id)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

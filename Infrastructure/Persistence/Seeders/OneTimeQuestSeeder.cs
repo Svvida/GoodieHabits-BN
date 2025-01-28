@@ -10,7 +10,7 @@ namespace Infrastructure.Persistence.Seeders
             var emojis = new[] { "🔥", "💧", "🌟", "🌿", "⚡", "💎", "🎯", "🏆" };
 
             var faker = new Faker<OneTimeQuest>()
-                .RuleFor(q => q.AccountId, f => f.PickRandom(accounts).AccountId)
+                .RuleFor(q => q.Id, f => f.PickRandom(accounts).Id)
                 .RuleFor(q => q.Title, f => f.Lorem.Sentence(3))
                 .RuleFor(q => q.Description, f => f.Lorem.Paragraph())
                 .RuleFor(q => q.EndDate, f => f.Date.Past(1))

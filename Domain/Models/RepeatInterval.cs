@@ -40,5 +40,7 @@ namespace Domain.Models
         public string? Day { get; set; }
         // Optional: e.g., every 2nd Monday
         public string? Frequency { get; set; }
+        public DateOnly? RepeatFrom { get; set; }
+        public DateOnly? RepeatTo { get; set; }
     }
 }

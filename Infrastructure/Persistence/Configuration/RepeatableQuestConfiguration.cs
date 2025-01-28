@@ -11,25 +11,30 @@ namespace Infrastructure.Persistence.Configuration
         {
             builder.ToTable("Repeatable_Quests");
 
-            builder.HasKey(rq => rq.RepeatableQuestId);
+            builder.HasKey(rq => rq.Id);
 
             builder.Property(rq => rq.Title)
                 .IsRequired()
                 .HasMaxLength(100);
 
             builder.Property(rq => rq.Description)
-                .IsRequired()
                 .HasMaxLength(1000);
 
             builder.Property(rq => rq.Emoji)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
+            builder.Property(rq => rq.IsCompleted)
+                .IsRequired();
+
             builder.Property(otq => otq.StartDate)
                 .IsRequired(false);
 
             builder.Property(otq => otq.EndDate)
                 .IsRequired(false);
+
+            builder.Property(rq => rq.PriorityLevel)
+                .IsRequired();
 
             builder.Property(rq => rq.RepeatTime)
                 .IsRequired();
@@ -48,9 +53,15 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasColumnType("NVARCHAR(MAX)");
 
-            builder.HasOne(rq => rq.Account)
-                .WithMany(a => a.RecurringQuests)
-                .HasForeignKey(rq => rq.AccountId)
+            builder.Property(rq => rq.CreatedAt)
+                .IsRequired();
+
+            builder.Property(rq => rq.UpdatedAt)
+                .IsRequired(false);
+
+            builder.HasOne(rq => rq.Quest)
+                .WithOne()
+                .HasForeignKey<RepeatableQuest>(rq => rq.Id)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

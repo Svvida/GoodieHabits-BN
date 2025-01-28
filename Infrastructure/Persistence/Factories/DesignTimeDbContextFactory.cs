@@ -9,29 +9,24 @@ namespace Infrastructure.Persistence.Factories
         public AppDbContext CreateDbContext(string[] args)
         {
             // Default environment
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-
-            // Parse command-line arguments
-            if (args != null && args.Length > 0)
-            {
-                var configuration = new ConfigurationBuilder()
-                    .AddCommandLine(args)
-                    .Build();
-
-                environment = configuration["environment"] ?? environment; // Override if --environment is provided
-            }
+            var environment = args != null && args.Length > 0
+                ? args[0] // Use the first argument as the environment
+                : Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
             Console.WriteLine($"Using environment: {environment}");
 
+            // Assume the configuration is in the Api project
+            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Api");
+
             var configurationBuilder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{environment}.json", optional: true)
                 .Build();
 
             var connectionString = configurationBuilder.GetConnectionString("DefaultConnection");
 
-            if (connectionString is not null && connectionString.Contains("Template"))
+            if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("Template"))
             {
                 throw new InvalidOperationException(
                     $"Connection string 'DefaultConnection' is missing or invalid. Ensure the correct environment is set.");

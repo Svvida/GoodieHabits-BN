@@ -1,31 +1,35 @@
 ﻿using Domain.Common;
+using Domain.Enum;
 
 namespace Domain.Models
 {
     public class RepeatableQuest : QuestBase
     {
-        public int RepeatableQuestId { get; set; }
-        public int AccountId { get; set; }
+        public int Id { get; set; }
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
         public TimeOnly RepeatTime { get; set; }
         public required RepeatInterval RepeatInterval { get; set; }
+        public PriorityLevel PriorityLevel { get; set; }
+        public Quest Quest { get; set; } = null!;
 
-        public Account Account { get; set; } = null!;
         public RepeatableQuest() { }
         public RepeatableQuest(int recurringQuestId,
             int accountId,
             string title,
             string description,
             TimeOnly repeatTime,
-            RepeatInterval repeatInterval)
+            RepeatInterval repeatInterval,
+            bool isCompleted,
+            PriorityLevel priorityLevel)
         {
-            RepeatableQuestId = recurringQuestId;
-            AccountId = accountId;
+            Id = recurringQuestId;
             Title = title;
             Description = description;
             RepeatTime = repeatTime;
             RepeatInterval = repeatInterval;
+            IsCompleted = isCompleted;
+            PriorityLevel = priorityLevel;
         }
     }
 }

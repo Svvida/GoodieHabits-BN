@@ -1,25 +1,28 @@
 ﻿using Domain.Common;
+using Domain.Enum;
 
 namespace Domain.Models
 {
     public class OneTimeQuest : QuestBase
     {
-        public int OneTimeQuestId { get; set; }
-        public int AccountId { get; set; }
+        public int Id { get; set; }
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public Account Account { get; set; } = null!;
+        public PriorityLevel PriorityLevel { get; set; }
+        public Quest Quest { get; set; } = null!;
         public OneTimeQuest() { }
         public OneTimeQuest(
             int oneTimeQuestId,
-            int accountId,
             string title,
-            string description)
+            string description,
+            bool isCompleted,
+            PriorityLevel priority)
         {
-            OneTimeQuestId = oneTimeQuestId;
-            AccountId = accountId;
+            Id = oneTimeQuestId;
             Title = title;
             Description = description;
+            IsCompleted = isCompleted;
+            PriorityLevel = priority;
         }
     }
 }
