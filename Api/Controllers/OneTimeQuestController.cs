@@ -69,6 +69,30 @@ namespace Api.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _oneTimeQuestService.UpdateAsync(id, updateDto, cancellationToken);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating OneTimeQuest with Id: {Id}", id);
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {

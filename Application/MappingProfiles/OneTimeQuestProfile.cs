@@ -22,9 +22,14 @@ namespace Application.MappingProfiles
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority));
 
-            // Patch Dto <-> Entity
+            // Patch Dto -> Entity
             CreateMap<PatchOneTimeQuestDto, OneTimeQuest>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Update DTO -> Entity
+            CreateMap<UpdateOneTimeQuestDto, OneTimeQuest>()
+                .ForAllMembers(opt =>
+                    opt.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

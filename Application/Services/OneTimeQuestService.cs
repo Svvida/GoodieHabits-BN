@@ -43,29 +43,31 @@ namespace Application.Services
 
         public async Task<int> CreateAsync(CreateOneTimeQuestDto createDto, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Received CreateOneTimeQuestDto with the following details: " +
-                                   "Title: {Title}, Description: {Description}, StartDate: {StartDate}, EndDate: {EndDate}, " +
-                                   "Emoji: {Emoji}, Priority: {Priority}, AccountId: {AccountId}",
-                                   createDto.Title, createDto.Description, createDto.StartDate, createDto.EndDate,
-                                   createDto.Emoji, createDto.Priority, createDto.AccountId);
-
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
-            _logger.LogInformation("Mapped OneTimeQuest entity details: " +
-                                   "Id: {Id}, Title: {Title}, Description: {Description}, StartDate: {StartDate}, " +
-                                   "EndDate: {EndDate}, Emoji: {Emoji}, IsCompleted: {IsCompleted}, Priority: {Priority}, " +
-                                   "AccountId: {AccountId}",
-                                   oneTimeQuest.Id, oneTimeQuest.Title, oneTimeQuest.Description, oneTimeQuest.StartDate,
-                                   oneTimeQuest.EndDate, oneTimeQuest.Emoji, oneTimeQuest.IsCompleted,
-                                   oneTimeQuest.Priority, oneTimeQuest.Quest.AccountId);
-
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
-
-            _logger.LogInformation("Successfully created OneTimeQuest with Id: {Id}", oneTimeQuest.Id);
 
             return oneTimeQuest.Id;
         }
 
+        public async Task UpdateAsync(int id, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
+        {
+            // Fetch the existing entity from the repository
+            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
+                ?? throw new KeyNotFoundException($"OneTimeQuest with Id {id} was not found.");
+
+            // Log the existing entity before update
+            _logger.LogInformation("Existing OneTimeQuest before update: {@existingOneTimeQuest}", existingOneTimeQuest);
+
+            // Map updated fields from the DTO to the existing entity
+            _mapper.Map(updateDto, existingOneTimeQuest);
+
+            // Log the updated entity after mapping
+            _logger.LogInformation("Updated OneTimeQuest after mapping: {@existingOneTimeQuest}", existingOneTimeQuest);
+
+            // Save changes to the database
+            await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
+        }
 
         public async Task PatchAsync(int id, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {
