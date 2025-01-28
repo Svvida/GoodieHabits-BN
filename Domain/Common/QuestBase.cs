@@ -3,8 +3,8 @@
     public abstract class QuestBase : BaseEntity
     {
         public required string Title { get; set; }
-        public required string Description { get; set; }
-        public bool IsCompleted { get; set; }
+        public string? Description { get; set; } = null;
+        public bool IsCompleted { get; set; } = false;
         public string? Emoji { get; set; } = null;
     }
 }

@@ -33,7 +33,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(otq => otq.EndDate)
                 .IsRequired(false);
 
-            builder.Property(rq => rq.PriorityLevel)
+            builder.Property(rq => rq.Priority)
                 .IsRequired();
 
             builder.Property(rq => rq.RepeatTime)

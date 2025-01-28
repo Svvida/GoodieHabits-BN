@@ -8,7 +8,7 @@ namespace Domain.Models
         public int Id { get; set; }
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public PriorityLevel PriorityLevel { get; set; }
+        public Priority Priority { get; set; }
         public Quest Quest { get; set; } = null!;
         public OneTimeQuest() { }
         public OneTimeQuest(
@@ -16,13 +16,13 @@ namespace Domain.Models
             string title,
             string description,
             bool isCompleted,
-            PriorityLevel priority)
+            Priority priority)
         {
             Id = oneTimeQuestId;
             Title = title;
             Description = description;
             IsCompleted = isCompleted;
-            PriorityLevel = priority;
+            Priority = priority;
         }
     }
 }

@@ -51,25 +51,6 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                await _oneTimeQuestService.UpdateAsync(id, updateDto, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-        }
-
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdatePartial(int id, [FromBody] PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {

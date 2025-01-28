@@ -33,7 +33,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(otq => otq.IsCompleted)
                 .IsRequired();
 
-            builder.Property(otq => otq.PriorityLevel)
+            builder.Property(otq => otq.Priority)
                 .IsRequired();
 
             builder.Property(otq => otq.CreatedAt)

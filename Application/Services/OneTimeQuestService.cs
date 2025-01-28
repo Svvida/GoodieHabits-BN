@@ -43,19 +43,29 @@ namespace Application.Services
 
         public async Task<int> CreateAsync(CreateOneTimeQuestDto createDto, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Received CreateOneTimeQuestDto with the following details: " +
+                                   "Title: {Title}, Description: {Description}, StartDate: {StartDate}, EndDate: {EndDate}, " +
+                                   "Emoji: {Emoji}, Priority: {Priority}, AccountId: {AccountId}",
+                                   createDto.Title, createDto.Description, createDto.StartDate, createDto.EndDate,
+                                   createDto.Emoji, createDto.Priority, createDto.AccountId);
+
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
+
+            _logger.LogInformation("Mapped OneTimeQuest entity details: " +
+                                   "Id: {Id}, Title: {Title}, Description: {Description}, StartDate: {StartDate}, " +
+                                   "EndDate: {EndDate}, Emoji: {Emoji}, IsCompleted: {IsCompleted}, Priority: {Priority}, " +
+                                   "AccountId: {AccountId}",
+                                   oneTimeQuest.Id, oneTimeQuest.Title, oneTimeQuest.Description, oneTimeQuest.StartDate,
+                                   oneTimeQuest.EndDate, oneTimeQuest.Emoji, oneTimeQuest.IsCompleted,
+                                   oneTimeQuest.Priority, oneTimeQuest.Quest.AccountId);
+
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
+
+            _logger.LogInformation("Successfully created OneTimeQuest with Id: {Id}", oneTimeQuest.Id);
+
             return oneTimeQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
-        {
-            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new KeyNotFoundException($"OneTimeQuest with ID {id} not found.");
-
-            _mapper.Map(updateDto, existingQuest);
-            await _repository.UpdateAsync(existingQuest, cancellationToken);
-        }
 
         public async Task PatchAsync(int id, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {
@@ -93,15 +103,13 @@ namespace Application.Services
                 existingOneTimeQuest.IsCompleted = patchDto.IsCompleted.Value;
             }
 
-            if (patchDto.PriorityLevel.HasValue)
+            if (patchDto.Priority.HasValue)
             {
-                existingOneTimeQuest.PriorityLevel = patchDto.PriorityLevel.Value;
+                existingOneTimeQuest.Priority = patchDto.Priority.Value;
             }
 
             await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
         }
-
-
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {

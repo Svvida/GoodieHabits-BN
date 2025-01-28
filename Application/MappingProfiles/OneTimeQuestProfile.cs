@@ -19,10 +19,8 @@ namespace Application.MappingProfiles
                 {
                     QuestType = QuestType.OneTime,
                     AccountId = src.AccountId
-                }));
-
-            // Update DTO <-> Entity
-            CreateMap<UpdateOneTimeQuestDto, OneTimeQuest>().ReverseMap();
+                }))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority));
 
             // Patch Dto <-> Entity
             CreateMap<PatchOneTimeQuestDto, OneTimeQuest>()
