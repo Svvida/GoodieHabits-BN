@@ -67,6 +67,19 @@ namespace Api
 
         private static void ConfigureServices(WebApplicationBuilder builder)
         {
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowWithCredentials",
+                    builder =>
+                    {
+                        builder
+                            .SetIsOriginAllowed(origin => true)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
+                    });
+            });
+
             // Add Controllers
             builder.Services.AddControllers();
 
@@ -132,13 +145,31 @@ namespace Api
 
         private static void ConfigureMiddleware(WebApplication app)
         {
+            // Handle OPTIONS requests explicitly for Preflight
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Method == "OPTIONS")
+                {
+                    var origin = context.Request.Headers["Origin"].ToString();
+                    context.Response.Headers.Add("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
+                    context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                    context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+                    context.Response.StatusCode = 204; // No Content
+                    return;
+                }
+                await next();
+            });
+
+            app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
+            app.UseRouting();
+
             // Enable Swagger in all environments
             app.UseSwagger();
             app.UseSwaggerUI();
 
             // Enable HTTPS Redirection
             app.UseHttpsRedirection();
-
 
             // Enable Authorization
             app.UseAuthorization();

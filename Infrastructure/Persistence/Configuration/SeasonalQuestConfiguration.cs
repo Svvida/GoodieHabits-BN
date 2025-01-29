@@ -17,6 +17,7 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(100);
 
             builder.Property(sq => sq.Description)
+                .IsRequired(false)
                 .HasMaxLength(1000);
 
             builder.Property(sq => sq.StartDate)
@@ -29,6 +30,7 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired();
 
             builder.Property(sq => sq.Emoji)
+                .IsRequired(false)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 

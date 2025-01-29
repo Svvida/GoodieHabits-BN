@@ -4,19 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/one-time-quests")]
     [ApiController]
     public class OneTimeQuestController : ControllerBase
     {
         private readonly IOneTimeQuestService _oneTimeQuestService;
-        private readonly ILogger<OneTimeQuestController> _logger;
 
         public OneTimeQuestController(
-            IOneTimeQuestService oneTimeQuestService,
-            ILogger<OneTimeQuestController> logger)
+            IOneTimeQuestService oneTimeQuestService)
         {
             _oneTimeQuestService = oneTimeQuestService;
-            _logger = logger;
         }
 
         [HttpGet("{id}")]
@@ -25,9 +22,7 @@ namespace Api.Controllers
             var oneTimeQuest = await _oneTimeQuestService.GetByIdAsync(id, cancellationToken);
 
             if (oneTimeQuest == null)
-            {
                 return NotFound();
-            }
 
             return Ok(oneTimeQuest);
         }
@@ -43,9 +38,7 @@ namespace Api.Controllers
         public async Task<IActionResult> Create([FromBody] CreateOneTimeQuestDto createDto, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
@@ -54,6 +47,9 @@ namespace Api.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdatePartial(int id, [FromBody] PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 await _oneTimeQuestService.PatchAsync(id, patchDto, cancellationToken);
@@ -73,9 +69,7 @@ namespace Api.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             try
             {

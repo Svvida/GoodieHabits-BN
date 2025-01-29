@@ -9,27 +9,29 @@ namespace Application.MappingProfiles
     {
         public OneTimeQuestProfile()
         {
-            // Entity -> DTO
+            // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<OneTimeQuest, OneTimeQuestDto>()
-                .ForMember(dest => dest.AccountId, opt => opt.MapFrom(src => src.Quest.AccountId));
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
 
-            // Create DTO -> Entity
+            // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateOneTimeQuestDto, OneTimeQuest>()
                 .ForMember(dest => dest.Quest, opt => opt.MapFrom(src => new Quest
                 {
                     QuestType = QuestType.OneTime,
                     AccountId = src.AccountId
                 }))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority));
 
-            // Patch Dto -> Entity
+
+            // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<PatchOneTimeQuestDto, OneTimeQuest>()
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority))
+                .ForMember(dest => dest.IsCompleted, opt => opt.Condition(src => src.IsCompleted.HasValue))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-            // Update DTO -> Entity
+            // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateOneTimeQuestDto, OneTimeQuest>()
-                .ForAllMembers(opt =>
-                    opt.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority));
         }
     }
 }

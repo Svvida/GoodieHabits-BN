@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Domain.Enum;
 
 namespace Application.Dtos.OneTimeQuest
 {
@@ -20,8 +19,7 @@ namespace Application.Dtos.OneTimeQuest
         public string? Emoji { get; set; }
 
         [Required(ErrorMessage = "Priority is required.")]
-        [Range((int)Priority.None, (int)Priority.High, ErrorMessage = "Priority level is invalid.")]
-        public Priority Priority { get; set; }
+        public string? Priority { get; set; }
 
         [Required(ErrorMessage = "IsCompleted is required.")]
         public bool IsCompleted { get; set; }

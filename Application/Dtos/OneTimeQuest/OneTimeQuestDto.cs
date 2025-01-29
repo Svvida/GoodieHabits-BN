@@ -1,6 +1,4 @@
-﻿using Domain.Enum;
-
-namespace Application.Dtos.OneTimeQuest
+﻿namespace Application.Dtos.OneTimeQuest
 {
     public class OneTimeQuestDto
     {
@@ -11,7 +9,6 @@ namespace Application.Dtos.OneTimeQuest
         public DateTime? EndDate { get; set; }
         public string? Emoji { get; set; }
         public bool IsCompleted { get; set; }
-        public Priority Priority { get; set; }
-        public int AccountId { get; set; }
+        public string? Priority { get; set; }
     }
 }
