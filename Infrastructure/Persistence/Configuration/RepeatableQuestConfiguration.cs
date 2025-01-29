@@ -18,9 +18,11 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(100);
 
             builder.Property(rq => rq.Description)
+                .IsRequired(false)
                 .HasMaxLength(1000);
 
             builder.Property(rq => rq.Emoji)
+                .IsRequired(false)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
@@ -34,10 +36,10 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired(false);
 
             builder.Property(rq => rq.Priority)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(rq => rq.RepeatTime)
-                .IsRequired();
+                .IsRequired(false);
 
             var jsonOptions = new JsonSerializerOptions
             {

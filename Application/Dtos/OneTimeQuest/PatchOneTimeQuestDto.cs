@@ -20,7 +20,6 @@ namespace Application.Dtos.OneTimeQuest
 
         public bool? IsCompleted { get; set; }
 
-        [Range((int)Domain.Enum.Priority.None, (int)Domain.Enum.Priority.High, ErrorMessage = "Priority level is invalid.")]
-        public Priority? Priority { get; set; }
+        public string? Priority { get; set; }
     }
 }

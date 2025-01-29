@@ -17,7 +17,7 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(100);
 
             builder.Property(otq => otq.Description)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(1000);
 
             builder.Property(otq => otq.StartDate)
@@ -27,6 +27,7 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired(false);
 
             builder.Property(otq => otq.Emoji)
+                .IsRequired(false)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
@@ -34,7 +35,7 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired();
 
             builder.Property(otq => otq.Priority)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(otq => otq.CreatedAt)
                 .IsRequired();

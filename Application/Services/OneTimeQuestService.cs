@@ -27,12 +27,8 @@ namespace Application.Services
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            if (quest is null)
-            {
-                return null;
+            return quest is null ? null : _mapper.Map<OneTimeQuestDto>(quest);
             }
-            return _mapper.Map<OneTimeQuestDto>(quest);
-        }
 
         public async Task<IEnumerable<OneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
@@ -52,20 +48,11 @@ namespace Application.Services
 
         public async Task UpdateAsync(int id, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            // Fetch the existing entity from the repository
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new KeyNotFoundException($"OneTimeQuest with Id {id} was not found.");
 
-            // Log the existing entity before update
-            _logger.LogInformation("Existing OneTimeQuest before update: {@existingOneTimeQuest}", existingOneTimeQuest);
-
-            // Map updated fields from the DTO to the existing entity
             _mapper.Map(updateDto, existingOneTimeQuest);
 
-            // Log the updated entity after mapping
-            _logger.LogInformation("Updated OneTimeQuest after mapping: {@existingOneTimeQuest}", existingOneTimeQuest);
-
-            // Save changes to the database
             await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
         }
 
@@ -74,40 +61,16 @@ namespace Application.Services
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new KeyNotFoundException($"OneTimeQuest with Id {id} was not found.");
 
-            // Apply updates only if provided in the DTO
-            if (patchDto.Title is not null)
-            {
-                existingOneTimeQuest.Title = patchDto.Title;
-            }
+            // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
+            bool previousIsCompleted = existingOneTimeQuest.IsCompleted;
 
-            if (patchDto.Description is not null)
-            {
-                existingOneTimeQuest.Description = patchDto.Description;
-            }
+            // Apply AutoMapper Mapping (Ignores Nulls)
+            _mapper.Map(patchDto, existingOneTimeQuest);
 
-            if (patchDto.StartDate.HasValue)
+            // **Fix: Restore IsCompleted If Not Provided**
+            if (patchDto.IsCompleted is null)
             {
-                existingOneTimeQuest.StartDate = patchDto.StartDate.Value;
-            }
-
-            if (patchDto.EndDate.HasValue)
-            {
-                existingOneTimeQuest.EndDate = patchDto.EndDate.Value;
-            }
-
-            if (patchDto.Emoji is not null)
-            {
-                existingOneTimeQuest.Emoji = patchDto.Emoji;
-            }
-
-            if (patchDto.IsCompleted.HasValue)
-            {
-                existingOneTimeQuest.IsCompleted = patchDto.IsCompleted.Value;
-            }
-
-            if (patchDto.Priority.HasValue)
-            {
-                existingOneTimeQuest.Priority = patchDto.Priority.Value;
+                existingOneTimeQuest.IsCompleted = previousIsCompleted;
             }
 
             await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);

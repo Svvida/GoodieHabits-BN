@@ -19,8 +19,7 @@ namespace Application.Dtos.OneTimeQuest
         [StringLength(10, ErrorMessage = "Emoji cannot exceed 10 characters.")]
         public string? Emoji { get; set; } = null;
 
-        [Range((int)Priority.None, (int)Priority.High, ErrorMessage = "Priority level is invalid.")]
-        public Priority Priority { get; set; } = Priority.None;
+        public string? Priority { get; set; } = null;
 
         public int AccountId { get; set; } = 1;
     }

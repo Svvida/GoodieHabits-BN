@@ -8,9 +8,9 @@ namespace Domain.Models
         public int Id { get; set; }
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public TimeOnly RepeatTime { get; set; }
+        public TimeOnly? RepeatTime { get; set; } = null;
         public required RepeatInterval RepeatInterval { get; set; }
-        public Priority Priority { get; set; }
+        public Priority? Priority { get; set; } = null;
         public Quest Quest { get; set; } = null!;
 
         public RepeatableQuest() { }
@@ -19,8 +19,7 @@ namespace Domain.Models
             string description,
             TimeOnly repeatTime,
             RepeatInterval repeatInterval,
-            bool isCompleted,
-            Priority priorityLevel)
+            bool isCompleted)
         {
             Id = recurringQuestId;
             Title = title;
@@ -28,7 +27,6 @@ namespace Domain.Models
             RepeatTime = repeatTime;
             RepeatInterval = repeatInterval;
             IsCompleted = isCompleted;
-            Priority = priorityLevel;
         }
     }
 }
