@@ -28,7 +28,7 @@ namespace Application.Services
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<OneTimeQuestDto>(quest);
-        }
+            }
 
         public async Task<IEnumerable<OneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {

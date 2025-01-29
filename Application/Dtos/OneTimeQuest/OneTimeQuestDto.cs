@@ -1,4 +1,6 @@
-﻿namespace Application.Dtos.OneTimeQuest
+﻿using Domain.Enum;
+
+namespace Application.Dtos.OneTimeQuest
 {
     public class OneTimeQuestDto
     {

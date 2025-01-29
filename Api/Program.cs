@@ -171,6 +171,7 @@ namespace Api
             // Enable HTTPS Redirection
             app.UseHttpsRedirection();
 
+
             // Enable Authorization
             app.UseAuthorization();
 
