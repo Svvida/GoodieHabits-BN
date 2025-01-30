@@ -1,3 +1,4 @@
+using Api.Middlewares;
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
@@ -150,11 +151,11 @@ namespace Api
             {
                 if (context.Request.Method == "OPTIONS")
                 {
-                    var origin = context.Request.Headers["Origin"].ToString();
-                    context.Response.Headers.Add("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
-                    context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-                    context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                    context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+                    var origin = context.Request.Headers.Origin.ToString();
+                    context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
+                    context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                    context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
                     context.Response.StatusCode = 204; // No Content
                     return;
                 }
@@ -162,6 +163,8 @@ namespace Api
             });
 
             app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseRouting();
 
             // Enable Swagger in all environments

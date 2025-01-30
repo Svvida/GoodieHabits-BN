@@ -1,6 +1,7 @@
 ﻿using Application.Dtos.OneTimeQuest;
 using Application.Interfaces;
 using AutoMapper;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,7 @@ namespace Application.Services
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<OneTimeQuestDto>(quest);
-            }
+        }
 
         public async Task<IEnumerable<OneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
@@ -49,7 +50,7 @@ namespace Application.Services
         public async Task UpdateAsync(int id, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
         {
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new KeyNotFoundException($"OneTimeQuest with Id {id} was not found.");
+                ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
 
             _mapper.Map(updateDto, existingOneTimeQuest);
 
@@ -59,7 +60,7 @@ namespace Application.Services
         public async Task PatchAsync(int id, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new KeyNotFoundException($"OneTimeQuest with Id {id} was not found.");
+                ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
 
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingOneTimeQuest.IsCompleted;
