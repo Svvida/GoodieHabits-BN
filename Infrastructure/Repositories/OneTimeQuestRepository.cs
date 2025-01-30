@@ -1,4 +1,5 @@
 ﻿using Domain.Enum;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
@@ -63,7 +64,8 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _context.Quests.FirstOrDefaultAsync(q => q.Id == id, cancellationToken) ?? throw new KeyNotFoundException($"Quest with ID: {id} not found.");
+            var quest = await _context.Quests.FirstOrDefaultAsync(q => q.Id == id, cancellationToken)
+                ?? throw new NotFoundException($"Quest with ID: {id} not found.");
 
             _context.Quests.Remove(quest);
             await _context.SaveChangesAsync(cancellationToken);

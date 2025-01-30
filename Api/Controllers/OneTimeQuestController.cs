@@ -21,7 +21,7 @@ namespace Api.Controllers
         {
             var oneTimeQuest = await _oneTimeQuestService.GetByIdAsync(id, cancellationToken);
 
-            if (oneTimeQuest == null)
+            if (oneTimeQuest is null)
                 return NotFound();
 
             return Ok(oneTimeQuest);
@@ -41,7 +41,7 @@ namespace Api.Controllers
                 return BadRequest(ModelState);
 
             var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
+            return CreatedAtAction(nameof(GetById), new { id = createdId });
         }
 
         [HttpPatch("{id}")]
@@ -50,19 +50,9 @@ namespace Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _oneTimeQuestService.PatchAsync(id, patchDto, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await _oneTimeQuestService.PatchAsync(id, patchDto, cancellationToken);
+            return NoContent();
+
         }
 
         [HttpPut("{id}")]
@@ -71,34 +61,15 @@ namespace Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _oneTimeQuestService.UpdateAsync(id, updateDto, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while updating OneTimeQuest with Id: {Id}", id);
-                return StatusCode(500, new { message = "An unexpected error occurred." });
-            }
+            await _oneTimeQuestService.UpdateAsync(id, updateDto, cancellationToken);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _oneTimeQuestService.DeleteAsync(id, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+            await _oneTimeQuestService.DeleteAsync(id, cancellationToken);
+            return NoContent();
         }
     }
 }
