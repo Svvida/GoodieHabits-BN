@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Quest> Quests { get; set; }
         public DbSet<OneTimeQuest> OneTimeQuests { get; set; }
-        public DbSet<RepeatableQuest> RecurringQuests { get; set; }
+        public DbSet<RepeatableQuest> RepeatableQuests { get; set; }
         public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
 
         public override int SaveChanges()

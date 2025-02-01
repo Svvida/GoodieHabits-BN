@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -43,7 +45,10 @@ namespace Infrastructure.Persistence.Configuration
 
             var jsonOptions = new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+                UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode,
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver()
             };
 
             // Configure RepeatInterval as a JSON column

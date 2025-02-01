@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Dtos.OneTimeQuest
+namespace Application.Dtos.RepeatableQuest
 {
-    public class UpdateOneTimeQuestDto
+    public class PatchRepeatableQuestDto
     {
-        [Required(ErrorMessage = "Title is required.")]
-        [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
-        public string Title { get; set; } = string.Empty;
+        [StringLength(100, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 100 characters.")]
+        public string? Title { get; set; }
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
         public string? Description { get; set; }
@@ -20,6 +19,7 @@ namespace Application.Dtos.OneTimeQuest
 
         public string? Priority { get; set; }
 
-        public bool IsCompleted { get; set; }
+        public RepeatIntervalDto? RepeatInterval { get; set; }
+        public bool? IsCompleted { get; set; }
     }
 }
