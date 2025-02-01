@@ -103,15 +103,18 @@ namespace Api
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
+            builder.Services.AddScoped<IRepeatableQuestRepository, RepeatableQuestRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
+            builder.Services.AddScoped<IRepeatableQuestService, RepeatableQuestService>();
 
             // Register AutoMapper profiles
             builder.Services.AddAutoMapper(cfg =>
             {
                 cfg.AddProfile<OneTimeQuestProfile>();
+                cfg.AddProfile<RepeatableQuestProfile>();
             });
 
             // Register Database Seeder

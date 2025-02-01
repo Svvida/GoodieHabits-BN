@@ -28,24 +28,29 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<OneTimeQuestDto>>> GetAll(CancellationToken cancellationToken = default)
         {
             var quests = await _oneTimeQuestService.GetAllAsync(cancellationToken);
             return Ok(quests);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateOneTimeQuestDto createDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<int>> Create(
+            [FromBody] CreateOneTimeQuestDto createDto,
+            CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = createdId });
+            return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdatePartial(int id, [FromBody] PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> UpdatePartial(
+            int id,
+            [FromBody] PatchOneTimeQuestDto patchDto,
+            CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -56,7 +61,10 @@ namespace Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Update(
+            int id,
+            [FromBody] UpdateOneTimeQuestDto updateDto,
+            CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
