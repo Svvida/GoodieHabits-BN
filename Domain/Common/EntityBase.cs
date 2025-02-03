@@ -1,6 +1,6 @@
 ﻿namespace Domain.Common
 {
-    public abstract class BaseEntity
+    public abstract class EntityBase
     {
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }

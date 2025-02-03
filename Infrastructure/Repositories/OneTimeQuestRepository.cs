@@ -1,5 +1,4 @@
-﻿using Domain.Enum;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
@@ -24,7 +23,6 @@ namespace Infrastructure.Repositories
         public async Task<OneTimeQuest?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.OneTimeQuests
-                .Include(otq => otq.Quest)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(otq => otq.Id == id, cancellationToken)
                 .ConfigureAwait(false);
@@ -33,7 +31,6 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<OneTimeQuest>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.OneTimeQuests
-                .Include(otq => otq.Quest)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -41,15 +38,6 @@ namespace Infrastructure.Repositories
 
         public async Task AddAsync(OneTimeQuest oneTimeQuest, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("We are in repository");
-            var quest = new Quest
-            {
-                QuestType = QuestType.OneTime,
-                AccountId = oneTimeQuest.Quest.AccountId,
-            };
-
-            oneTimeQuest.Id = quest.Id;
-
             await _context.OneTimeQuests.AddAsync(oneTimeQuest, cancellationToken).ConfigureAwait(false);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -65,10 +53,10 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _context.Quests.FirstOrDefaultAsync(q => q.Id == id, cancellationToken).ConfigureAwait(false)
+            var quest = await _context.QuestsMetadata.FirstOrDefaultAsync(q => q.Id == id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {id} not found.");
 
-            _context.Quests.Remove(quest);
+            _context.QuestsMetadata.Remove(quest);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }

@@ -3,11 +3,11 @@ using Domain.Enum;
 
 namespace Domain.Models
 {
-    public class OneTimeQuest : QuestBase
+    public class DailyQuest : QuestBase
     {
         public PriorityEnum? Priority { get; set; } = null;
-        public OneTimeQuest() : base() { }
-        public OneTimeQuest(int id, string title, PriorityEnum? priority, string? description, string? emoji, DateTime? startDate, DateTime? endDate)
+        public DailyQuest() : base() { }
+        public DailyQuest(int id, string title, PriorityEnum? priority, string? description, string? emoji, DateTime? startDate, DateTime? endDate)
             : base(id, title, description, emoji, startDate, endDate)
         {
             Priority = priority;

@@ -21,10 +21,10 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(1000);
 
             builder.Property(sq => sq.StartDate)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(sq => sq.EndDate)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(sq => sq.IsCompleted)
                 .IsRequired();
@@ -33,6 +33,9 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired(false)
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
+
+            builder.Property(sq => sq.Season)
+                .IsRequired();
 
             builder.Property(sq => sq.CreatedAt)
                 .IsRequired();

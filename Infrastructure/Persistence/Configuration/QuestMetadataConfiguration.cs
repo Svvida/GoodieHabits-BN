@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configuration
 {
-    public class QuestConfiguration : IEntityTypeConfiguration<Quest>
+    public class QuestMetadataConfiguration : IEntityTypeConfiguration<QuestMetadata>
     {
-        public void Configure(EntityTypeBuilder<Quest> builder)
+        public void Configure(EntityTypeBuilder<QuestMetadata> builder)
         {
             builder.ToTable("Quests");
 

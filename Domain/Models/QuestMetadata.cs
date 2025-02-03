@@ -2,16 +2,14 @@
 
 namespace Domain.Models
 {
-    public class Quest
+    public class QuestMetadata
     {
         public int Id { get; set; }
-        public QuestType QuestType { get; set; }
-        public int AccountId { get; set; }
-
+        public QuestTypeEnum QuestType { get; set; }
+        public required int AccountId { get; set; }
         public Account Account { get; set; } = null!;
-
-        public Quest() { }
-        public Quest(int id, QuestType type, int accountId)
+        public QuestMetadata() { }
+        public QuestMetadata(int id, QuestTypeEnum type, int accountId)
         {
             Id = id;
             QuestType = type;

@@ -14,22 +14,22 @@ namespace Application.MappingProfiles
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateRepeatableQuestDto, RepeatableQuest>()
-                .ForMember(dest => dest.Quest, opt => opt.MapFrom(src => new Quest
+                .ForMember(dest => dest.Quest, opt => opt.MapFrom(src => new QuestMetadata
                 {
-                    QuestType = QuestType.Repeatable,
+                    QuestType = QuestTypeEnum.Repeatable,
                     AccountId = src.AccountId
                 }))
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<PatchRepeatableQuestDto, RepeatableQuest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority))
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
                 .ForMember(dest => dest.IsCompleted, opt => opt.Condition(src => src.IsCompleted.HasValue))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateRepeatableQuestDto, RepeatableQuest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<Priority>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Polymorphic Mapping for RepeatInterval -> RepeatIntervalDto
             CreateMap<RepeatInterval, RepeatIntervalDto>()
