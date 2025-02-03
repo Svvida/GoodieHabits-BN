@@ -32,7 +32,7 @@ namespace Domain.Models
         public int? DayOfMonth { get; set; }
         // For "Monday", "Tesday" etc.
         //public WeekdayEnum? Day { get; set; }
-        public DateOnly? RepeatFrom { get; set; }
-        public DateOnly? RepeatTo { get; set; }
+        public int? RepeatFrom { get; set; }
+        public int? RepeatTo { get; set; }
     }
 }
