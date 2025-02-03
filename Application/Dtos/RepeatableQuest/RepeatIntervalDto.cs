@@ -31,9 +31,11 @@ namespace Application.Dtos.RepeatableQuest
     {
         public MonthlyRepeatIntervalDto() { Type = "Monthly"; }
 
-        [Range(1, 31, ErrorMessage = "Day of the month must be between 1 and 31.")]
+        [Range(1, 31, ErrorMessage = "Repeat from must be between 1 and 31.")]
         public int? DayOfMonth { get; set; }
-        public DateOnly? RepeatFrom { get; set; }
-        public DateOnly? RepeatTo { get; set; }
+
+        public int? RepeatFrom { get; set; }
+
+        public int? RepeatTo { get; set; }
     }
 }

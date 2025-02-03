@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastru
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "Api\Api.csproj", "{927A9C7F-5B8D-47DF-9535-CE8BCC968C56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{14C72A89-786D-4886-9169-1E70AE38296B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{14C72A89-786D-4886-9169-1E70AE38296B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{E471DBCB-6144-4151-8474-3B30E7A9149C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{14C72A89-786D-4886-9169-1E70AE38296B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14C72A89-786D-4886-9169-1E70AE38296B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14C72A89-786D-4886-9169-1E70AE38296B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
