@@ -1,8 +1,6 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Application.Dtos.RepeatableQuest
+﻿namespace Application.Dtos.WeeklyQuest
 {
-    public class RepeatableQuestDto
+    public class WeeklyQuestDto
     {
         public int Id { get; set; }
         public required string Title { get; set; }
@@ -12,8 +10,6 @@ namespace Application.Dtos.RepeatableQuest
         public string? Emoji { get; set; }
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
-
-        [JsonPropertyName("repeatInterval")]
-        public RepeatIntervalDto RepeatInterval { get; set; } = null!;
+        public List<string> Weekdays { get; set; } = new();
     }
 }

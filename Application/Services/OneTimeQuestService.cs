@@ -42,6 +42,10 @@ namespace Application.Services
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
+            oneTimeQuest.Quest.Id = oneTimeQuest.Id;
+            oneTimeQuest.Quest.QuestType = Domain.Enum.QuestTypeEnum.OneTime;
+            oneTimeQuest.Quest.AccountId = oneTimeQuest.Quest.AccountId;
+
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
             return oneTimeQuest.Id;
@@ -79,7 +83,7 @@ namespace Application.Services
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            await _repository.DeleteAsync(id, cancellationToken);
+            await _repository.DeleteByIdAsync(id, cancellationToken);
         }
     }
 }

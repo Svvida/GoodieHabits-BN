@@ -1,6 +1,6 @@
-﻿namespace Application.Dtos.OneTimeQuest
+﻿namespace Application.Dtos.DailyQuest
 {
-    public class OneTimeQuestDto
+    public class DailyQuestDto
     {
         public int Id { get; set; }
         public required string Title { get; set; }

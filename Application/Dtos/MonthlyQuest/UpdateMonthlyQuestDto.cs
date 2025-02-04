@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Dtos.OneTimeQuest
+namespace Application.Dtos.MonthlyQuest
 {
-    public class UpdateOneTimeQuestDto
+    public class UpdateMonthlyQuestDto
     {
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 100 characters.")]
@@ -21,5 +21,13 @@ namespace Application.Dtos.OneTimeQuest
         public string? Priority { get; set; }
 
         public bool IsCompleted { get; set; }
+
+        [Required(ErrorMessage = "StartDay is required.")]
+        [Range(1, 31, ErrorMessage = "StartDay must be between 1 and 31.")]
+        public int StartDay { get; set; }
+
+        [Required(ErrorMessage = "EndDay is required.")]
+        [Range(1, 31, ErrorMessage = "EndDay must be between 1 and 31.")]
+        public int EndDay { get; set; }
     }
 }

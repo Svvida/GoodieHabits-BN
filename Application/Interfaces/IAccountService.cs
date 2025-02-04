@@ -1,15 +1,10 @@
 ﻿using Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Interfaces
 {
     public interface IAccountService
     {
-        public Task<IEnumerable<AccountDto>> GetAllAccountsAsync();
-        public Task<AccountDto?> GetAccountByIdAsync(int id);
+        Task<IEnumerable<AccountDto>> GetAllAccountsAsync();
+        Task<AccountDto?> GetAccountByIdAsync(int id);
     }
 }

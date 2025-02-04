@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Dtos.RepeatableQuest
+namespace Application.Dtos.WeeklyQuest
 {
-    public class UpdateRepeatableQuestDto
+    public class UpdateWeeklyQuestDto
     {
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 100 characters.")]
@@ -17,8 +17,11 @@ namespace Application.Dtos.RepeatableQuest
 
         [StringLength(10, ErrorMessage = "Emoji cannot exceed 10 characters.")]
         public string? Emoji { get; set; }
+
         public string? Priority { get; set; }
-        public bool? IsCompleted { get; set; }
-        public RepeatIntervalDto? RepeatInterval { get; set; }
+
+        public bool IsCompleted { get; set; }
+        [Required(ErrorMessage = "Weekdays is required.")]
+        public List<string> Weekdays { get; set; } = null!;
     }
 }

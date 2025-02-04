@@ -1,6 +1,6 @@
-﻿namespace Application.Dtos.OneTimeQuest
+﻿namespace Application.Dtos.SeasonalQuest
 {
-    public class OneTimeQuestDto
+    public class SeasonalQuestDto
     {
         public int Id { get; set; }
         public required string Title { get; set; }
@@ -10,5 +10,6 @@
         public string? Emoji { get; set; }
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
+        public required string Season { get; set; }
     }
 }

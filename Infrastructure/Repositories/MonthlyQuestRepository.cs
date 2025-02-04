@@ -2,18 +2,19 @@
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class OneTimeQuestRepository : BaseRepository<OneTimeQuest>, IOneTimeQuestRepository
+    public class MonthlyQuestRepository : BaseRepository<MonthlyQuest>, IMonthlyQuestRepository
     {
-        public OneTimeQuestRepository(AppDbContext context) : base(context) { }
+        public MonthlyQuestRepository(AppDbContext context) : base(context)
+        {
+        }
 
         public override async Task DeleteByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _context.QuestsMetadata.FirstOrDefaultAsync(q => q.Id == id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with ID: {id} not found.");
+            var quest = await _context.QuestsMetadata.FindAsync(id, cancellationToken).ConfigureAwait(false)
+                  ?? throw new NotFoundException($"WeeklyQuest with id {id} not found");
 
             _context.QuestsMetadata.Remove(quest);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

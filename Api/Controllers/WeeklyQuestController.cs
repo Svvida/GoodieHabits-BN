@@ -1,32 +1,33 @@
-﻿using Application.Dtos.RepeatableQuest;
+﻿using Application.Dtos.WeeklyQuest;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
-    [Route("api/repeatable-quests")]
-    public class RepeatableQuestController : ControllerBase
+    [Route("api/weekly-quests")]
+    public class WeeklyQuestController : ControllerBase
     {
-        private readonly IRepeatableQuestService _service;
+        private readonly IWeeklyQuestService _service;
 
-        public RepeatableQuestController(IRepeatableQuestService service)
+        public WeeklyQuestController(IWeeklyQuestService service)
         {
             _service = service;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RepeatableQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<WeeklyQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _service.GetByIdAsync(id, cancellationToken);
+
             if (quest is null)
-                return NotFound($"Quest with ID: {id} not found.");
+                return NotFound();
 
             return Ok(quest);
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RepeatableQuestDto>>> GetAll(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<WeeklyQuestDto>>> GetAll(CancellationToken cancellationToken = default)
         {
             var quests = await _service.GetAllAsync(cancellationToken);
             return Ok(quests);
@@ -34,7 +35,7 @@ namespace Api.Controllers
 
         [HttpPost]
         public async Task<ActionResult<int>> Create(
-            [FromBody] CreateRepeatableQuestDto createDto,
+            [FromBody] CreateWeeklyQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -47,7 +48,7 @@ namespace Api.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdatePartial(
             int id,
-            [FromBody] PatchRepeatableQuestDto patchDto,
+            [FromBody] PatchWeeklyQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -61,7 +62,7 @@ namespace Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
             int id,
-            [FromBody] UpdateRepeatableQuestDto updateDto,
+            [FromBody] UpdateWeeklyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -76,18 +77,6 @@ namespace Api.Controllers
         {
             await _service.DeleteAsync(id, cancellationToken);
             return NoContent();
-        }
-
-        [HttpGet("by-types")]
-        public async Task<ActionResult<IEnumerable<RepeatableQuestDto>>> GetByTypes(
-            [FromQuery] List<string> types,
-            CancellationToken cancellationToken = default)
-        {
-            if (types is null || types.Count == 0)
-                return BadRequest("At least one type must be provided");
-
-            var quests = await _service.GetByTypesAsync(types, cancellationToken);
-            return Ok(quests);
         }
     }
 }

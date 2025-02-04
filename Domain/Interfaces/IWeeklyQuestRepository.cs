@@ -3,7 +3,7 @@ using Domain.Models;
 
 namespace Domain.Interfaces
 {
-    public interface IOneTimeQuestRepository : IBaseRepository<OneTimeQuest>
+    public interface IWeeklyQuestRepository : IBaseRepository<WeeklyQuest>
     {
     }
 }

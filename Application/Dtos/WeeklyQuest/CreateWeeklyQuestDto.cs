@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Dtos.OneTimeQuest
+namespace Application.Dtos.WeeklyQuest
 {
-    public class CreateOneTimeQuestDto
+    public class CreateWeeklyQuestDto
     {
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 100 characters.")]
@@ -12,7 +12,6 @@ namespace Application.Dtos.OneTimeQuest
         public string? Description { get; set; } = null;
 
         public DateTime? StartDate { get; set; } = null;
-
         public DateTime? EndDate { get; set; } = null;
 
         [StringLength(10, ErrorMessage = "Emoji cannot exceed 10 characters.")]
@@ -21,5 +20,8 @@ namespace Application.Dtos.OneTimeQuest
         public string? Priority { get; set; } = null;
 
         public int AccountId { get; set; } = 1;
+        [Required(ErrorMessage = "Weekdays is required.")]
+        [MinLength(1, ErrorMessage = "At least one weekday must be selected.")]
+        public List<string> Weekdays { get; set; } = new();
     }
 }

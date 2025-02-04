@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Dtos.OneTimeQuest
+namespace Application.Dtos.SeasonalQuest
 {
-    public class CreateOneTimeQuestDto
+    public class CreateSeasonalQuestDto
     {
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 100 characters.")]
@@ -21,5 +21,8 @@ namespace Application.Dtos.OneTimeQuest
         public string? Priority { get; set; } = null;
 
         public int AccountId { get; set; } = 1;
+
+        [Required(ErrorMessage = "Season is required.")]
+        public required string Season { get; set; }
     }
 }

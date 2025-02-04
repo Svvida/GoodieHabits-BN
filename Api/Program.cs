@@ -3,7 +3,6 @@ using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
 using Domain.Interfaces;
-using Domain.Models;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -89,32 +88,32 @@ namespace Api
             builder.Services.AddSwaggerGen(c =>
             {
                 c.UseAllOfToExtendReferenceSchemas();
-
-                c.SelectSubTypesUsing(type =>
-                {
-                    if (type == typeof(RepeatInterval))
-                    {
-                        return new[] { typeof(DailyRepeatInterval), typeof(WeeklyRepeatInterval), typeof(MonthlyRepeatInterval) };
-                    }
-                    return Enumerable.Empty<Type>();
-                });
             });
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
-            builder.Services.AddScoped<IRepeatableQuestRepository, RepeatableQuestRepository>();
+            builder.Services.AddScoped<IDailyQuestRepository, DailyQuestRepository>();
+            builder.Services.AddScoped<IWeeklyQuestRepository, WeeklyQuestRepository>();
+            builder.Services.AddScoped<IMonthlyQuestRepository, MonthlyQuestRepository>();
+            builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
-            builder.Services.AddScoped<IRepeatableQuestService, RepeatableQuestService>();
+            builder.Services.AddScoped<IDailyQuestService, DailyQuestService>();
+            builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
+            builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
+            builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
 
             // Register AutoMapper profiles
             builder.Services.AddAutoMapper(cfg =>
             {
                 cfg.AddProfile<OneTimeQuestProfile>();
-                cfg.AddProfile<RepeatableQuestProfile>();
+                cfg.AddProfile<DailyQuestProfile>();
+                cfg.AddProfile<WeeklyQuestProfile>();
+                cfg.AddProfile<MonthlyQuestProfile>();
+                cfg.AddProfile<SeasonalQuestProfile>();
             });
 
             // Register Database Seeder
