@@ -40,9 +40,9 @@ namespace Application.Services
 
             var weeklyQuest = _mapper.Map<WeeklyQuest>(createDto);
 
-            weeklyQuest.Quest.Id = weeklyQuest.Id;
-            weeklyQuest.Quest.AccountId = createDto.AccountId;
-            weeklyQuest.Quest.QuestType = QuestTypeEnum.Weekly;
+            weeklyQuest.QuestMetadata.Id = weeklyQuest.Id;
+            weeklyQuest.QuestMetadata.AccountId = createDto.AccountId;
+            weeklyQuest.QuestMetadata.QuestType = QuestTypeEnum.Weekly;
 
             await _repository.AddAsync(weeklyQuest, cancellationToken);
 

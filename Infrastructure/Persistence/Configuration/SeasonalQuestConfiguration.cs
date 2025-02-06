@@ -43,8 +43,8 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(sq => sq.UpdatedAt)
                 .IsRequired(false);
 
-            builder.HasOne(sq => sq.Quest)
-                .WithOne()
+            builder.HasOne(sq => sq.QuestMetadata)
+                .WithOne(qm => qm.SeasonalQuest)
                 .HasForeignKey<SeasonalQuest>(sq => sq.Id)
                 .OnDelete(DeleteBehavior.Cascade);
         }

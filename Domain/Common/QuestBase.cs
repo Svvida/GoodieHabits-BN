@@ -12,7 +12,7 @@ namespace Domain.Common
         public string? Emoji { get; set; } = null;
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public QuestMetadata Quest { get; set; } = null!;
+        public QuestMetadata QuestMetadata { get; set; } = null!;
 
         public QuestBase() { }
         public QuestBase(int id, string title, string? description, string? emoji, DateTime? startDate, DateTime? endDate)

@@ -15,7 +15,7 @@ namespace Application.MappingProfiles
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateSeasonalQuestDto, SeasonalQuest>()
-                .ForMember(dest => dest.Quest, opt => opt.MapFrom(src => new QuestMetadata
+                .ForMember(dest => dest.QuestMetadata, opt => opt.MapFrom(src => new QuestMetadata
                 {
                     QuestType = QuestTypeEnum.Seasonal,
                     AccountId = src.AccountId

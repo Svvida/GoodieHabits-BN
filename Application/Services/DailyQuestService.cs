@@ -37,9 +37,9 @@ namespace Application.Services
         {
             var dailyQuest = _mapper.Map<DailyQuest>(createDto);
 
-            dailyQuest.Quest.Id = dailyQuest.Id;
-            dailyQuest.Quest.AccountId = createDto.AccountId;
-            dailyQuest.Quest.QuestType = QuestTypeEnum.Daily;
+            dailyQuest.QuestMetadata.Id = dailyQuest.Id;
+            dailyQuest.QuestMetadata.AccountId = createDto.AccountId;
+            dailyQuest.QuestMetadata.QuestType = QuestTypeEnum.Daily;
 
             await _repository.AddAsync(dailyQuest, cancellationToken);
 

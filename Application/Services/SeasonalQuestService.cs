@@ -37,9 +37,9 @@ namespace Application.Services
         {
             var seasonalQuest = _mapper.Map<SeasonalQuest>(createDto);
 
-            seasonalQuest.Quest.Id = seasonalQuest.Id;
-            seasonalQuest.Quest.AccountId = createDto.AccountId;
-            seasonalQuest.Quest.QuestType = QuestTypeEnum.Seasonal;
+            seasonalQuest.QuestMetadata.Id = seasonalQuest.Id;
+            seasonalQuest.QuestMetadata.AccountId = createDto.AccountId;
+            seasonalQuest.QuestMetadata.QuestType = QuestTypeEnum.Seasonal;
 
             await _repository.AddAsync(seasonalQuest, cancellationToken);
 

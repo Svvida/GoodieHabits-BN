@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.DailyQuest;
+using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Models;
@@ -15,7 +16,7 @@ namespace Application.MappingProfiles
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateDailyQuestDto, DailyQuest>()
-                .ForMember(dest => dest.Quest, opt => opt.MapFrom(src => new QuestMetadata
+                .ForMember(dest => dest.QuestMetadata, opt => opt.MapFrom(src => new QuestMetadata
                 {
                     QuestType = QuestTypeEnum.Daily,
                     AccountId = src.AccountId

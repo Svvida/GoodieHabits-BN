@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-namespace Application.MappingProfiles
+namespace Application.Helpers
 {
     internal class NullableEnumConverter<TEnum> : IValueConverter<string?, TEnum?> where TEnum : struct, Enum
     {

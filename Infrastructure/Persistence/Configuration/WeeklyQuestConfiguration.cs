@@ -44,8 +44,8 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(wq => wq.UpdatedAt)
                 .IsRequired(false);
 
-            builder.HasOne(wq => wq.Quest)
-                .WithOne()
+            builder.HasOne(wq => wq.QuestMetadata)
+                .WithOne(qm => qm.WeeklyQuest)
                 .HasForeignKey<WeeklyQuest>(wq => wq.Id)
                 .OnDelete(DeleteBehavior.Cascade);
         }

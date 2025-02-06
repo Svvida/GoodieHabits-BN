@@ -1,10 +1,12 @@
 using Api.Middlewares;
+using Application.Helpers;
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Quests;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -97,6 +99,7 @@ namespace Api
             builder.Services.AddScoped<IWeeklyQuestRepository, WeeklyQuestRepository>();
             builder.Services.AddScoped<IMonthlyQuestRepository, MonthlyQuestRepository>();
             builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
+            builder.Services.AddScoped<IQuestMetadataRepository, QuestMetadataRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -105,6 +108,7 @@ namespace Api
             builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
             builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
+            builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
 
             // Register AutoMapper profiles
             builder.Services.AddAutoMapper(cfg =>
@@ -114,7 +118,9 @@ namespace Api
                 cfg.AddProfile<WeeklyQuestProfile>();
                 cfg.AddProfile<MonthlyQuestProfile>();
                 cfg.AddProfile<SeasonalQuestProfile>();
+                cfg.AddProfile<QuestMetadataProfile>();
             });
+            builder.Services.AddTransient<QuestMetadataResolver>();
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();

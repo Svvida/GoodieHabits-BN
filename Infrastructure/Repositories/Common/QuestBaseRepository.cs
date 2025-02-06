@@ -1,14 +1,14 @@
-﻿using Domain.Exceptions;
-using Domain.Interfaces;
-using Domain.Models;
+﻿using Domain.Common;
+using Domain.Exceptions;
+using Domain.Interfaces.Domain.Interfaces;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Repositories.Common
 {
-    public class DailyQuestRepository : BaseRepository<DailyQuest>, IDailyQuestRepository
+    public abstract class QuestBaseRepository<T> : BaseRepository<T>, IBaseRepository<T> where T : QuestBase
     {
-        public DailyQuestRepository(AppDbContext context) : base(context) { }
+        public QuestBaseRepository(AppDbContext context) : base(context) { }
 
         public override async Task DeleteByIdAsync(int id, CancellationToken cancellationToken = default)
         {
