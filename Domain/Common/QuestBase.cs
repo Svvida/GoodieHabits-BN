@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Domain.Enum;
+using Domain.Exceptions;
 using Domain.Models;
 
 namespace Domain.Common
@@ -12,10 +13,11 @@ namespace Domain.Common
         public string? Emoji { get; set; } = null;
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
+        public PriorityEnum? Priority { get; set; } = null;
         public QuestMetadata QuestMetadata { get; set; } = null!;
 
         public QuestBase() { }
-        public QuestBase(int id, string title, string? description, string? emoji, DateTime? startDate, DateTime? endDate)
+        public QuestBase(int id, string title, string? description, string? emoji, DateTime? startDate, DateTime? endDate, PriorityEnum? priority)
         {
             ValidateDates(startDate, endDate);
 
@@ -25,6 +27,7 @@ namespace Domain.Common
             Emoji = emoji;
             StartDate = startDate;
             EndDate = endDate;
+            Priority = priority;
         }
 
         private static void ValidateDates(DateTime? startDate, DateTime? endDate)

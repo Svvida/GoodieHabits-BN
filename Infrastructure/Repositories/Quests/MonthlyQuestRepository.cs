@@ -5,7 +5,7 @@ using Infrastructure.Repositories.Common;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class MonthlyQuestRepository : QuestBaseRepository<MonthlyQuest>, IMonthlyQuestRepository
+    public class MonthlyQuestRepository : BaseRepository<MonthlyQuest>, IMonthlyQuestRepository
     {
         public MonthlyQuestRepository(AppDbContext context) : base(context) { }
     }

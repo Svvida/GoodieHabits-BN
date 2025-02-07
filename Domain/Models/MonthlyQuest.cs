@@ -6,18 +6,16 @@ namespace Domain.Models
 {
     public class MonthlyQuest : QuestBase
     {
-        public PriorityEnum? Priority { get; set; } = null;
         public required int StartDay { get; set; }
         public required int EndDay { get; set; }
         public MonthlyQuest() : base() { }
         public MonthlyQuest(int id, string title, int startDay, int endDay, PriorityEnum? priority, string? description, string? emoji, DateTime? startDate, DateTime? endDate)
-            : base(id, title, description, emoji, startDate, endDate)
+            : base(id, title, description, emoji, startDate, endDate, priority)
         {
             ValidateDays(startDay, endDay);
 
             StartDay = startDay;
             EndDay = endDay;
-            Priority = priority;
         }
 
         private static void ValidateDays(int startDay, int endDay)

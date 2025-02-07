@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers
 {
     [ApiController]
-    [Route("api/questmetadata")]
+    [Route("api/all-quests")]
     public class QuestMetadataController : ControllerBase
     {
         private readonly IQuestMetadataService _questMetadataService;

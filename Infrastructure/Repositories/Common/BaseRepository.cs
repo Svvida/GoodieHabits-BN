@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Common
 {
-    public class BaseRepository<T> : IBaseRepository<T> where T : class
+    public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
     {
         protected readonly AppDbContext _context;
 
@@ -34,15 +34,10 @@ namespace Infrastructure.Repositories.Common
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public virtual async Task DeleteByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
         {
-            var entity = await _context.Set<T>().FindAsync([id], cancellationToken).ConfigureAwait(false);
-            if (entity != null)
-            {
-                _context.Set<T>().Remove(entity);
-                await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
+            _context.Set<T>().Remove(entity);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
-
     }
 }

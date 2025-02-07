@@ -69,16 +69,17 @@ namespace Application.Services
 
             // **Fix: Restore IsCompleted If Not Provided**
             if (patchDto.IsCompleted is null)
-            {
                 existingDailyQuest.IsCompleted = previousIsCompleted;
-            }
 
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
         }
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            await _repository.DeleteByIdAsync(id, cancellationToken);
+            var quest = await _repository.GetByIdAsync(id, cancellationToken)
+                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            await _repository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

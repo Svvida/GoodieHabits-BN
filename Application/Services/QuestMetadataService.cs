@@ -18,7 +18,7 @@ namespace Application.Services
 
         public async Task<IEnumerable<QuestMetadataDto>> GetAllQuestsAsync(CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllQuestsAsync(cancellationToken)
+            var quests = await _repository.GetTodaysQuestsAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<QuestMetadataDto>>(quests);

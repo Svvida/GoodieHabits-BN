@@ -37,6 +37,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(sq => sq.Season)
                 .IsRequired();
 
+            builder.Property(sq => sq.Priority)
+                .IsRequired(false);
+
             builder.Property(sq => sq.CreatedAt)
                 .IsRequired();
 

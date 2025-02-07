@@ -12,5 +12,6 @@
         public string? Priority { get; set; }
         public int StartDay { get; set; }
         public int EndDay { get; set; }
+        public string? Type { get; set; } = "Monthly";
     }
 }

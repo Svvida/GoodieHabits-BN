@@ -8,7 +8,6 @@ namespace Domain.Models
 {
     public class WeeklyQuest : QuestBase
     {
-        public PriorityEnum? Priority { get; set; } = null;
         [NotMapped]
         public List<WeekdayEnum> Weekdays { get; set; } = [];
 
@@ -24,7 +23,7 @@ namespace Domain.Models
         public WeeklyQuest() : base() { }
 
         public WeeklyQuest(int id, string title, List<WeekdayEnum> weekdays, PriorityEnum? priority, string? description, string? emoji, DateTime? startDate, DateTime? endDate)
-            : base(id, title, description, emoji, startDate, endDate)
+            : base(id, title, description, emoji, startDate, endDate, priority)
         {
             if (weekdays.Count == 0)
             {
@@ -32,7 +31,6 @@ namespace Domain.Models
             }
 
             Weekdays = weekdays;
-            Priority = priority;
         }
     }
 }

@@ -11,5 +11,6 @@
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
         public List<string> Weekdays { get; set; } = new();
+        public string? Type { get; set; } = "Weekly";
     }
 }

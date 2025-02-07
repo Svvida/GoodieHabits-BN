@@ -5,7 +5,7 @@ using Infrastructure.Repositories.Common;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class SeasonalQuestRepository : QuestBaseRepository<SeasonalQuest>, ISeasonalQuestRepository
+    public class SeasonalQuestRepository : BaseRepository<SeasonalQuest>, ISeasonalQuestRepository
     {
         public SeasonalQuestRepository(AppDbContext context) : base(context) { }
     }
