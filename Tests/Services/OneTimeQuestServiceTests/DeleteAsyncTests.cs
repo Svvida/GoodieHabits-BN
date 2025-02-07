@@ -2,7 +2,9 @@
 using Application.MappingProfiles;
 using Application.Services;
 using AutoMapper;
+using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -29,34 +31,44 @@ namespace Tests.Services.OneTimeQuestServiceTests
             _service = new OneTimeQuestService(_repositoryMock.Object, _mapper, logger.Object);
         }
 
-        //[Fact]
-        //public async Task DeleteAsync_ShouldCallRepository_WhenQuestExists()
-        //{
-        //    // Arrange
-        //    int questId = 1;
-        //    _repositoryMock
-        //        .Setup(repo => repo.DeleteAsync(questId, It.IsAny<CancellationToken>()))
-        //        .Returns(Task.CompletedTask)
-        //        .Verifiable();
+        [Fact]
+        public async Task DeleteAsync_ShouldCallRepository_WhenQuestExists()
+        {
+            // Arrange
+            int questId = 1;
+            var quest = new OneTimeQuest { Id = questId, Title = "Test Quest" };
 
-        //    // Act
-        //    await _service.DeleteAsync(questId, CancellationToken.None);
+            _repositoryMock
+                .Setup(repo => repo.GetByIdAsync(questId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(quest);
 
-        //    // Assert
-        //    _repositoryMock.Verify(repo => repo.DeleteByIdAsync(questId, It.IsAny<CancellationToken>()), Times.Once);
-        //}
+            _repositoryMock
+                .Setup(repo => repo.DeleteAsync(It.Is<OneTimeQuest>(q => q.Id == questId), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
 
-        //[Fact]
-        //public async Task DeleteAsync_ShouldThrowException_WhenQuestDoesNotExist()
-        //{
-        //    // Arrange
-        //    int questId = 2;
-        //    _repositoryMock
-        //        .Setup(repo => repo.DeleteByIdAsync(questId, It.IsAny<CancellationToken>()))
-        //        .ThrowsAsync(new NotFoundException($"Quest with ID: {questId} not found"));
+            // Act
+            await _service.DeleteAsync(questId, CancellationToken.None);
 
-        //    // Act & Assert
-        //    await Assert.ThrowsAsync<NotFoundException>(() => _service.DeleteAsync(questId, CancellationToken.None));
-        //}
+            // Assert
+            _repositoryMock.Verify(repo => repo.DeleteAsync(It.Is<OneTimeQuest>(q => q.Id == questId), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ShouldThrowException_WhenQuestDoesNotExist()
+        {
+            // Arrange
+            int questId = 2;
+
+            _repositoryMock
+                .Setup(repo => repo.GetByIdAsync(questId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((OneTimeQuest?)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<NotFoundException>(() => _service.DeleteAsync(questId, CancellationToken.None));
+
+            // Ensure DeleteAsync is never called
+            _repositoryMock.Verify(repo => repo.DeleteAsync(It.IsAny<OneTimeQuest>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
     }
 }

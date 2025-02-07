@@ -6,11 +6,11 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/all-quests")]
-    public class QuestMetadataController : ControllerBase
+    public class AllQuestsController : ControllerBase
     {
         private readonly IQuestMetadataService _questMetadataService;
 
-        public QuestMetadataController(IQuestMetadataService questMetadataService)
+        public AllQuestsController(IQuestMetadataService questMetadataService)
         {
             _questMetadataService = questMetadataService;
         }
