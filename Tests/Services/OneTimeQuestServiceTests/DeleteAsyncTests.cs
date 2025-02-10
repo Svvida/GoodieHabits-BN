@@ -4,6 +4,7 @@ using Application.Services;
 using AutoMapper;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -35,8 +36,14 @@ namespace Tests.Services.OneTimeQuestServiceTests
         {
             // Arrange
             int questId = 1;
+            var quest = new OneTimeQuest { Id = questId, Title = "Test Quest" };
+
             _repositoryMock
-                .Setup(repo => repo.DeleteAsync(questId, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.GetByIdAsync(questId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(quest);
+
+            _repositoryMock
+                .Setup(repo => repo.DeleteAsync(It.Is<OneTimeQuest>(q => q.Id == questId), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask)
                 .Verifiable();
 
@@ -44,7 +51,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
             await _service.DeleteAsync(questId, CancellationToken.None);
 
             // Assert
-            _repositoryMock.Verify(repo => repo.DeleteAsync(questId, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(repo => repo.DeleteAsync(It.Is<OneTimeQuest>(q => q.Id == questId), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -52,12 +59,16 @@ namespace Tests.Services.OneTimeQuestServiceTests
         {
             // Arrange
             int questId = 2;
+
             _repositoryMock
-                .Setup(repo => repo.DeleteAsync(questId, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new NotFoundException($"Quest with ID: {questId} not found"));
+                .Setup(repo => repo.GetByIdAsync(questId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((OneTimeQuest?)null);
 
             // Act & Assert
             await Assert.ThrowsAsync<NotFoundException>(() => _service.DeleteAsync(questId, CancellationToken.None));
+
+            // Ensure DeleteAsync is never called
+            _repositoryMock.Verify(repo => repo.DeleteAsync(It.IsAny<OneTimeQuest>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }

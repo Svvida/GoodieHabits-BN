@@ -1,11 +1,16 @@
 using Api.Middlewares;
+using Application.Dtos;
+using Application.Helpers;
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
+using Application.Validators.Quests;
 using Domain.Interfaces;
-using Domain.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Quests;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -89,33 +94,44 @@ namespace Api
             builder.Services.AddSwaggerGen(c =>
             {
                 c.UseAllOfToExtendReferenceSchemas();
-
-                c.SelectSubTypesUsing(type =>
-                {
-                    if (type == typeof(RepeatInterval))
-                    {
-                        return new[] { typeof(DailyRepeatInterval), typeof(WeeklyRepeatInterval), typeof(MonthlyRepeatInterval) };
-                    }
-                    return Enumerable.Empty<Type>();
-                });
             });
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
-            builder.Services.AddScoped<IRepeatableQuestRepository, RepeatableQuestRepository>();
+            builder.Services.AddScoped<IDailyQuestRepository, DailyQuestRepository>();
+            builder.Services.AddScoped<IWeeklyQuestRepository, WeeklyQuestRepository>();
+            builder.Services.AddScoped<IMonthlyQuestRepository, MonthlyQuestRepository>();
+            builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
+            builder.Services.AddScoped<IQuestMetadataRepository, QuestMetadataRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
-            builder.Services.AddScoped<IRepeatableQuestService, RepeatableQuestService>();
+            builder.Services.AddScoped<IDailyQuestService, DailyQuestService>();
+            builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
+            builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
+            builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
+            builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
+
+            // Register Validators
+            builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<BasePatchQuestValidator<BasePatchQuestDto>>();
+            builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddFluentValidationClientsideAdapters();
 
             // Register AutoMapper profiles
             builder.Services.AddAutoMapper(cfg =>
             {
                 cfg.AddProfile<OneTimeQuestProfile>();
-                cfg.AddProfile<RepeatableQuestProfile>();
+                cfg.AddProfile<DailyQuestProfile>();
+                cfg.AddProfile<WeeklyQuestProfile>();
+                cfg.AddProfile<MonthlyQuestProfile>();
+                cfg.AddProfile<SeasonalQuestProfile>();
+                cfg.AddProfile<QuestMetadataProfile>();
             });
+            builder.Services.AddTransient<QuestMetadataResolver>();
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();

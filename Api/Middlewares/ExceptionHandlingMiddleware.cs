@@ -29,9 +29,9 @@ namespace Api.Middlewares
             }
             catch (Exception ex) // Catch unexpected exceptions
             {
-                _logger.LogError(ex, "An unexpected exception occurred.");
+                _logger.LogError("Caught unhandled exception: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await HandleExceptionAsync(context, new Exception("An Unexpected error occurred."));
+                await HandleExceptionAsync(context, new Exception(ex.Message));
             }
         }
 

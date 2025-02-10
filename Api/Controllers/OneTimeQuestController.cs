@@ -17,7 +17,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<OneTimeQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetOneTimeQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
         {
             var oneTimeQuest = await _oneTimeQuestService.GetByIdAsync(id, cancellationToken);
 
@@ -28,7 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OneTimeQuestDto>>> GetAll(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<GetOneTimeQuestDto>>> GetAll(CancellationToken cancellationToken = default)
         {
             var quests = await _oneTimeQuestService.GetAllAsync(cancellationToken);
             return Ok(quests);

@@ -21,10 +21,10 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(1000);
 
             builder.Property(sq => sq.StartDate)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(sq => sq.EndDate)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(sq => sq.IsCompleted)
                 .IsRequired();
@@ -34,14 +34,20 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(10)
                 .HasColumnType("NVARCHAR");
 
+            builder.Property(sq => sq.Season)
+                .IsRequired();
+
+            builder.Property(sq => sq.Priority)
+                .IsRequired(false);
+
             builder.Property(sq => sq.CreatedAt)
                 .IsRequired();
 
             builder.Property(sq => sq.UpdatedAt)
                 .IsRequired(false);
 
-            builder.HasOne(sq => sq.Quest)
-                .WithOne()
+            builder.HasOne(sq => sq.QuestMetadata)
+                .WithOne(qm => qm.SeasonalQuest)
                 .HasForeignKey<SeasonalQuest>(sq => sq.Id)
                 .OnDelete(DeleteBehavior.Cascade);
         }

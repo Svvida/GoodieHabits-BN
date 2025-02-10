@@ -1,13 +1,9 @@
-﻿using Domain.Models;
+﻿using Domain.Interfaces.Domain.Interfaces;
+using Domain.Models;
 
 namespace Domain.Interfaces
 {
-    public interface IOneTimeQuestRepository
+    public interface IOneTimeQuestRepository : IBaseRepository<OneTimeQuest>
     {
-        Task<OneTimeQuest?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-        Task<IEnumerable<OneTimeQuest>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task AddAsync(OneTimeQuest oneTimeQuest, CancellationToken cancellationToken = default);
-        Task UpdateAsync(OneTimeQuest quoneTimeQuestest, CancellationToken cancellationToken = default);
-        Task DeleteAsync(int id, CancellationToken cancellationToken = default);
     }
 }

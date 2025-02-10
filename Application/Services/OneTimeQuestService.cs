@@ -24,23 +24,27 @@ namespace Application.Services
             _logger = logger;
         }
 
-        public async Task<OneTimeQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetOneTimeQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            return quest is null ? null : _mapper.Map<OneTimeQuestDto>(quest);
+            return quest is null ? null : _mapper.Map<GetOneTimeQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<OneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<OneTimeQuestDto>>(quests);
+            return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);
         }
 
         public async Task<int> CreateAsync(CreateOneTimeQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
+
+            oneTimeQuest.QuestMetadata.Id = oneTimeQuest.Id;
+            oneTimeQuest.QuestMetadata.QuestType = Domain.Enum.QuestTypeEnum.OneTime;
+            oneTimeQuest.QuestMetadata.AccountId = oneTimeQuest.QuestMetadata.AccountId;
 
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
@@ -62,6 +66,20 @@ namespace Application.Services
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
 
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (patchDto.StartDate.HasValue && existingOneTimeQuest.EndDate.HasValue)
+            {
+                if (patchDto.StartDate.Value > existingOneTimeQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
+
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (patchDto.EndDate.HasValue && existingOneTimeQuest.StartDate.HasValue)
+            {
+                if (patchDto.EndDate.Value < existingOneTimeQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
+
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingOneTimeQuest.IsCompleted;
 
@@ -79,7 +97,10 @@ namespace Application.Services
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            await _repository.DeleteAsync(id, cancellationToken);
+            var quest = await _repository.GetByIdAsync(id, cancellationToken)
+                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            await _repository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

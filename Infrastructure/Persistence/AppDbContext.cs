@@ -10,9 +10,11 @@ namespace Infrastructure.Persistence
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Account> Accounts { get; set; }
-        public DbSet<Quest> Quests { get; set; }
+        public DbSet<QuestMetadata> QuestsMetadata { get; set; }
         public DbSet<OneTimeQuest> OneTimeQuests { get; set; }
-        public DbSet<RepeatableQuest> RepeatableQuests { get; set; }
+        public DbSet<DailyQuest> DailyQuests { get; set; }
+        public DbSet<WeeklyQuest> WeeklyQuests { get; set; }
+        public DbSet<MonthlyQuest> MonthlyQuests { get; set; }
         public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
 
         public override int SaveChanges()
@@ -29,7 +31,7 @@ namespace Infrastructure.Persistence
 
         private void UpdateTimestamps()
         {
-            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            foreach (var entry in ChangeTracker.Entries<EntityBase>())
             {
                 if (entry.State == EntityState.Added)
                 {
@@ -47,9 +49,11 @@ namespace Infrastructure.Persistence
         {
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
             modelBuilder.ApplyConfiguration(new OneTimeQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new RepeatableQuestConfiguration());
             modelBuilder.ApplyConfiguration(new SeasonalQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new QuestConfiguration());
+            modelBuilder.ApplyConfiguration(new QuestMetadataConfiguration());
+            modelBuilder.ApplyConfiguration(new DailyQuestConfiguration());
+            modelBuilder.ApplyConfiguration(new WeeklyQuestConfiguration());
+            modelBuilder.ApplyConfiguration(new MonthlyQuestConfiguration());
         }
     }
 }
