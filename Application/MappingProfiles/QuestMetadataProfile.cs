@@ -10,7 +10,7 @@ namespace Application.MappingProfiles
         public QuestMetadataProfile()
         {
             CreateMap<QuestMetadata, QuestMetadataDto>()
-                .ForMember(dest => dest.QuestType, opt => opt.MapFrom(src => src.QuestType.ToString()))
+                //.ForMember(dest => dest.QuestType, opt => opt.MapFrom(src => src.QuestType.ToString()))
                 .ForMember(dest => dest.Quest, opt => opt.MapFrom<QuestMetadataResolver>());
         }
     }

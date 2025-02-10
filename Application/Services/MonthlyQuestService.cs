@@ -19,18 +19,18 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<MonthlyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetMonthlyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            return quest is null ? null : _mapper.Map<MonthlyQuestDto>(quest);
+            return quest is null ? null : _mapper.Map<GetMonthlyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<MonthlyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<MonthlyQuestDto>>(quests);
+            return _mapper.Map<IEnumerable<GetMonthlyQuestDto>>(quests);
         }
 
         public async Task<int> CreateAsync(CreateMonthlyQuestDto createDto, CancellationToken cancellationToken = default)
@@ -60,6 +60,20 @@ namespace Application.Services
         {
             var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (patchDto.StartDate.HasValue && existingMonthlyQuest.EndDate.HasValue)
+            {
+                if (patchDto.StartDate.Value > existingMonthlyQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
+
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (patchDto.EndDate.HasValue && existingMonthlyQuest.StartDate.HasValue)
+            {
+                if (patchDto.EndDate.Value < existingMonthlyQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
 
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingMonthlyQuest.IsCompleted;

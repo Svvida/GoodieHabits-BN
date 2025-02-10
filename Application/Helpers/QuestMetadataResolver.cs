@@ -16,15 +16,15 @@ namespace Application.Helpers
         {
             // Return only the non-null quest type
             if (source.OneTimeQuest is not null)
-                return context.Mapper.Map<OneTimeQuestDto>(source.OneTimeQuest);
+                return context.Mapper.Map<GetOneTimeQuestDto>(source.OneTimeQuest);
             if (source.DailyQuest is not null)
-                return context.Mapper.Map<DailyQuestDto>(source.DailyQuest);
+                return context.Mapper.Map<GetDailyQuestDto>(source.DailyQuest);
             if (source.WeeklyQuest is not null)
-                return context.Mapper.Map<WeeklyQuestDto>(source.WeeklyQuest);
+                return context.Mapper.Map<GetWeeklyQuestDto>(source.WeeklyQuest);
             if (source.MonthlyQuest is not null)
-                return context.Mapper.Map<MonthlyQuestDto>(source.MonthlyQuest);
+                return context.Mapper.Map<GetMonthlyQuestDto>(source.MonthlyQuest);
             if (source.SeasonalQuest is not null)
-                return context.Mapper.Map<SeasonalQuestDto>(source.SeasonalQuest);
+                return context.Mapper.Map<GetSeasonalQuestDto>(source.SeasonalQuest);
 
             return null; // No quest type found
         }

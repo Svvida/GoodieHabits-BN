@@ -16,7 +16,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<MonthlyQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetMonthlyQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _service.GetByIdAsync(id, cancellationToken);
 
@@ -27,7 +27,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MonthlyQuestDto>>> GetAll(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<GetMonthlyQuestDto>>> GetAll(CancellationToken cancellationToken = default)
         {
             var quests = await _service.GetAllAsync(cancellationToken);
             return Ok(quests);

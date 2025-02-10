@@ -11,7 +11,7 @@ namespace Application.MappingProfiles
         public DailyQuestProfile()
         {
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<DailyQuest, DailyQuestDto>()
+            CreateMap<DailyQuest, GetDailyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
 
             // Create DTO -> Entity (Convert String -> Enum)

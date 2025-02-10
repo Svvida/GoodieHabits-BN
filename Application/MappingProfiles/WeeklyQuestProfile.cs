@@ -11,7 +11,7 @@ namespace Application.MappingProfiles
         public WeeklyQuestProfile()
         {
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<WeeklyQuest, WeeklyQuestDto>()
+            CreateMap<WeeklyQuest, GetWeeklyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
                 .ForMember(dest => dest.Weekdays, opt => opt.MapFrom(src => src.Weekdays.ConvertAll(w => w.ToString())));
 

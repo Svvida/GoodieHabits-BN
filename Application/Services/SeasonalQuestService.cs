@@ -19,18 +19,18 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<SeasonalQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetSeasonalQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            return quest is null ? null : _mapper.Map<SeasonalQuestDto>(quest);
+            return quest is null ? null : _mapper.Map<GetSeasonalQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<SeasonalQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<SeasonalQuestDto>>(quests);
+            return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
         }
 
         public async Task<int> CreateAsync(CreateSeasonalQuestDto createDto, CancellationToken cancellationToken = default)
@@ -60,6 +60,20 @@ namespace Application.Services
         {
             var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (patchDto.StartDate.HasValue && existingSeasonalQuest.EndDate.HasValue)
+            {
+                if (patchDto.StartDate.Value > existingSeasonalQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
+
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (patchDto.EndDate.HasValue && existingSeasonalQuest.StartDate.HasValue)
+            {
+                if (patchDto.EndDate.Value < existingSeasonalQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
 
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingSeasonalQuest.IsCompleted;

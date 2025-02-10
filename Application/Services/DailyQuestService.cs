@@ -19,18 +19,18 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<DailyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetDailyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            return quest is null ? null : _mapper.Map<DailyQuestDto>(quest);
+            return quest is null ? null : _mapper.Map<GetDailyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<DailyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<GetDailyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<DailyQuestDto>>(quests);
+            return _mapper.Map<IEnumerable<GetDailyQuestDto>>(quests);
         }
 
         public async Task<int> CreateAsync(CreateDailyQuestDto createDto, CancellationToken cancellationToken = default)
@@ -51,6 +51,12 @@ namespace Application.Services
             var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
+            if (existingDailyQuest.EndDate.HasValue && updateDto.StartDate.HasValue)
+            {
+                if (existingDailyQuest.EndDate.Value < updateDto.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before start date.");
+            }
+
             _mapper.Map(updateDto, existingDailyQuest);
 
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
@@ -60,6 +66,20 @@ namespace Application.Services
         {
             var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (patchDto.StartDate.HasValue && existingDailyQuest.EndDate.HasValue)
+            {
+                if (patchDto.StartDate.Value > existingDailyQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
+
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (patchDto.EndDate.HasValue && existingDailyQuest.StartDate.HasValue)
+            {
+                if (patchDto.EndDate.Value < existingDailyQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
 
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingDailyQuest.IsCompleted;

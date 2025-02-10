@@ -1,9 +1,13 @@
 using Api.Middlewares;
+using Application.Dtos;
 using Application.Helpers;
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
+using Application.Validators.Quests;
 using Domain.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Quests;
@@ -109,6 +113,13 @@ namespace Api
             builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
             builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
+
+            // Register Validators
+            builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<BasePatchQuestValidator<BasePatchQuestDto>>();
+            builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddFluentValidationClientsideAdapters();
 
             // Register AutoMapper profiles
             builder.Services.AddAutoMapper(cfg =>

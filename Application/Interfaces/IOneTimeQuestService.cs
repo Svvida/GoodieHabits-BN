@@ -4,7 +4,7 @@ using Application.Interfaces.Common;
 namespace Application.Interfaces
 {
     public interface IOneTimeQuestService : IBaseQuestService<
-        OneTimeQuestDto,
+        GetOneTimeQuestDto,
         CreateOneTimeQuestDto,
         UpdateOneTimeQuestDto,
         PatchOneTimeQuestDto>

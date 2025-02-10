@@ -4,7 +4,7 @@ using Application.Interfaces.Common;
 namespace Application.Interfaces
 {
     public interface ISeasonalQuestService : IBaseQuestService<
-        SeasonalQuestDto,
+        GetSeasonalQuestDto,
         CreateSeasonalQuestDto,
         UpdateSeasonalQuestDto,
         PatchSeasonalQuestDto>

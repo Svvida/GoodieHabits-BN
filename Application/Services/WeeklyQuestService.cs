@@ -1,5 +1,4 @@
 ﻿using Application.Dtos.WeeklyQuest;
-using Application.Helpers;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enum;
@@ -20,24 +19,22 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<WeeklyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetWeeklyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
-            return quest is null ? null : _mapper.Map<WeeklyQuestDto>(quest);
+            return quest is null ? null : _mapper.Map<GetWeeklyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<WeeklyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<GetWeeklyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<WeeklyQuestDto>>(quests);
+            return _mapper.Map<IEnumerable<GetWeeklyQuestDto>>(quests);
         }
 
         public async Task<int> CreateAsync(CreateWeeklyQuestDto createDto, CancellationToken cancellationToken = default)
         {
-            QuestValidationHelper.ValidateWeekdays(createDto.Weekdays);
-
             var weeklyQuest = _mapper.Map<WeeklyQuest>(createDto);
 
             weeklyQuest.QuestMetadata.Id = weeklyQuest.Id;
@@ -51,9 +48,6 @@ namespace Application.Services
 
         public async Task UpdateAsync(int id, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            if (updateDto.Weekdays is not null)
-                QuestValidationHelper.ValidateWeekdays(updateDto.Weekdays);
-
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
@@ -64,11 +58,22 @@ namespace Application.Services
 
         public async Task PatchAsync(int id, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            if (patchDto.Weekdays is not null)
-                QuestValidationHelper.ValidateWeekdays(patchDto.Weekdays);
-
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (patchDto.StartDate.HasValue && existingQuest.EndDate.HasValue)
+            {
+                if (patchDto.StartDate.Value > existingQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
+
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (patchDto.EndDate.HasValue && existingQuest.StartDate.HasValue)
+            {
+                if (patchDto.EndDate.Value < existingQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
 
             // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
             bool previousIsCompleted = existingQuest.IsCompleted;

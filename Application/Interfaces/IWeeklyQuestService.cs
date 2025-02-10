@@ -4,7 +4,7 @@ using Application.Interfaces.Common;
 namespace Application.Interfaces
 {
     public interface IWeeklyQuestService : IBaseQuestService<
-        WeeklyQuestDto,
+        GetWeeklyQuestDto,
         CreateWeeklyQuestDto,
         UpdateWeeklyQuestDto,
         PatchWeeklyQuestDto>

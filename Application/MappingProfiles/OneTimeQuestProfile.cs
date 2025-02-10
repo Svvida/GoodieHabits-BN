@@ -11,7 +11,7 @@ namespace Application.MappingProfiles
         public OneTimeQuestProfile()
         {
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<OneTimeQuest, OneTimeQuestDto>()
+            CreateMap<OneTimeQuest, GetOneTimeQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
 
             // Create DTO -> Entity (Convert String -> Enum)

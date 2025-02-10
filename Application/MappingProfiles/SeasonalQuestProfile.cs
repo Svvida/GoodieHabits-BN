@@ -11,7 +11,7 @@ namespace Application.MappingProfiles
         public SeasonalQuestProfile()
         {
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<SeasonalQuest, SeasonalQuestDto>()
+            CreateMap<SeasonalQuest, GetSeasonalQuestDto>()
                 .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.Season.ToString()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
 

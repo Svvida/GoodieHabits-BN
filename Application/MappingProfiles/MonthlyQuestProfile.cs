@@ -11,7 +11,7 @@ namespace Application.MappingProfiles
         public MonthlyQuestProfile()
         {
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<MonthlyQuest, MonthlyQuestDto>()
+            CreateMap<MonthlyQuest, GetMonthlyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
 
             // Create DTO -> Entity (Convert String -> Enum)
