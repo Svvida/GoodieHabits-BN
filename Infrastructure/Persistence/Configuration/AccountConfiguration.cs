@@ -21,7 +21,7 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(a => a.HashPassword)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(500);
 
             builder.Property(a => a.Email)
                 .IsRequired()

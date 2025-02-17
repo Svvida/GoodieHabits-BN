@@ -1,4 +1,5 @@
-﻿using Domain.Enum;
+﻿using Domain.Common;
+using Domain.Enum;
 
 namespace Domain.Models
 {
@@ -19,6 +20,19 @@ namespace Domain.Models
             Id = id;
             QuestType = type;
             AccountId = accountId;
+        }
+
+        public QuestBase? GetActualQuest()
+        {
+            return QuestType switch
+            {
+                QuestTypeEnum.OneTime => OneTimeQuest,
+                QuestTypeEnum.Daily => DailyQuest,
+                QuestTypeEnum.Weekly => WeeklyQuest,
+                QuestTypeEnum.Monthly => MonthlyQuest,
+                QuestTypeEnum.Seasonal => SeasonalQuest,
+                _ => null
+            };
         }
     }
 }

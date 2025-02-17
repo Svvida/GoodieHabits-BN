@@ -4,6 +4,6 @@ namespace Application.Interfaces
 {
     public interface IQuestMetadataService
     {
-        Task<IEnumerable<QuestMetadataDto>> GetAllQuestsAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<GetQuestMetadataDto>> GetAllQuestsAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -16,7 +16,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<QuestMetadataDto>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<GetQuestMetadataDto>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
         {
             return Ok(await _questMetadataService.GetAllQuestsAsync(cancellationToken));
         }

@@ -1,6 +1,5 @@
 using Api.Middlewares;
 using Application.Dtos;
-using Application.Helpers;
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
@@ -131,7 +130,6 @@ namespace Api
                 cfg.AddProfile<SeasonalQuestProfile>();
                 cfg.AddProfile<QuestMetadataProfile>();
             });
-            builder.Services.AddTransient<QuestMetadataResolver>();
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();
