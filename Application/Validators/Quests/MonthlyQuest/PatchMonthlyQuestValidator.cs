@@ -1,4 +1,4 @@
-﻿using Application.Dtos.MonthlyQuest;
+﻿using Application.Dtos.Quests.MonthlyQuest;
 using FluentValidation;
 
 namespace Application.Validators.Quests.MonthlyQuest

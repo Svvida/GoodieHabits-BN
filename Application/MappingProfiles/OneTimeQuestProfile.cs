@@ -1,4 +1,4 @@
-﻿using Application.Dtos.OneTimeQuest;
+﻿using Application.Dtos.Quests.OneTimeQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;

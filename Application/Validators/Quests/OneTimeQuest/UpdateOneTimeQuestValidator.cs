@@ -1,4 +1,4 @@
-﻿using Application.Dtos.OneTimeQuest;
+﻿using Application.Dtos.Quests.OneTimeQuest;
 
 namespace Application.Validators.Quests.OneTimeQuest
 {

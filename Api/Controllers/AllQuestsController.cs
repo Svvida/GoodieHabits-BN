@@ -1,5 +1,5 @@
-﻿using Application.Dtos.QuestMetadata;
-using Application.Interfaces;
+﻿using Application.Dtos.Quests.QuestMetadata;
+using Application.Interfaces.Quests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers

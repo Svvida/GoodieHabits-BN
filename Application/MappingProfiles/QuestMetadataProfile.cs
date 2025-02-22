@@ -1,4 +1,4 @@
-﻿using Application.Dtos.QuestMetadata;
+﻿using Application.Dtos.Quests.QuestMetadata;
 using AutoMapper;
 using Domain.Common;
 using Domain.Models;

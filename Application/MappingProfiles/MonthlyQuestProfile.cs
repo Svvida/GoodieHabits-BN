@@ -1,4 +1,4 @@
-﻿using Application.Dtos.MonthlyQuest;
+﻿using Application.Dtos.Quests.MonthlyQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;

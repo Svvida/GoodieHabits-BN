@@ -1,4 +1,4 @@
-﻿using Application.Dtos;
+﻿using Application.Dtos.Quests;
 using Domain.Enum;
 using FluentValidation;
 

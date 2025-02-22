@@ -1,4 +1,4 @@
-﻿using Application.Dtos.SeasonalQuest;
+﻿using Application.Dtos.Quests.SeasonalQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;

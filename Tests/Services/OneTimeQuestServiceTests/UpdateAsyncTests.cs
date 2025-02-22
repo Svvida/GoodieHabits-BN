@@ -1,7 +1,7 @@
 ﻿using Application.Dtos.OneTimeQuest;
-using Application.Interfaces;
+using Application.Interfaces.Quests;
 using Application.MappingProfiles;
-using Application.Services;
+using Application.Services.Quests;
 using AutoMapper;
 using Domain.Interfaces;
 using Domain.Models;
