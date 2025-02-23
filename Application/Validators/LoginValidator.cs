@@ -1,4 +1,4 @@
-﻿using Application.Dtos;
+﻿using Application.Dtos.Auth;
 using FluentValidation;
 
 namespace Application.Validators
@@ -14,9 +14,9 @@ namespace Application.Validators
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required")
-                .MinimumLength(8).WithMessage("Password must be at least 8 characters long")
+                .MinimumLength(6).WithMessage("Password must be at least 8 characters long")
                 .MaximumLength(50).WithMessage("Password must not exceed 50 characters")
-                .Matches("^[a-zA-Z0-9_#@-]*$")
+                .Matches("^[a-zA-Z0-9_#@!-]*$")
                 .WithMessage("Password must contain only letters, numbers, and the following special characters: _ @ # -");
         }
     }

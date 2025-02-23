@@ -200,7 +200,7 @@ namespace Api
                         ValidateAudience = false,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:AccessToken:Key"]!)),
                         ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
                     };
                 });
@@ -228,42 +228,54 @@ namespace Api
 
         private static void ConfigureMiddleware(WebApplication app)
         {
-            // Handle OPTIONS requests explicitly for Preflight
-            app.Use(async (context, next) =>
+            try
             {
-                if (context.Request.Method == "OPTIONS")
+                // Handle OPTIONS requests explicitly for Preflight
+                app.Use(async (context, next) =>
                 {
-                    var origin = context.Request.Headers.Origin.ToString();
-                    context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
-                    context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-                    context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                    context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-                    context.Response.StatusCode = 204; // No Content
-                    return;
-                }
-                await next();
-            });
+                    if (context.Request.Method == "OPTIONS")
+                    {
+                        var origin = context.Request.Headers.Origin.ToString();
+                        context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
+                        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+                        context.Response.StatusCode = 204; // No Content
+                        return;
+                    }
+                    await next();
+                });
 
-            app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
+                app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
 
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-            app.UseRouting();
+                app.UseMiddleware<ExceptionHandlingMiddleware>();
+                app.UseRouting();
 
-            // Enable Swagger in all environments
-            app.UseSwagger();
-            app.UseSwaggerUI();
+                // Enable Swagger in all environments
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
+                    options.RoutePrefix = string.Empty; // Root path
+                });
 
-            // Enable HTTPS Redirection
-            app.UseHttpsRedirection();
+                // Enable HTTPS Redirection
+                app.UseHttpsRedirection();
 
-            //Enable Authentication
-            app.UseAuthentication();
+                //Enable Authentication
+                app.UseAuthentication();
 
-            // Enable Authorization
-            app.UseAuthorization();
+                // Enable Authorization
+                app.UseAuthorization();
 
-            // Map Controllers
-            app.MapControllers();
+                // Map Controllers
+                app.MapControllers();
+                Log.Information("Middleware configured successfully.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while configuring the middleware.");
+            }
         }
     }
 }

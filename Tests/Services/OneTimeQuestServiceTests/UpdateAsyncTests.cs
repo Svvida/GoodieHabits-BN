@@ -1,4 +1,4 @@
-﻿using Application.Dtos.OneTimeQuest;
+﻿using Application.Dtos.Quests.OneTimeQuest;
 using Application.Interfaces.Quests;
 using Application.MappingProfiles;
 using Application.Services.Quests;

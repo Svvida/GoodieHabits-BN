@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos
+﻿namespace Application.Dtos.Auth
 {
     /// <summary>
     /// DTO for user login.

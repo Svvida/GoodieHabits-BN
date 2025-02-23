@@ -10,6 +10,9 @@
 appsettings.Production.json
 appsettings.Development.json
 
+# Web config
+web.config
+
 # User-specific files
 *.rsuser
 *.suo

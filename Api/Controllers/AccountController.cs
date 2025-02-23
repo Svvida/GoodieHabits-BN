@@ -38,7 +38,6 @@ namespace Api.Controllers
                     Detail = $"Account with ID {id} was not found"
                 });
             }
-
             return Ok(account);
         }
 
