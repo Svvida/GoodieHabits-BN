@@ -1,10 +1,10 @@
-﻿using Application.Dtos;
+﻿using Application.Dtos.Accounts;
 
 namespace Application.Interfaces
 {
     public interface IAccountService
     {
-        Task<IEnumerable<AccountDto>> GetAllAccountsAsync();
-        Task<AccountDto?> GetAccountByIdAsync(int id);
+        Task<IEnumerable<GetAccountDto>> GetAllAccountsAsync(CancellationToken cancellationToken = default);
+        Task<GetAccountDto?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default);
     }
 }

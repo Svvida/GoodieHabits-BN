@@ -1,5 +1,6 @@
-﻿using Application.Dtos.WeeklyQuest;
-using Application.Interfaces;
+﻿using System.Security.Claims;
+using Application.Dtos.Quests.WeeklyQuest;
+using Application.Interfaces.Quests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -41,6 +42,11 @@ namespace Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var accountIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(accountIdString) || !int.TryParse(accountIdString, out var accountId))
+                return Unauthorized("Account id is missing or invalid");
+
+            createDto.AccountId = accountId;
             var createdId = await _service.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
         }

@@ -6,8 +6,12 @@
 # dotenv files
 .env
 
-# appsettings.Production.json
+# Environment specific app settings
 appsettings.Production.json
+appsettings.Development.json
+
+# Web config
+web.config
 
 # User-specific files
 *.rsuser

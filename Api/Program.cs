@@ -1,17 +1,28 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using Api.Middlewares;
-using Application.Dtos;
-using Application.Helpers;
+using Application.Configurations;
+using Application.Dtos.Quests;
 using Application.Interfaces;
+using Application.Interfaces.Quests;
 using Application.MappingProfiles;
 using Application.Services;
+using Application.Services.Quests;
+using Application.Validators;
 using Application.Validators.Quests;
 using Domain.Interfaces;
+using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Quests;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 namespace Api
@@ -91,10 +102,34 @@ namespace Api
 
             // Add Swagger for API Documentation
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
+            builder.Services.AddSwaggerGen(options =>
             {
-                c.UseAllOfToExtendReferenceSchemas();
+                options.UseAllOfToExtendReferenceSchemas();
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter ONLY token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
             });
+            builder.Services.AddFluentValidationRulesToSwagger();
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -113,11 +148,14 @@ namespace Api
             builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
             builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<BasePatchQuestValidator<BasePatchQuestDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
@@ -130,8 +168,8 @@ namespace Api
                 cfg.AddProfile<MonthlyQuestProfile>();
                 cfg.AddProfile<SeasonalQuestProfile>();
                 cfg.AddProfile<QuestMetadataProfile>();
+                cfg.AddProfile<AccountProfile>();
             });
-            builder.Services.AddTransient<QuestMetadataResolver>();
 
             // Register Database Seeder
             builder.Services.AddScoped<DataSeeder>();
@@ -141,6 +179,35 @@ namespace Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .EnableSensitiveDataLogging()
                 .LogTo(Console.WriteLine, LogLevel.Information));
+
+            // Register Password Hasher
+            builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
+            builder.Services.Configure<PasswordHasherOptions>(options =>
+            {
+                options.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+                options.IterationCount = 100000;
+            });
+
+            // Register configurations
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+            // Configure Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Default is not necessary since we use only one scheme
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:AccessToken:Key"]!)),
+                        ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
+                    };
+                });
+
+            // Register Token Handler
+            builder.Services.AddSingleton<JwtSecurityTokenHandler>();
         }
 
         private static async Task SeedDatabaseAsync(WebApplication app)
@@ -165,40 +232,54 @@ namespace Api
 
         private static void ConfigureMiddleware(WebApplication app)
         {
-            // Handle OPTIONS requests explicitly for Preflight
-            app.Use(async (context, next) =>
+            try
             {
-                if (context.Request.Method == "OPTIONS")
+                // Handle OPTIONS requests explicitly for Preflight
+                app.Use(async (context, next) =>
                 {
-                    var origin = context.Request.Headers.Origin.ToString();
-                    context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
-                    context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-                    context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                    context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-                    context.Response.StatusCode = 204; // No Content
-                    return;
-                }
-                await next();
-            });
+                    if (context.Request.Method == "OPTIONS")
+                    {
+                        var origin = context.Request.Headers.Origin.ToString();
+                        context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
+                        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+                        context.Response.StatusCode = 204; // No Content
+                        return;
+                    }
+                    await next();
+                });
 
-            app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
+                app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
 
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-            app.UseRouting();
+                app.UseMiddleware<ExceptionHandlingMiddleware>();
+                app.UseRouting();
 
-            // Enable Swagger in all environments
-            app.UseSwagger();
-            app.UseSwaggerUI();
+                // Enable Swagger in all environments
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
+                    options.RoutePrefix = string.Empty; // Root path
+                });
 
-            // Enable HTTPS Redirection
-            app.UseHttpsRedirection();
+                // Enable HTTPS Redirection
+                app.UseHttpsRedirection();
 
+                //Enable Authentication
+                app.UseAuthentication();
 
-            // Enable Authorization
-            app.UseAuthorization();
+                // Enable Authorization
+                app.UseAuthorization();
 
-            // Map Controllers
-            app.MapControllers();
+                // Map Controllers
+                app.MapControllers();
+                Log.Information("Middleware configured successfully.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while configuring the middleware.");
+            }
         }
     }
 }

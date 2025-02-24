@@ -1,4 +1,4 @@
-﻿using Application.Dtos.DailyQuest;
+﻿using Application.Dtos.Quests.DailyQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;

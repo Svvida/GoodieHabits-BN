@@ -16,12 +16,12 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(a => a.Username).IsUnique();
 
             builder.Property(a => a.Username)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(50);
 
             builder.Property(a => a.HashPassword)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(500);
 
             builder.Property(a => a.Email)
                 .IsRequired()

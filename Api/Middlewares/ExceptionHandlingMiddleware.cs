@@ -1,4 +1,5 @@
 ﻿using Domain.Exceptions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Middlewares
 {
@@ -27,9 +28,25 @@ namespace Api.Middlewares
                 context.Response.StatusCode = ex.StatusCode;
                 await HandleExceptionAsync(context, ex);
             }
+            catch (SecurityTokenException ex)
+            {
+                _logger.LogError("Caught SecurityTokenException: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
+                context.Response.StatusCode = 401;
+                await HandleExceptionAsync(context, ex);
+            }
             catch (Exception ex) // Catch unexpected exceptions
             {
-                _logger.LogError("Caught unhandled exception: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
+                var exceptionDetails = new
+                {
+                    ExceptionType = ex.GetType().Name,
+                    ex.Message,
+                    ex.StackTrace,
+                    ex.Source,
+                    TargetSite = ex.TargetSite?.Name,
+                    InnerException = ex.InnerException?.Message
+                };
+
+                _logger.LogError("Caught unhandled exception: {@ExceptionDetails}", exceptionDetails);
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await HandleExceptionAsync(context, new Exception(ex.Message));
             }

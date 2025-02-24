@@ -1,4 +1,4 @@
-﻿using Application.Dtos.WeeklyQuest;
+﻿using Application.Dtos.Quests.WeeklyQuest;
 using Domain.Enum;
 using FluentValidation;
 

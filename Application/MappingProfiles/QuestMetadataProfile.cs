@@ -1,6 +1,6 @@
-﻿using Application.Dtos.QuestMetadata;
-using Application.Helpers;
+﻿using Application.Dtos.Quests.QuestMetadata;
 using AutoMapper;
+using Domain.Common;
 using Domain.Models;
 
 namespace Application.MappingProfiles
@@ -9,9 +9,19 @@ namespace Application.MappingProfiles
     {
         public QuestMetadataProfile()
         {
-            CreateMap<QuestMetadata, QuestMetadataDto>()
-                //.ForMember(dest => dest.QuestType, opt => opt.MapFrom(src => src.QuestType.ToString()))
-                .ForMember(dest => dest.Quest, opt => opt.MapFrom<QuestMetadataResolver>());
+            // Map QuestMetadata -> GetQuestMetadataDto
+            CreateMap<QuestMetadata, GetQuestMetadataDto>()
+                .IncludeMembers(src => src.GetActualQuest());
+
+            // Explicitly map QuestBase -> GetQuestMetadataDto
+            CreateMap<QuestBase, GetQuestMetadataDto>();
+
+            // Map each subclass of QuestBase directly to GetQuestMetadataDto
+            CreateMap<OneTimeQuest, GetQuestMetadataDto>();
+            CreateMap<DailyQuest, GetQuestMetadataDto>();
+            CreateMap<WeeklyQuest, GetQuestMetadataDto>();
+            CreateMap<MonthlyQuest, GetQuestMetadataDto>();
+            CreateMap<SeasonalQuest, GetQuestMetadataDto>();
         }
     }
 }
