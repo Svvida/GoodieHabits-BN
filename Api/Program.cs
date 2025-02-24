@@ -155,6 +155,7 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<BasePatchQuestValidator<BasePatchQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<PatchAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();

@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using Application.Configurations;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
@@ -43,8 +44,17 @@ namespace Application.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByEmailAsync(loginDto.Login, cancellationToken)
+            Account account;
+            if (IsEmail(loginDto.Login))
+            {
+                account = await _accountRepository.GetByEmailAsync(loginDto.Login, cancellationToken)
+                ?? throw new NotFoundException($"Account with email: {loginDto.Login} not found");
+            }
+            else
+            {
+                account = await _accountRepository.GetByUsernameAsync(loginDto.Login, cancellationToken)
                 ?? throw new NotFoundException($"Account with login: {loginDto.Login} not found");
+            }
 
             var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, loginDto.Password);
 
@@ -161,6 +171,9 @@ namespace Application.Services
 
             return _jwtSecurityTokenHandler.WriteToken(token);
         }
+
+        private static bool IsEmail(string login) =>
+            Regex.IsMatch(login, @"^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
     }
 
     public static class JwtClaimTypes

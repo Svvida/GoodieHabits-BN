@@ -34,12 +34,25 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<GetAccountDto>>(accounts);
         }
 
-        public async Task<GetAccountDto?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetAccountDto?> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID {id} was not found");
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {accountId} was not found");
 
             return _mapper.Map<GetAccountDto>(account);
+        }
+
+        public async Task PatchAccountAsync(int accountId, PatchAccountDto patchDto, CancellationToken cancellationToken = default)
+        {
+            if (_accountRepository.GetByUsernameAsync(patchDto.Username!, cancellationToken) is not null)
+                throw new ConflictException($"Username {patchDto.Username} is already in use");
+
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {accountId} was not found");
+
+            _mapper.Map(patchDto, account);
+
+            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
         }
     }
 }

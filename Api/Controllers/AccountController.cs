@@ -40,5 +40,20 @@ namespace Api.Controllers
             }
             return Ok(account);
         }
+
+        [HttpPatch("accounts/{id:int}")]
+        public async Task<IActionResult> PatchAccount(
+            int id,
+            PatchAccountDto patchDto,
+            CancellationToken cancellationToken = default)
+        {
+            var trimmedData = new PatchAccountDto
+            {
+                Username = patchDto.Username!.Trim()
+            };
+
+            await _accountService.PatchAccountAsync(id, trimmedData, cancellationToken);
+            return NoContent();
+        }
     }
 }
