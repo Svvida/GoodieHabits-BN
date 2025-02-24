@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Auth;
+﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,10 +21,36 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
-        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
+        public async Task<ActionResult<AuthResponseDto>> Login(
+            [FromBody] LoginDto loginDto,
+            CancellationToken cancellationToken = default)
         {
-            var authResponse = await _authService.LoginAsync(loginDto);
+            var trimmedData = new LoginDto
+            {
+                Login = loginDto.Login.Trim(),
+                Password = loginDto.Password.Trim()
+            };
+
+            var authResponse = await _authService.LoginAsync(trimmedData, cancellationToken);
             return Ok(authResponse);
+        }
+
+
+        [HttpPost]
+        [Route("register")]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AuthResponseDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        public async Task<ActionResult<AuthResponseDto>> CreateAccount(
+            [FromBody] CreateAccountDto createDto,
+            CancellationToken cancellationToken = default)
+        {
+            var trimmedData = new CreateAccountDto
+            {
+                Email = createDto.Email.Trim(),
+                Password = createDto.Password.Trim()
+            };
+            var authResponse = await _authService.RegisterAsync(trimmedData, cancellationToken);
+            return Created(nameof(CreateAccount), authResponse);
         }
 
         [HttpPost]
@@ -31,12 +58,11 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RefreshResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
-        public async Task<ActionResult<RefreshResponseDto>> RefreshToken([FromBody] RefreshRequestDto refreshRequestDto)
+        public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
+            [FromBody] RefreshRequestDto refreshRequestDto,
+            CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken);
+            var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken.Trim(), cancellationToken);
             return Ok(refreshResponse);
         }
     }

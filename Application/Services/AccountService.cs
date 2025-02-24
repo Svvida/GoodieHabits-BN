@@ -41,19 +41,5 @@ namespace Application.Services
 
             return _mapper.Map<GetAccountDto>(account);
         }
-
-        public async Task<int> CreateAccountAsync(CreateAccountDto createDto, CancellationToken cancellationToken = default)
-        {
-            if (await _accountRepository.GetByEmailAsync(createDto.Email, cancellationToken) != null)
-                throw new ConflictException($"Account with email {createDto.Email} already exists");
-
-            var accountEntity = _mapper.Map<Account>(createDto);
-
-            accountEntity.HashPassword = _passwordHasher.HashPassword(accountEntity, createDto.Password);
-
-            await _accountRepository.AddAsync(accountEntity, cancellationToken).ConfigureAwait(false);
-
-            return accountEntity.Id;
-        }
     }
 }

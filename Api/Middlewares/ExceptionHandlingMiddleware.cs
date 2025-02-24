@@ -1,4 +1,5 @@
 ﻿using Domain.Exceptions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Middlewares
 {
@@ -25,6 +26,12 @@ namespace Api.Middlewares
             {
                 _logger.LogWarning("Caught AppException: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
                 context.Response.StatusCode = ex.StatusCode;
+                await HandleExceptionAsync(context, ex);
+            }
+            catch (SecurityTokenException ex)
+            {
+                _logger.LogError("Caught SecurityTokenException: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
+                context.Response.StatusCode = 401;
                 await HandleExceptionAsync(context, ex);
             }
             catch (Exception ex) // Catch unexpected exceptions

@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Api.Middlewares;
 using Application.Configurations;
@@ -204,6 +205,9 @@ namespace Api
                         ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
                     };
                 });
+
+            // Register Token Handler
+            builder.Services.AddSingleton<JwtSecurityTokenHandler>();
         }
 
         private static async Task SeedDatabaseAsync(WebApplication app)

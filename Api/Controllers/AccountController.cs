@@ -40,18 +40,5 @@ namespace Api.Controllers
             }
             return Ok(account);
         }
-
-        [HttpPost]
-        [Route("register")]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(int))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<ActionResult> CreateAccount([FromBody] CreateAccountDto createDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var accountId = await _accountService.CreateAccountAsync(createDto);
-            return CreatedAtAction(nameof(GetAccount), new { id = accountId }, new { id = accountId });
-        }
     }
 }
