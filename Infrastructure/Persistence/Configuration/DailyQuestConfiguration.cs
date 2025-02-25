@@ -40,6 +40,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(dq => dq.UpdatedAt)
                 .IsRequired(false);
 
+            builder.Property(dq => dq.LastCompleted)
+                .IsRequired(false);
+
             builder.HasOne(dq => dq.QuestMetadata)
                 .WithOne(qm => qm.DailyQuest)
                 .HasForeignKey<DailyQuest>(dq => dq.Id)

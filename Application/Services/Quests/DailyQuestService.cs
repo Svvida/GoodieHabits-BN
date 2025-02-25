@@ -5,6 +5,7 @@ using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
@@ -12,11 +13,16 @@ namespace Application.Services.Quests
     {
         private readonly IDailyQuestRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<DailyQuestService> _logger;
 
-        public DailyQuestService(IDailyQuestRepository repository, IMapper mapper)
+        public DailyQuestService(
+            IDailyQuestRepository repository,
+            IMapper mapper,
+            ILogger<DailyQuestService> logger)
         {
             _repository = repository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<GetDailyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -80,16 +86,10 @@ namespace Application.Services.Quests
                 if (patchDto.EndDate.Value < existingDailyQuest.StartDate.Value)
                     throw new InvalidArgumentException("End date cannot be before the existing start date.");
             }
-
-            // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
-            bool previousIsCompleted = existingDailyQuest.IsCompleted;
-
-            // Apply AutoMapper Mapping (Ignores Nulls)
             _mapper.Map(patchDto, existingDailyQuest);
 
-            // **Fix: Restore IsCompleted If Not Provided**
-            if (patchDto.IsCompleted is null)
-                existingDailyQuest.IsCompleted = previousIsCompleted;
+            if (existingDailyQuest.IsCompleted == false && patchDto.IsCompleted == true)
+                existingDailyQuest.LastCompleted = DateTime.UtcNow;
 
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
         }
