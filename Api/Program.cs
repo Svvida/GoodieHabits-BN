@@ -63,10 +63,11 @@ namespace Api
             ConfigureMiddleware(app);
 
             // Reset daily questes on startup
-            await ResetQuestsAsync(app);
+            ResetQuestsAsync(app);
 
             Log.Information("Application started");
             await app.RunAsync();
+
         }
 
         private static void ConfigureLogger()
