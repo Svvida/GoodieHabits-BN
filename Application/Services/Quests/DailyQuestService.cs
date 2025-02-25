@@ -86,10 +86,12 @@ namespace Application.Services.Quests
                 if (patchDto.EndDate.Value < existingDailyQuest.StartDate.Value)
                     throw new InvalidArgumentException("End date cannot be before the existing start date.");
             }
-            _mapper.Map(patchDto, existingDailyQuest);
 
             if (existingDailyQuest.IsCompleted == false && patchDto.IsCompleted == true)
                 existingDailyQuest.LastCompleted = DateTime.UtcNow;
+
+            _mapper.Map(patchDto, existingDailyQuest);
+
 
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
         }

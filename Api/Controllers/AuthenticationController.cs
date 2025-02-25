@@ -17,7 +17,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        [Route("login")]
+        [Route("auth/login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
@@ -54,7 +54,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        [Route("refresh-token")]
+        [Route("auth/refresh-token")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RefreshResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
