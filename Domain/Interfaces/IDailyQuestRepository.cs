@@ -3,7 +3,5 @@ using Domain.Models;
 
 namespace Domain.Interfaces
 {
-    public interface IDailyQuestRepository : IBaseRepository<DailyQuest>
-    {
-    }
+    public interface IDailyQuestRepository : IBaseRepository<DailyQuest> { }
 }

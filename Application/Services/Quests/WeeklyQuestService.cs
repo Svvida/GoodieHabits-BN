@@ -75,16 +75,11 @@ namespace Application.Services.Quests
                     throw new InvalidArgumentException("End date cannot be before the existing start date.");
             }
 
-            // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
-            bool previousIsCompleted = existingQuest.IsCompleted;
+            // **Fix: Manually Preserve WeekDays Before AutoMapper Mapping**
             List<WeekdayEnum> previousWeekdays = existingQuest.Weekdays;
 
-            // Apply AutoMapper Mapping (Ignores Nulls)
             _mapper.Map(patchDto, existingQuest);
 
-            // **Fix: Restore IsCompleted If Not Provided**
-            if (patchDto.IsCompleted is null)
-                existingQuest.IsCompleted = previousIsCompleted;
             // **Fix: Restore Weekdays If Not Provided**
             if (patchDto.Weekdays is null)
                 existingQuest.Weekdays = previousWeekdays;

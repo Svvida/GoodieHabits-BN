@@ -75,16 +75,7 @@ namespace Application.Services.Quests
                     throw new InvalidArgumentException("End date cannot be before the existing start date.");
             }
 
-            // **Fix: Manually Preserve IsCompleted Before AutoMapper Mapping**
-            bool previousIsCompleted = existingSeasonalQuest.IsCompleted;
-
-            // Apply AutoMapper Mapping (Ignores Nulls)
             _mapper.Map(patchDto, existingSeasonalQuest);
-
-            // **Fix: Restore IsCompleted If Not Provided**
-            if (patchDto.IsCompleted is null)
-                existingSeasonalQuest.IsCompleted = previousIsCompleted;
-
 
             await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
         }

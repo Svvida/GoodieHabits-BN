@@ -26,7 +26,7 @@ namespace Application.MappingProfiles
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<PatchSeasonalQuestDto, SeasonalQuest>()
-                .ForMember(dest => dest.IsCompleted, opt => opt.Condition(src => src.IsCompleted.HasValue))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom((src, dest) => src.IsCompleted ?? dest.IsCompleted))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 

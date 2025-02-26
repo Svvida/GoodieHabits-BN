@@ -62,8 +62,12 @@ namespace Api
             // Configure Middleware
             ConfigureMiddleware(app);
 
+            // Reset daily questes on startup
+            ResetQuestsAsync(app);
+
             Log.Information("Application started");
             await app.RunAsync();
+
         }
 
         private static void ConfigureLogger()
@@ -139,6 +143,7 @@ namespace Api
             builder.Services.AddScoped<IMonthlyQuestRepository, MonthlyQuestRepository>();
             builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
             builder.Services.AddScoped<IQuestMetadataRepository, QuestMetadataRepository>();
+            builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -149,6 +154,7 @@ namespace Api
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
             builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -229,6 +235,14 @@ namespace Api
 
             var seeder = serviceProvider.GetRequiredService<DataSeeder>();
             await seeder.SeedAsync();
+        }
+
+        private static async Task ResetQuestsAsync(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var questsResetService = serviceProvider.GetRequiredService<IQuestResetService>();
+            await questsResetService.ResetDailyQuestsAsync();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

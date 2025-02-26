@@ -8,11 +8,14 @@ namespace Application.Validators.Quests.WeeklyQuest
     {
         public PatchWeeklyQuestValidator()
         {
-            RuleForEach(x => x.Weekdays)
-                .NotEmpty().WithMessage("Each weekday must be a valid name.")
-                .IsEnumName(typeof(WeekdayEnum), caseSensitive: true)
-                .WithMessage("{PropertyName} must be a valid weekday name: 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'.")
-                .When(x => x.Weekdays.Count > 0 && x.Weekdays != null);
+            RuleFor(x => x.Weekdays)
+                .NotEmpty().WithMessage("{PropertyName} can't be empty.")
+                .When(x => x.Weekdays is not null)
+                .ForEach(weekday =>
+                {
+                    weekday.IsEnumName(typeof(WeekdayEnum), caseSensitive: true)
+                        .WithMessage("{PropertyName} must be a valid weekday name: 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'.");
+                });
         }
     }
 }

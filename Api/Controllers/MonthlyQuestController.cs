@@ -1,6 +1,7 @@
-﻿using System.Security.Claims;
-using Application.Dtos.Quests.MonthlyQuest;
+﻿using Application.Dtos.Quests.MonthlyQuest;
 using Application.Interfaces.Quests;
+using Application.Services;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -39,12 +40,9 @@ namespace Api.Controllers
             [FromBody] CreateMonthlyQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var accountIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(accountIdString) || !int.TryParse(accountIdString, out var accountId))
-                return Unauthorized("Account id is missing or invalid");
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
             createDto.AccountId = accountId;
 
