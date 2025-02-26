@@ -5,6 +5,7 @@ using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
@@ -12,18 +13,36 @@ namespace Application.Services.Quests
     {
         private readonly IWeeklyQuestRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<WeeklyQuestService> _logger;
 
-        public WeeklyQuestService(IWeeklyQuestRepository repository, IMapper mapper)
+        public WeeklyQuestService(
+            IWeeklyQuestRepository repository,
+            IMapper mapper,
+            ILogger<WeeklyQuestService> logger)
         {
             _repository = repository;
             _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<GetWeeklyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetWeeklyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<GetWeeklyQuestDto>(quest);
+        }
+
+        public async Task<GetWeeklyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetByIdAsync(questId, cancellationToken, wq => wq.QuestMetadata);
+
+            if (quest is null)
+                return null;
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            return _mapper.Map<GetWeeklyQuestDto>(quest);
         }
 
         public async Task<IEnumerable<GetWeeklyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)

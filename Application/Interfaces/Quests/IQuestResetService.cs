@@ -2,6 +2,6 @@
 {
     public interface IQuestResetService
     {
-        Task ResetDailyQuestsAsync(CancellationToken cancellationToken = default);
+        void ResetDailyQuestsAsync(CancellationToken cancellationToken = default);
     }
 }

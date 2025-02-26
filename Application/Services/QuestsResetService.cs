@@ -12,10 +12,9 @@ namespace Application.Services
             _resetQuestRepository = resetQuestRepository;
         }
 
-        public async Task ResetDailyQuestsAsync(CancellationToken cancellationToken = default)
+        public void ResetDailyQuestsAsync(CancellationToken cancellationToken = default)
         {
-            await _resetQuestRepository.ResetDailyQuestsAsync(cancellationToken)
-                .ConfigureAwait(false);
+            _resetQuestRepository.ResetDailyQuestsAsync(cancellationToken);
         }
     }
 }

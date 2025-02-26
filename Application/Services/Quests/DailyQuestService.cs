@@ -25,11 +25,24 @@ namespace Application.Services.Quests
             _logger = logger;
         }
 
-        public async Task<GetDailyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetDailyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<GetDailyQuestDto>(quest);
+        }
+
+        public async Task<GetDailyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetByIdAsync(questId, cancellationToken, dq => dq.QuestMetadata);
+
+            if (quest is null)
+                return null;
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            return _mapper.Map<GetDailyQuestDto>(quest);
         }
 
         public async Task<IEnumerable<GetDailyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)

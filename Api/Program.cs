@@ -63,7 +63,7 @@ namespace Api
             ConfigureMiddleware(app);
 
             // Reset daily questes on startup
-            ResetQuestsAsync(app);
+            ResetQuests(app);
 
             Log.Information("Application started");
             await app.RunAsync();
@@ -237,12 +237,12 @@ namespace Api
             await seeder.SeedAsync();
         }
 
-        private static async Task ResetQuestsAsync(WebApplication app)
+        private static void ResetQuests(WebApplication app)
         {
             using var scope = app.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
             var questsResetService = serviceProvider.GetRequiredService<IQuestResetService>();
-            await questsResetService.ResetDailyQuestsAsync();
+            questsResetService.ResetDailyQuestsAsync();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

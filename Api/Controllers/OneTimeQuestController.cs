@@ -10,29 +10,40 @@ namespace Api.Controllers
     [ApiController]
     public class OneTimeQuestController : ControllerBase
     {
-        private readonly IOneTimeQuestService _oneTimeQuestService;
+        private readonly IOneTimeQuestService _service;
 
         public OneTimeQuestController(
             IOneTimeQuestService oneTimeQuestService)
         {
-            _oneTimeQuestService = oneTimeQuestService;
+            _service = oneTimeQuestService;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<GetOneTimeQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetOneTimeQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var oneTimeQuest = await _oneTimeQuestService.GetByIdAsync(id, cancellationToken);
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
-            if (oneTimeQuest is null)
-                return NotFound();
+            var quest = await _service.GetUserQuestByIdAsync(id, accountId, cancellationToken);
 
-            return Ok(oneTimeQuest);
+            if (quest is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Quest not found",
+                    Detail = $"Quest with ID {id} was not found"
+                });
+            }
+
+            return Ok(quest);
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetOneTimeQuestDto>>> GetAll(CancellationToken cancellationToken = default)
         {
-            var quests = await _oneTimeQuestService.GetAllAsync(cancellationToken);
+            var quests = await _service.GetAllAsync(cancellationToken);
             return Ok(quests);
         }
 
@@ -47,8 +58,8 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
+            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
         [HttpPatch("{id}")]
@@ -60,7 +71,7 @@ namespace Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _oneTimeQuestService.PatchAsync(id, patchDto, cancellationToken);
+            await _service.PatchAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }
@@ -74,14 +85,14 @@ namespace Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _oneTimeQuestService.UpdateAsync(id, updateDto, cancellationToken);
+            await _service.UpdateAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await _oneTimeQuestService.DeleteAsync(id, cancellationToken);
+            await _service.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }

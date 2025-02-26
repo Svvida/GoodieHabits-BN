@@ -19,11 +19,24 @@ namespace Application.Services.Quests
             _mapper = mapper;
         }
 
-        public async Task<GetMonthlyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetMonthlyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<GetMonthlyQuestDto>(quest);
+        }
+
+        public async Task<GetMonthlyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetByIdAsync(questId, cancellationToken, mq => mq.QuestMetadata);
+
+            if (quest is null)
+                return null;
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            return _mapper.Map<GetMonthlyQuestDto>(quest);
         }
 
         public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)

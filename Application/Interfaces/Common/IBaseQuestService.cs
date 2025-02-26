@@ -6,7 +6,10 @@
         where TUpdateDto : class
         where TPatchDto : class
     {
-        Task<TDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        // For admins: No account validation
+        Task<TDto?> GetQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
+        // For users: Validate if quest belongs to the user
+        Task<TDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default);
         Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<int> CreateAsync(TCreateDto createDto, CancellationToken cancellationToken = default);
         Task UpdateAsync(int id, TUpdateDto updateDto, CancellationToken cancellationToken = default);

@@ -18,12 +18,23 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<GetWeeklyQuestDto>> GetById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetWeeklyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _service.GetByIdAsync(id, cancellationToken);
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+
+            var quest = await _service.GetUserQuestByIdAsync(id, accountId, cancellationToken);
 
             if (quest is null)
-                return NotFound();
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Quest not found",
+                    Detail = $"Quest with ID {id} was not found"
+                });
+            }
 
             return Ok(quest);
         }
@@ -46,7 +57,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
             var createdId = await _service.CreateAsync(createDto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = createdId }, new { id = createdId });
+            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
         [HttpPatch("{id}")]
