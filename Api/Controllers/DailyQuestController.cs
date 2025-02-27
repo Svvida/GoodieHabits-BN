@@ -71,12 +71,12 @@ namespace Api.Controllers
             [FromBody] PatchDailyQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
-            await _service.PatchAsync(id, patchDto, cancellationToken);
+            await _service.PatchUserQuestAsync(id, accountId, patchDto, cancellationToken);
             return NoContent();
-
         }
 
         [HttpPut("{id}")]
@@ -85,10 +85,11 @@ namespace Api.Controllers
             [FromBody] UpdateDailyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
-            await _service.UpdateAsync(id, updateDto, cancellationToken);
+            await _service.UpdateUserQuestAsync(id, accountId, updateDto, cancellationToken);
             return NoContent();
         }
 

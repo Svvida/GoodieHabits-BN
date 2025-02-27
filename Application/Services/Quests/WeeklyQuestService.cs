@@ -71,20 +71,26 @@ namespace Application.Services.Quests
             return weeklyQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             _mapper.Map(updateDto, existingQuest);
 
             await _repository.UpdateAsync(existingQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            if (existingQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingQuest.EndDate.HasValue)

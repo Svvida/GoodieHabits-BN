@@ -70,20 +70,26 @@ namespace Application.Services.Quests
             return oneTimeQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
+
+            if (existingOneTimeQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             _mapper.Map(updateDto, existingOneTimeQuest);
 
             await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
+
+            if (existingOneTimeQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingOneTimeQuest.EndDate.HasValue)

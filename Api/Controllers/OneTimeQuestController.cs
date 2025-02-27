@@ -67,29 +67,31 @@ namespace Api.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdatePartial(
+        public async Task<IActionResult> UpdateUserQuestPartial(
             int id,
             [FromBody] PatchOneTimeQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
-            await _service.PatchAsync(id, patchDto, cancellationToken);
+            await _service.PatchUserQuestAsync(id, accountId, patchDto, cancellationToken);
             return NoContent();
 
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
+        public async Task<IActionResult> UpdateUserQuest(
             int id,
             [FromBody] UpdateOneTimeQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
 
-            await _service.UpdateAsync(id, updateDto, cancellationToken);
+            await _service.UpdateUserQuestAsync(id, accountId, updateDto, cancellationToken);
             return NoContent();
         }
 

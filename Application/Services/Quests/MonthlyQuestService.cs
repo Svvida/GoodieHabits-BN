@@ -65,20 +65,26 @@ namespace Application.Services.Quests
             return monthlyQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            _mapper.Map(updateDto, existingDailyQuest);
+            if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
+            _mapper.Map(updateDto, existingMonthlyQuest);
+
+            await _repository.UpdateAsync(existingMonthlyQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingMonthlyQuest.EndDate.HasValue)

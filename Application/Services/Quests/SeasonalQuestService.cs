@@ -63,20 +63,26 @@ namespace Application.Services.Quests
             return seasonalQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateSeasonalQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateSeasonalQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             _mapper.Map(updateDto, existingSeasonalQuest);
 
             await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingSeasonalQuest.EndDate.HasValue)

@@ -72,10 +72,13 @@ namespace Application.Services.Quests
             return dailyQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateDailyQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateDailyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            if (existingDailyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             if (existingDailyQuest.EndDate.HasValue && updateDto.StartDate.HasValue)
             {
@@ -88,10 +91,13 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchDailyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchDailyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+
+            if (existingDailyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingDailyQuest.EndDate.HasValue)

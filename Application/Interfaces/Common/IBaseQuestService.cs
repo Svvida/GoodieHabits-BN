@@ -13,8 +13,8 @@
         Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<TDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default);
         Task<int> CreateAsync(TCreateDto createDto, CancellationToken cancellationToken = default);
-        Task UpdateAsync(int id, TUpdateDto updateDto, CancellationToken cancellationToken = default);
-        Task PatchAsync(int id, TPatchDto patchDto, CancellationToken cancellationToken = default);
+        Task UpdateUserQuestAsync(int id, int accountId, TUpdateDto updateDto, CancellationToken cancellationToken = default);
+        Task PatchUserQuestAsync(int id, int accountId, TPatchDto patchDto, CancellationToken cancellationToken = default);
         Task DeleteAsync(int id, CancellationToken cancellationToken = default);
     }
 }

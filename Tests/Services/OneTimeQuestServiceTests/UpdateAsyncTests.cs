@@ -36,6 +36,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
         {
             // Arrange
             var questId = 1;
+            var accountId = 1;
             var questBeforeUpdate = new OneTimeQuest { Id = questId, Title = "Before update", Description = "Should be null after update" };
             var updateValues = new UpdateOneTimeQuestDto { Title = "After update" };
 
@@ -49,7 +50,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
                 .Verifiable();
 
             // Act
-            await _service.UpdateAsync(questId, updateValues, CancellationToken.None);
+            await _service.UpdateUserQuestAsync(questId, accountId, updateValues, CancellationToken.None);
 
             // Assert
             _repositoryMock.Verify(repo => repo.UpdateAsync(It.Is<OneTimeQuest>(
