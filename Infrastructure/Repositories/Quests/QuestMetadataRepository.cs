@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories.Quests
             _context = context;
         }
 
-        public async Task<IEnumerable<QuestMetadata>> GetTodaysQuestsAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<QuestMetadata>> GetTodaysQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
             DateTime today = DateTime.UtcNow.Date;
 
@@ -25,6 +25,7 @@ namespace Infrastructure.Repositories.Quests
                 .Include(q => q.MonthlyQuest)
                 .Include(q => q.SeasonalQuest)
                 .Where(q =>
+                    q.AccountId == accountId && (
                     (q.OneTimeQuest != null &&
                     (!q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.StartDate.Value.Date <= today) &&
                     (!q.OneTimeQuest.EndDate.HasValue || q.OneTimeQuest.EndDate.Value.Date >= today)) ||
@@ -44,7 +45,7 @@ namespace Infrastructure.Repositories.Quests
                     (q.SeasonalQuest != null &&
                     (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&
                     (!q.SeasonalQuest.EndDate.HasValue || q.SeasonalQuest.EndDate.Value.Date >= today))
-                    )
+                    ))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

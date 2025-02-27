@@ -13,7 +13,10 @@ namespace Infrastructure.Repositories.Common
         {
             _context = context;
         }
-        public async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default, params Expression<Func<T, object>>[] includes)
+        public async Task<T?> GetByIdAsync(
+            int id,
+            CancellationToken cancellationToken = default,
+            params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>();
 
@@ -30,9 +33,33 @@ namespace Infrastructure.Repositories.Common
                 .ConfigureAwait(false);
         }
 
+        public async Task<IEnumerable<T>> GetAllUserQuestsAsync(
+            int accountId,
+            CancellationToken cancellationToken = default,
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            // Apply includes if provided
+            if (includes is not null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            // Aply filter to get only the quests of the user
+            query = query.Where(entity => EF.Property<int>(EF.Property<object>(entity, "QuestMetadata"), "AccountId") == accountId);
+
+            return await query.AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Set<T>().ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.Set<T>().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
