@@ -43,7 +43,13 @@ namespace Application.Services.Quests
 
             return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
         }
+        public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+                .ConfigureAwait(false);
 
+            return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
+        }
         public async Task<int> CreateAsync(CreateSeasonalQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var seasonalQuest = _mapper.Map<SeasonalQuest>(createDto);

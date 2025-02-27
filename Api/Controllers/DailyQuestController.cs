@@ -40,9 +40,13 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetDailyQuestDto>>> GetAll(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<GetDailyQuestDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
         {
-            var quests = await _service.GetAllAsync(cancellationToken);
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+
+            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
