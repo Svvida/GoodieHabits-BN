@@ -118,10 +118,13 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest, cancellationToken);
         }
 
-        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+        public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+            var quest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             await _repository.DeleteAsync(quest, cancellationToken);
         }

@@ -2,12 +2,14 @@
 using Application.Interfaces.Quests;
 using Application.Services;
 using Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/monthly-quests")]
+    [Authorize]
     public class MonthlyQuestController : ControllerBase
     {
         private readonly IMonthlyQuestService _service;
@@ -22,7 +24,7 @@ namespace Api.Controllers
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             var quest = await _service.GetUserQuestByIdAsync(id, accountId, cancellationToken);
             if (quest is null)
@@ -43,7 +45,7 @@ namespace Api.Controllers
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
@@ -56,7 +58,7 @@ namespace Api.Controllers
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             createDto.AccountId = accountId;
 
@@ -72,7 +74,7 @@ namespace Api.Controllers
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             await _service.PatchUserQuestAsync(id, accountId, patchDto, cancellationToken);
             return NoContent();
@@ -87,7 +89,7 @@ namespace Api.Controllers
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             await _service.UpdateUserQuestAsync(id, accountId, updateDto, cancellationToken);
             return NoContent();
@@ -96,7 +98,11 @@ namespace Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await _service.DeleteAsync(id, cancellationToken);
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            await _service.DeleteUserQuestAsync(id, accountId, cancellationToken);
             return NoContent();
         }
     }
