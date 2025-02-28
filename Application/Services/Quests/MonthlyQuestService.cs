@@ -19,11 +19,24 @@ namespace Application.Services.Quests
             _mapper = mapper;
         }
 
-        public async Task<GetMonthlyQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetMonthlyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<GetMonthlyQuestDto>(quest);
+        }
+
+        public async Task<GetMonthlyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetByIdAsync(questId, cancellationToken, mq => mq.QuestMetadata);
+
+            if (quest is null)
+                return null;
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            return _mapper.Map<GetMonthlyQuestDto>(quest);
         }
 
         public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -32,7 +45,13 @@ namespace Application.Services.Quests
 
             return _mapper.Map<IEnumerable<GetMonthlyQuestDto>>(quests);
         }
+        public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+                .ConfigureAwait(false);
 
+            return _mapper.Map<IEnumerable<GetMonthlyQuestDto>>(quests);
+        }
         public async Task<int> CreateAsync(CreateMonthlyQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var monthlyQuest = _mapper.Map<MonthlyQuest>(createDto);
@@ -46,20 +65,26 @@ namespace Application.Services.Quests
             return monthlyQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            _mapper.Map(updateDto, existingDailyQuest);
+            if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
+            _mapper.Map(updateDto, existingMonthlyQuest);
+
+            await _repository.UpdateAsync(existingMonthlyQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingMonthlyQuest.EndDate.HasValue)
@@ -80,10 +105,13 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingMonthlyQuest, cancellationToken);
         }
 
-        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+        public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+            var quest = await _repository.GetByIdAsync(id, cancellationToken, mq => mq.QuestMetadata).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             await _repository.DeleteAsync(quest, cancellationToken);
         }

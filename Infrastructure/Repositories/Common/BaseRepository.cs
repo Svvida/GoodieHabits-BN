@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Domain.Interfaces;
+﻿using System.Linq.Expressions;
+using Domain.Interfaces.Domain.Interfaces;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +13,53 @@ namespace Infrastructure.Repositories.Common
         {
             _context = context;
         }
-        public async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(
+            int id,
+            CancellationToken cancellationToken = default,
+            params Expression<Func<T, object>>[] includes)
         {
-            return await _context.Set<T>().FindAsync([id], cancellationToken).ConfigureAwait(false);
+            IQueryable<T> query = _context.Set<T>();
+
+            // Apply includes if provided
+            if (includes is not null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Id") == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<T>> GetAllUserQuestsAsync(
+            int accountId,
+            CancellationToken cancellationToken = default,
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            // Apply includes if provided
+            if (includes is not null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            // Aply filter to get only the quests of the user
+            query = query.Where(entity => EF.Property<int>(EF.Property<object>(entity, "QuestMetadata"), "AccountId") == accountId);
+
+            return await query.AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Set<T>().ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.Set<T>().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)

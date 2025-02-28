@@ -19,20 +19,37 @@ namespace Application.Services.Quests
             _mapper = mapper;
         }
 
-        public async Task<GetSeasonalQuestDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<GetSeasonalQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _repository.GetByIdAsync(id, cancellationToken);
 
             return quest is null ? null : _mapper.Map<GetSeasonalQuestDto>(quest);
         }
+        public async Task<GetSeasonalQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetByIdAsync(questId, cancellationToken, sq => sq.QuestMetadata);
 
+            if (quest is null)
+                return null;
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            return _mapper.Map<GetSeasonalQuestDto>(quest);
+        }
         public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetAllAsync(cancellationToken);
 
             return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
         }
+        public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+                .ConfigureAwait(false);
 
+            return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
+        }
         public async Task<int> CreateAsync(CreateSeasonalQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var seasonalQuest = _mapper.Map<SeasonalQuest>(createDto);
@@ -46,20 +63,26 @@ namespace Application.Services.Quests
             return seasonalQuest.Id;
         }
 
-        public async Task UpdateAsync(int id, UpdateSeasonalQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateSeasonalQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             _mapper.Map(updateDto, existingSeasonalQuest);
 
             await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
         }
 
-        public async Task PatchAsync(int id, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, int accountId, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
         {
-            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken)
+            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingSeasonalQuest.EndDate.HasValue)
@@ -80,10 +103,13 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
         }
 
-        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+        public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken)
-                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+            var quest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (quest.QuestMetadata.AccountId != accountId)
+                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             await _repository.DeleteAsync(quest, cancellationToken);
         }

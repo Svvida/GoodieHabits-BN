@@ -1,11 +1,15 @@
 ﻿using Application.Dtos.Accounts;
 using Application.Interfaces;
+using Application.Services;
+using Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api")]
+    [Authorize]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -28,6 +32,13 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ProblemDetails))]
         public async Task<ActionResult<GetAccountDto?>> GetAccount(int id)
         {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            if (accountId != id)
+                throw new UnauthorizedException("Unauthorized to update account.");
+
             var account = await _accountService.GetAccountByIdAsync(id);
             if (account is null)
             {
@@ -47,6 +58,13 @@ namespace Api.Controllers
             PatchAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            if (accountId != id)
+                throw new UnauthorizedException("Unauthorized to update account.");
+
             var trimmedData = new PatchAccountDto
             {
                 Username = patchDto.Username!.Trim()

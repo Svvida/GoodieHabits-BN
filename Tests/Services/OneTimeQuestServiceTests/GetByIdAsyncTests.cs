@@ -40,7 +40,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
                 .ReturnsAsync(expectedQuest);
 
             // Act: call the method being tested
-            var result = await _service.GetByIdAsync(1, CancellationToken.None);
+            var result = await _service.GetQuestByIdAsync(1, CancellationToken.None);
 
             // Assert: verify the output is as expected
             Assert.NotNull(result);
@@ -52,7 +52,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
         public async Task GetByIdAsync_ShouldReturnNull_WhenQuestDoesNotExists()
         {
             // Act
-            var result = await _service.GetByIdAsync(2, CancellationToken.None);
+            var result = await _service.GetQuestByIdAsync(2, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
