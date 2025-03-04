@@ -1,7 +1,8 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Validators.Helpers;
 using FluentValidation;
 
-namespace Application.Validators
+namespace Application.Validators.Accounts
 {
     public class CreateAccountValidator : AbstractValidator<CreateAccountDto>
     {
@@ -17,7 +18,7 @@ namespace Application.Validators
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")
                 .MaximumLength(100).WithMessage("Email must not exceed 100 characters")
-                .EmailAddress().WithMessage("Email must be a valid email address");
+                .Must(input => Checkers.IsEmail(input!)).WithMessage("Email must be a valid email address");
         }
     }
 }
