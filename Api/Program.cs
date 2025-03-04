@@ -9,6 +9,7 @@ using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
 using Application.Validators;
+using Application.Validators.Accounts;
 using Application.Validators.Quests;
 using Domain.Interfaces;
 using Domain.Models;

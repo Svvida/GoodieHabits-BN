@@ -1,7 +1,7 @@
 ﻿using Application.Dtos.Accounts;
 using FluentValidation;
 
-namespace Application.Validators
+namespace Application.Validators.Accounts
 {
     public class PatchAccountValidator : AbstractValidator<PatchAccountDto>
     {

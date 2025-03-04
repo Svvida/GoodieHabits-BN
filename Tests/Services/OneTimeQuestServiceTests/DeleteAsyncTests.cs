@@ -36,6 +36,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
         {
             // Arrange
             int questId = 1;
+            int accountId = 2;
             var quest = new OneTimeQuest { Id = questId, Title = "Test Quest" };
 
             _repositoryMock
@@ -48,7 +49,7 @@ namespace Tests.Services.OneTimeQuestServiceTests
                 .Verifiable();
 
             // Act
-            await _service.DeleteAsync(questId, CancellationToken.None);
+            await _service.DeleteUserQuestAsync(questId, accountId, CancellationToken.None);
 
             // Assert
             _repositoryMock.Verify(repo => repo.DeleteAsync(It.Is<OneTimeQuest>(q => q.Id == questId), It.IsAny<CancellationToken>()), Times.Once);
@@ -59,13 +60,14 @@ namespace Tests.Services.OneTimeQuestServiceTests
         {
             // Arrange
             int questId = 2;
+            int accountId = 1;
 
             _repositoryMock
                 .Setup(repo => repo.GetByIdAsync(questId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((OneTimeQuest?)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _service.DeleteAsync(questId, CancellationToken.None));
+            await Assert.ThrowsAsync<NotFoundException>(() => _service.DeleteUserQuestAsync(questId, accountId, CancellationToken.None));
 
             // Ensure DeleteAsync is never called
             _repositoryMock.Verify(repo => repo.DeleteAsync(It.IsAny<OneTimeQuest>(), It.IsAny<CancellationToken>()), Times.Never);

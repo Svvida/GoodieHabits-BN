@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests;
+using Application.Validators.Helpers;
 using Domain.Enum;
 using FluentValidation;
 
@@ -12,10 +13,12 @@ namespace Application.Validators.Quests
                 .Length(1, 100).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.");
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000).WithMessage("{PropertyName} must not exceed {MaxLength} characters.");
+                .MaximumLength(1000).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
+                .Must(desc => Checkers.IsSafeHtml(desc!)).WithMessage("{PropertyName} contains unsafe HTML.")
+                .When(x => !string.IsNullOrEmpty(x.Description));
 
             RuleFor(x => x.Emoji)
-                .Matches(@"^\p{So}$").When(x => !string.IsNullOrEmpty(x.Emoji))
+                .Must(emoji => Checkers.IsSingleEmoji(emoji!)).When(x => !string.IsNullOrEmpty(x.Emoji))
                 .WithMessage("You must provide a valid single emoji.");
 
             RuleFor(x => x.EndDate)
