@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories.Common;

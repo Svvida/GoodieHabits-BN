@@ -18,7 +18,8 @@ namespace Infrastructure.Repositories
 
         public async Task<Account?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false);
+            return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false)
+                ?? null;
         }
     }
 }

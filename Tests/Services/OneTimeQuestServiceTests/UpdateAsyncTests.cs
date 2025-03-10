@@ -3,7 +3,7 @@ using Application.Interfaces.Quests;
 using Application.MappingProfiles;
 using Application.Services.Quests;
 using AutoMapper;
-using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
 using Moq;

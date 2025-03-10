@@ -6,7 +6,7 @@ using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
-using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
 
