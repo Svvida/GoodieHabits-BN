@@ -1,7 +1,6 @@
 ﻿using Application.Dtos.Quests.SeasonalQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
-using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -53,10 +52,6 @@ namespace Application.Services.Quests
         public async Task<int> CreateAsync(CreateSeasonalQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var seasonalQuest = _mapper.Map<SeasonalQuest>(createDto);
-
-            seasonalQuest.QuestMetadata.Id = seasonalQuest.Id;
-            seasonalQuest.QuestMetadata.AccountId = createDto.AccountId;
-            seasonalQuest.QuestMetadata.QuestType = QuestTypeEnum.Seasonal;
 
             await _repository.AddAsync(seasonalQuest, cancellationToken);
 

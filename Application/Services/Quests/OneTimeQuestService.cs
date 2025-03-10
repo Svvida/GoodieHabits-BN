@@ -61,10 +61,6 @@ namespace Application.Services.Quests
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
-            oneTimeQuest.QuestMetadata.Id = oneTimeQuest.Id;
-            oneTimeQuest.QuestMetadata.QuestType = Domain.Enum.QuestTypeEnum.OneTime;
-            oneTimeQuest.QuestMetadata.AccountId = oneTimeQuest.QuestMetadata.AccountId;
-
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
             return oneTimeQuest.Id;

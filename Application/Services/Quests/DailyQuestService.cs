@@ -1,7 +1,6 @@
 ﻿using Application.Dtos.Quests.DailyQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
-using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -62,10 +61,6 @@ namespace Application.Services.Quests
         public async Task<int> CreateAsync(CreateDailyQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var dailyQuest = _mapper.Map<DailyQuest>(createDto);
-
-            dailyQuest.QuestMetadata.Id = dailyQuest.Id;
-            dailyQuest.QuestMetadata.AccountId = createDto.AccountId;
-            dailyQuest.QuestMetadata.QuestType = QuestTypeEnum.Daily;
 
             await _repository.AddAsync(dailyQuest, cancellationToken);
 

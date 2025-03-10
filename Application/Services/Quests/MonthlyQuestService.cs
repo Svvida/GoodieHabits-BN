@@ -1,7 +1,6 @@
 ﻿using Application.Dtos.Quests.MonthlyQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
-using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -55,10 +54,6 @@ namespace Application.Services.Quests
         public async Task<int> CreateAsync(CreateMonthlyQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var monthlyQuest = _mapper.Map<MonthlyQuest>(createDto);
-
-            monthlyQuest.QuestMetadata.Id = monthlyQuest.Id;
-            monthlyQuest.QuestMetadata.AccountId = createDto.AccountId;
-            monthlyQuest.QuestMetadata.QuestType = QuestTypeEnum.Monthly;
 
             await _repository.AddAsync(monthlyQuest, cancellationToken);
 
