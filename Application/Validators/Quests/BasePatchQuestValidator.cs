@@ -13,7 +13,7 @@ namespace Application.Validators.Quests
                 .Length(1, 100).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.");
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
+                .MaximumLength(10000).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
                 .Must(desc => Checkers.IsSafeHtml(desc!)).WithMessage("{PropertyName} contains unsafe HTML.")
                 .When(x => !string.IsNullOrEmpty(x.Description));
 

@@ -18,7 +18,7 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(dq => dq.Description)
                 .IsRequired(false)
-                .HasMaxLength(1000);
+                .HasMaxLength(10000);
 
             builder.Property(dq => dq.StartDate)
                 .IsRequired(false);

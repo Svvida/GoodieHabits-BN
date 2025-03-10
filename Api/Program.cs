@@ -174,7 +174,6 @@ namespace Api
                 cfg.AddProfile<WeeklyQuestProfile>();
                 cfg.AddProfile<MonthlyQuestProfile>();
                 cfg.AddProfile<SeasonalQuestProfile>();
-                cfg.AddProfile<QuestMetadataProfile>();
                 cfg.AddProfile<AccountProfile>();
             });
 

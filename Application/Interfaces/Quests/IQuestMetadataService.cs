@@ -1,9 +1,7 @@
-﻿using Application.Dtos.Quests.QuestMetadata;
-
-namespace Application.Interfaces.Quests
+﻿namespace Application.Interfaces.Quests
 {
     public interface IQuestMetadataService
     {
-        Task<IEnumerable<GetQuestMetadataDto>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<object>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default);
     }
 }

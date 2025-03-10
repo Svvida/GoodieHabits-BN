@@ -2,6 +2,6 @@
 {
     public class GetOneTimeQuestDto : BaseGetQuestDto
     {
-        public override string? Type { get; set; } = "One-Time";
+        public override string? Type { get; set; } = "OneTime";
     }
 }

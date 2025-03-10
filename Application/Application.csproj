@@ -11,6 +11,8 @@
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.876" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.2" />
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" />
   </ItemGroup>
 
   <ItemGroup>

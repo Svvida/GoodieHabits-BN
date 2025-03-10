@@ -44,7 +44,7 @@ namespace Application.Services
 
         public async Task PatchAccountAsync(int accountId, PatchAccountDto patchDto, CancellationToken cancellationToken = default)
         {
-            if (_accountRepository.GetByUsernameAsync(patchDto.Username!, cancellationToken) is not null)
+            if (await _accountRepository.GetByUsernameAsync(patchDto.Username!, cancellationToken) is not null)
                 throw new ConflictException($"Username {patchDto.Username} is already in use");
 
             var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
