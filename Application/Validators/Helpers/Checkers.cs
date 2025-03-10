@@ -31,72 +31,38 @@ namespace Application.Validators.Helpers
         {
             var sanitizer = new HtmlSanitizer();
 
-            // Allow necessary tags
+            string[] allowedTags = { "a", "blockquote", "code", "b", "strong", "i", "em", "u", "s", "del",
+                                     "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "p", "label",
+                                     "span", "div", "input" };
+
+            string[] allowedAttributes = { "data-type", "data-checked", "type", "checked" };
+
             sanitizer.AllowedTags.Clear();
-            sanitizer.AllowedTags.Add("a");
-            sanitizer.AllowedTags.Add("blockquote");
-            sanitizer.AllowedTags.Add("code");
-            sanitizer.AllowedTags.Add("b");
-            sanitizer.AllowedTags.Add("strong");
-            sanitizer.AllowedTags.Add("i");
-            sanitizer.AllowedTags.Add("em");
-            sanitizer.AllowedTags.Add("u");
-            sanitizer.AllowedTags.Add("s");
-            sanitizer.AllowedTags.Add("del");
-            sanitizer.AllowedTags.Add("h1");
-            sanitizer.AllowedTags.Add("h2");
-            sanitizer.AllowedTags.Add("h3");
-            sanitizer.AllowedTags.Add("h4");
-            sanitizer.AllowedTags.Add("h5");
-            sanitizer.AllowedTags.Add("h6");
-            sanitizer.AllowedTags.Add("ul");
-            sanitizer.AllowedTags.Add("ol");
-            sanitizer.AllowedTags.Add("li");
-            sanitizer.AllowedTags.Add("p");
-            sanitizer.AllowedTags.Add("label");
-            sanitizer.AllowedTags.Add("span");
-            sanitizer.AllowedTags.Add("div");
-            sanitizer.AllowedTags.Add("input");
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedTags.UnionWith(allowedTags);
+            sanitizer.AllowedAttributes.UnionWith(allowedAttributes);
 
-            // Allow attributes for task list structure
-            sanitizer.AllowedAttributes.Add("data-type");
-            sanitizer.AllowedAttributes.Add("data-checked");
-
-            // Allow only checkboxes (input type="checkbox")
-            sanitizer.AllowedAttributes.Add("type");
-            sanitizer.AllowedAttributes.Add("checked");
-
+            // Event to ensure input checkboxes are inside labels
             sanitizer.RemovingTag += (sender, args) =>
             {
-                // Allow <input type="checkbox"> but only inside <ul data-type="taskList">
-                if (args.Tag.TagName == "input")
+                if (args.Tag.TagName == "input" && (args.Tag.Parent == null || args.Tag.Parent.NodeName != "label"))
                 {
-                    var parent = args.Tag.Parent;
-                    if (parent == null || parent.NodeName != "label") // Ensure it's inside <label>
-                    {
-                        args.Cancel = true; // Remove the <input> if it's outside a label
-                    }
+                    args.Cancel = true; // Remove <input> if not inside <label>
                 }
             };
 
-            // Prevent XSS via JavaScript URLs
+            // Prevent JavaScript-based XSS in href attributes
             sanitizer.RemovingAttribute += (sender, args) =>
             {
-                if (args.Tag.TagName == "a" && args.Attribute.Name == "href")
+                if (args.Tag.TagName == "a" && args.Attribute.Name == "href" &&
+                    args.Attribute.Value.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
                 {
-                    string hrefValue = args.Attribute.Value.ToLower();
-                    if (hrefValue.StartsWith("javascript:"))
-                    {
-                        args.Cancel = true; // Remove dangerous href values
-                    }
+                    args.Cancel = true;
                 }
             };
 
-            // Sanitize input
-            string sanitized = sanitizer.Sanitize(input);
-
-            // If sanitized version differs from original, it means input contained unsafe tags
-            return sanitized == input;
+            // Sanitize input and compare. If sanitized version differs from original, it means input contained unsafe tags
+            return sanitizer.Sanitize(input) == input;
         }
     }
 }
