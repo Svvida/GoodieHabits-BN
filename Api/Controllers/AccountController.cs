@@ -52,9 +52,8 @@ namespace Api.Controllers
             return Ok(account);
         }
 
-        [HttpPatch("accounts/{id:int}")]
+        [HttpPatch("accounts")]
         public async Task<IActionResult> PatchAccount(
-            int id,
             PatchAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
@@ -62,15 +61,12 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            if (accountId != id)
-                throw new UnauthorizedException("Unauthorized to update account.");
-
             var trimmedData = new PatchAccountDto
             {
                 Username = patchDto.Username!.Trim()
             };
 
-            await _accountService.PatchAccountAsync(id, trimmedData, cancellationToken);
+            await _accountService.PatchAccountAsync(accountId, trimmedData, cancellationToken);
             return NoContent();
         }
     }
