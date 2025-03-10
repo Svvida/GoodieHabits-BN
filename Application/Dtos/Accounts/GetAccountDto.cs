@@ -2,8 +2,11 @@
 {
     public class GetAccountDto
     {
-        public int Id { get; set; }
-        public string? Username { get; set; }
+        public string? Nickname { get; set; }
         public string? Email { get; set; }
+        public string? Name { get; set; } = null;
+        public string? Surename { get; set; } = null;
+        public GetAccountDataDto Data { get; set; } = new();
+        public ICollection<GetAccountPreferencesDto> Preferences { get; set; } = [];
     }
 }

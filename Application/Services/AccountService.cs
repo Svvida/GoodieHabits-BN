@@ -34,9 +34,9 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<GetAccountDto>>(accounts);
         }
 
-        public async Task<GetAccountDto?> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Labels).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");
 
             return _mapper.Map<GetAccountDto>(account);
@@ -44,8 +44,11 @@ namespace Application.Services
 
         public async Task PatchAccountAsync(int accountId, PatchAccountDto patchDto, CancellationToken cancellationToken = default)
         {
-            if (await _accountRepository.GetByUsernameAsync(patchDto.Username!, cancellationToken) is not null)
-                throw new ConflictException($"Username {patchDto.Username} is already in use");
+            if (!string.IsNullOrEmpty(patchDto.Nickname))
+            {
+                if (await _accountRepository.GetByUsernameAsync(patchDto.Nickname!, cancellationToken) is not null)
+                    throw new ConflictException($"Nickname {patchDto.Nickname} is already in use");
+            }
 
             var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");

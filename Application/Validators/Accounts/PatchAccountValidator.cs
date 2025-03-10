@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Validators.Helpers;
 using FluentValidation;
 
 namespace Application.Validators.Accounts
@@ -7,10 +8,15 @@ namespace Application.Validators.Accounts
     {
         public PatchAccountValidator()
         {
-            RuleFor(x => x.Username)
-                .NotEmpty().WithMessage("{PropertyName} is required")
+            RuleFor(x => x.Nickname)
                 .Length(1, 20).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.")
-                .Matches("^[a-zA-Z0-9.!_-]*$").WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: . ! _ -");
+                .Matches("^[a-zA-Z0-9.!_-]*$").WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: . ! _ -")
+                .When(x => !string.IsNullOrEmpty(x.Nickname));
+
+            RuleFor(x => x.Email)
+                .MaximumLength(100).WithMessage("{PropertyName} must not exceed 100 characters")
+                .Must(input => Checkers.IsEmail(input!)).WithMessage("{PropertyName} must be a valid email address")
+                .When(x => !string.IsNullOrEmpty(x.Email));
         }
     }
 }
