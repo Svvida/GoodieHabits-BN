@@ -20,7 +20,14 @@ namespace Application.MappingProfiles
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
                         TextColor = ql.QuestLabel.TextColor
                     }).ToList()))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.DailyQuest!.Priority.ToString()));
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.DailyQuest!.Priority.ToString()))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.DailyQuest!.Title))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DailyQuest!.Description))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.DailyQuest!.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.DailyQuest!.EndDate))
+                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.DailyQuest!.Emoji))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.DailyQuest!.IsCompleted));
+
 
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<DailyQuest, GetDailyQuestDto>()

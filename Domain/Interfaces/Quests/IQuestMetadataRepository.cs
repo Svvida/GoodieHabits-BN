@@ -5,7 +5,8 @@ namespace Domain.Interfaces.Quests
 {
     public interface IQuestMetadataRepository
     {
-        Task<IEnumerable<QuestMetadata>> GetTodaysQuestsAsync(int accountId, CancellationToken cancellationToken = default);
-        Task<IEnumerable<QuestMetadata>> GetUserSubtypeQuestsAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
+        Task<IEnumerable<QuestMetadata>> GetActiveQuestsAsync(int accountId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<QuestMetadata>> GetSubtypeQuestsAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
+        Task<QuestMetadata?> GetQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
     }
 }

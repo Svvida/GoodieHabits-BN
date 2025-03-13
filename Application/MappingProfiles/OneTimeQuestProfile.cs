@@ -20,7 +20,14 @@ namespace Application.MappingProfiles
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
                         TextColor = ql.QuestLabel.TextColor
                     }).ToList()))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.OneTimeQuest!.Priority.ToString()));
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.OneTimeQuest!.Priority.ToString()))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.OneTimeQuest!.Title))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.OneTimeQuest!.Description))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.OneTimeQuest!.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.OneTimeQuest!.EndDate))
+                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.OneTimeQuest!.Emoji))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.OneTimeQuest!.IsCompleted));
+
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<OneTimeQuest, GetOneTimeQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))

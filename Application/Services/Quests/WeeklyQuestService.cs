@@ -28,35 +28,22 @@ namespace Application.Services.Quests
             _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<GetWeeklyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetWeeklyQuestDto>(quest);
-        }
-
         public async Task<GetWeeklyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, wq => wq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
             return _mapper.Map<GetWeeklyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<GetWeeklyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
-
-            return _mapper.Map<IEnumerable<GetWeeklyQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetWeeklyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.Weekly, cancellationToken)
+            var quests = await _questMetadataRepository.GetSubtypeQuestsAsync(accountId, QuestTypeEnum.Weekly, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetWeeklyQuestDto>>(quests);

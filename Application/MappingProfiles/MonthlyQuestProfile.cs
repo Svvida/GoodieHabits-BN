@@ -21,8 +21,14 @@ namespace Application.MappingProfiles
                         TextColor = ql.QuestLabel.TextColor
                     }).ToList()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.MonthlyQuest!.Priority.ToString()))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.MonthlyQuest!.Title))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.MonthlyQuest!.Description))
                 .ForMember(dest => dest.StartDay, opt => opt.MapFrom(src => src.MonthlyQuest!.StartDay))
-                .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest!.EndDay));
+                .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest!.EndDay))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.MonthlyQuest!.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.MonthlyQuest!.EndDate))
+                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.MonthlyQuest!.Emoji))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.MonthlyQuest!.IsCompleted));
 
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<MonthlyQuest, GetMonthlyQuestDto>()

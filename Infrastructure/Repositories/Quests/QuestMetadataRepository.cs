@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories.Quests
             _logger = logger;
         }
 
-        public async Task<IEnumerable<QuestMetadata>> GetTodaysQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<QuestMetadata>> GetActiveQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
             DateTime today = DateTime.UtcNow.Date;
 
@@ -59,23 +59,20 @@ namespace Infrastructure.Repositories.Quests
                     AccountId = q.AccountId,
 
                     // Include only the relevant quest type
-                    OneTimeQuest = q.QuestType == QuestTypeEnum.OneTime ? q.OneTimeQuest : null,
-                    DailyQuest = q.QuestType == QuestTypeEnum.Daily ? q.DailyQuest : null,
-                    WeeklyQuest = q.QuestType == QuestTypeEnum.Weekly ? q.WeeklyQuest : null,
-                    MonthlyQuest = q.QuestType == QuestTypeEnum.Monthly ? q.MonthlyQuest : null,
-                    SeasonalQuest = q.QuestType == QuestTypeEnum.Seasonal ? q.SeasonalQuest : null,
+                    OneTimeQuest = q.OneTimeQuest,
+                    DailyQuest = q.DailyQuest,
+                    WeeklyQuest = q.WeeklyQuest,
+                    MonthlyQuest = q.MonthlyQuest,
+                    SeasonalQuest = q.SeasonalQuest,
                     QuestLabels = q.QuestLabels
                     .Select(ql => new QuestMetadata_QuestLabel
                     {
-                        QuestMetadataId = q.Id,
-                        QuestLabelId = ql.QuestLabelId,
                         QuestLabel = new QuestLabel
                         {
                             Id = ql.QuestLabelId,
                             Value = ql.QuestLabel.Value,
                             BackgroundColor = ql.QuestLabel.BackgroundColor,
-                            TextColor = ql.QuestLabel.TextColor,
-                            AccountId = q.AccountId
+                            TextColor = ql.QuestLabel.TextColor
                         }
                     }).ToList()
                 })
@@ -84,19 +81,14 @@ namespace Infrastructure.Repositories.Quests
             return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<QuestMetadata>> GetUserSubtypeQuestsAsync(
+        public async Task<IEnumerable<QuestMetadata>> GetSubtypeQuestsAsync(
             int accountId,
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var quests = _context.QuestsMetadata
+            var quests = await _context.QuestsMetadata
                 .Where(q => q.AccountId == accountId &&
                     q.QuestType == questType)
-                .Include(q => q.QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel)
-                .AsQueryable();
-
-            quests = quests
                 .Select(q => new QuestMetadata
                 {
                     Id = q.Id,
@@ -105,29 +97,61 @@ namespace Infrastructure.Repositories.Quests
                     QuestLabels = q.QuestLabels
                     .Select(ql => new QuestMetadata_QuestLabel
                     {
-                        QuestMetadataId = q.Id,
-                        QuestLabelId = ql.QuestLabelId,
                         QuestLabel = new QuestLabel
                         {
                             Id = ql.QuestLabelId,
                             Value = ql.QuestLabel.Value,
                             BackgroundColor = ql.QuestLabel.BackgroundColor,
-                            TextColor = ql.QuestLabel.TextColor,
-                            AccountId = q.AccountId
+                            TextColor = ql.QuestLabel.TextColor
                         }
                     }).ToList(),
                     // Only assign the relevant quest type dynamically
-                    DailyQuest = questType == QuestTypeEnum.Daily ? q.DailyQuest : null,
-                    WeeklyQuest = questType == QuestTypeEnum.Weekly ? q.WeeklyQuest : null,
-                    MonthlyQuest = questType == QuestTypeEnum.Monthly ? q.MonthlyQuest : null,
-                    OneTimeQuest = questType == QuestTypeEnum.OneTime ? q.OneTimeQuest : null,
-                    SeasonalQuest = questType == QuestTypeEnum.Seasonal ? q.SeasonalQuest : null
+                    DailyQuest = q.DailyQuest,
+                    WeeklyQuest = q.WeeklyQuest,
+                    MonthlyQuest = q.MonthlyQuest,
+                    OneTimeQuest = q.OneTimeQuest,
+                    SeasonalQuest = q.SeasonalQuest
                 })
-                .AsNoTracking();
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            var result = await quests.ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Fetched {@result} quests from repository.", result);
-            return result;
+            _logger.LogInformation("Fetched {@quests} quests from repository.", quests);
+            return quests;
+        }
+
+        public async Task<QuestMetadata?> GetQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _context.QuestsMetadata
+                .Where(q => q.Id == questId)
+                .Select(q => new QuestMetadata
+                {
+                    Id = q.Id,
+                    QuestType = q.QuestType,
+                    AccountId = q.AccountId,
+                    QuestLabels = q.QuestLabels.Select(ql => new QuestMetadata_QuestLabel
+                    {
+                        QuestLabel = new QuestLabel
+                        {
+                            Id = ql.QuestLabel.Id,
+                            Value = ql.QuestLabel.Value,
+                            BackgroundColor = ql.QuestLabel.BackgroundColor,
+                            TextColor = ql.QuestLabel.TextColor,
+                        }
+                    }).ToList(),
+                    DailyQuest = q.DailyQuest,
+                    WeeklyQuest = q.WeeklyQuest,
+                    MonthlyQuest = q.MonthlyQuest,
+                    OneTimeQuest = q.OneTimeQuest,
+                    SeasonalQuest = q.SeasonalQuest
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            _logger.LogInformation("Fetched quest: {@quest}", quest);
+
+            return quest;
         }
     }
 }

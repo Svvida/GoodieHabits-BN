@@ -28,35 +28,22 @@ namespace Application.Services.Quests
             _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<GetDailyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetDailyQuestDto>(quest);
-        }
-
         public async Task<GetDailyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, dq => dq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
             return _mapper.Map<GetDailyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<GetDailyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
-
-            return _mapper.Map<IEnumerable<GetDailyQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetDailyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.Daily, cancellationToken)
+            var quests = await _questMetadataRepository.GetSubtypeQuestsAsync(accountId, QuestTypeEnum.Daily, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetDailyQuestDto>>(quests);
@@ -116,7 +103,6 @@ namespace Application.Services.Quests
                 existingDailyQuest.LastCompleted = DateTime.UtcNow;
 
             _mapper.Map(patchDto, existingDailyQuest);
-
 
             await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
         }

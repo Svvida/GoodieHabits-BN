@@ -20,8 +20,14 @@ namespace Application.MappingProfiles
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
                         TextColor = ql.QuestLabel.TextColor
                     }).ToList()))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.SeasonalQuest!.Priority.ToString()))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.SeasonalQuest!.Title))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.SeasonalQuest!.Description))
                 .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.SeasonalQuest!.Season.ToString()))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.SeasonalQuest!.Priority.ToString()));
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.SeasonalQuest!.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.SeasonalQuest!.EndDate))
+                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.SeasonalQuest!.Emoji))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.SeasonalQuest!.IsCompleted));
 
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<SeasonalQuest, GetSeasonalQuestDto>()

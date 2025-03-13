@@ -28,34 +28,22 @@ namespace Application.Services.Quests
             _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<GetOneTimeQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetOneTimeQuestDto>(quest);
-        }
         public async Task<GetOneTimeQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, otq => otq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
             return _mapper.Map<GetOneTimeQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
-
-            return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.OneTime, cancellationToken)
+            var quests = await _questMetadataRepository.GetSubtypeQuestsAsync(accountId, QuestTypeEnum.OneTime, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);

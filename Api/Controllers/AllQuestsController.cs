@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Quests;
+﻿using Application.Dtos.Quests;
+using Application.Interfaces.Quests;
 using Application.Services;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -23,14 +24,13 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _questMetadataService.GetAllQuestsAsync(accountId, cancellationToken);
-            _logger.LogInformation("Quests in controller: @{quests}", quests);
+            var quests = await _questMetadataService.GetActiveQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
     }
