@@ -14,13 +14,16 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasKey(ql => ql.Id);
 
             builder.Property(ql => ql.Value)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(25);
 
             builder.Property(ql => ql.BackgroundColor)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(7);
 
             builder.Property(ql => ql.TextColor)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(7);
 
             builder.HasOne(ql => ql.Account)
                 .WithMany(a => a.Labels)

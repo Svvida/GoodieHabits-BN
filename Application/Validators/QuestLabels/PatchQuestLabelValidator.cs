@@ -8,13 +8,13 @@ namespace Application.Validators.QuestLabels
         public PatchQuestLabelValidator()
         {
             RuleFor(x => x.Value)
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(25).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
 
             RuleFor(x => x.BackgroundColor)
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
 
             RuleFor(x => x.TextColor)
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
         }
     }
 }

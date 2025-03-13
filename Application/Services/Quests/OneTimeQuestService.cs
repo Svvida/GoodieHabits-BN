@@ -1,6 +1,7 @@
 ﻿using Application.Dtos.Quests.OneTimeQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
+using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -13,15 +14,18 @@ namespace Application.Services.Quests
         private readonly IOneTimeQuestRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<OneTimeQuestService> _logger;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
 
         public OneTimeQuestService(
             IOneTimeQuestRepository repository,
             IMapper mapper,
-            ILogger<OneTimeQuestService> logger)
+            ILogger<OneTimeQuestService> logger,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _questMetadataRepository = questMetadataRepository;
         }
 
         public async Task<GetOneTimeQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -51,7 +55,7 @@ namespace Application.Services.Quests
         }
         public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.OneTime, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);

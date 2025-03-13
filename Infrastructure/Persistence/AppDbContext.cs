@@ -17,6 +17,7 @@ namespace Infrastructure.Persistence
         public DbSet<MonthlyQuest> MonthlyQuests { get; set; }
         public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
         public DbSet<QuestLabel> QuestLabels { get; set; }
+        public DbSet<QuestMetadata_QuestLabel> QuestMetadata_QuestLabels { get; set; }
 
         public override int SaveChanges()
         {
@@ -56,6 +57,7 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new WeeklyQuestConfiguration());
             modelBuilder.ApplyConfiguration(new MonthlyQuestConfiguration());
             modelBuilder.ApplyConfiguration(new QuestLabelConfiguration());
+            modelBuilder.ApplyConfiguration(new QuestMetadata_QuestLabelConfiguration());
         }
     }
 }

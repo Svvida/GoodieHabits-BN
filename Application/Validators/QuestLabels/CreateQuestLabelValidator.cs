@@ -9,15 +9,15 @@ namespace Application.Validators.QuestLabels
         {
             RuleFor(x => x.Value)
                 .NotEmpty().WithMessage("{PropertyName} is required")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(25).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
 
             RuleFor(x => x.BackgroundColor)
                 .NotEmpty().WithMessage("{PropertyName} is required")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
 
             RuleFor(x => x.TextColor)
                 .NotEmpty().WithMessage("{PropertyName} is required")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
+                .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
         }
     }
 }

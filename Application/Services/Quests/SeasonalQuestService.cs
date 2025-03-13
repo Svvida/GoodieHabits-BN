@@ -1,6 +1,7 @@
 ﻿using Application.Dtos.Quests.SeasonalQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
+using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -10,12 +11,17 @@ namespace Application.Services.Quests
     public class SeasonalQuestService : ISeasonalQuestService
     {
         private readonly ISeasonalQuestRepository _repository;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
 
-        public SeasonalQuestService(ISeasonalQuestRepository repository, IMapper mapper)
+        public SeasonalQuestService(
+            ISeasonalQuestRepository repository,
+            IMapper mapper,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
+            _questMetadataRepository = questMetadataRepository;
         }
 
         public async Task<GetSeasonalQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -44,7 +50,7 @@ namespace Application.Services.Quests
         }
         public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.Seasonal, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);

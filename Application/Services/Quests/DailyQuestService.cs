@@ -1,6 +1,7 @@
 ﻿using Application.Dtos.Quests.DailyQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
+using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -11,17 +12,20 @@ namespace Application.Services.Quests
     public class DailyQuestService : IDailyQuestService
     {
         private readonly IDailyQuestRepository _repository;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<DailyQuestService> _logger;
 
         public DailyQuestService(
             IDailyQuestRepository repository,
             IMapper mapper,
-            ILogger<DailyQuestService> logger)
+            ILogger<DailyQuestService> logger,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _questMetadataRepository = questMetadataRepository;
         }
 
         public async Task<GetDailyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -52,7 +56,7 @@ namespace Application.Services.Quests
         }
         public async Task<IEnumerable<GetDailyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.Daily, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetDailyQuestDto>>(quests);

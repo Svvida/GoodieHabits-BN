@@ -2,6 +2,6 @@
 {
     public interface IQuestMetadataService
     {
-        Task<IEnumerable<object>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<object?>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default);
     }
 }

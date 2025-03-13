@@ -28,30 +28,29 @@ namespace Application.Services.Quests
             _logger = logger;
         }
 
-        public async Task<IEnumerable<object>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<object?>> GetAllQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
             var quests = await _repository.GetTodaysQuestsAsync(accountId, cancellationToken)
                 .ConfigureAwait(false);
 
             _logger.LogInformation("Quests before mapping: {@quests}", quests);
 
-            var mappedQuests = quests.Select(q =>
+            var questList = quests.Select(q =>
             {
                 return q.GetActualQuest() switch
                 {
-                    OneTimeQuest oneTime => QuestDto.From(_mapper.Map<GetOneTimeQuestDto>(oneTime)).Value,
-                    DailyQuest daily => QuestDto.From(_mapper.Map<GetDailyQuestDto>(daily)).Value,
-                    WeeklyQuest weekly => QuestDto.From(_mapper.Map<GetWeeklyQuestDto>(weekly)).Value,
-                    MonthlyQuest monthly => QuestDto.From(_mapper.Map<GetMonthlyQuestDto>(monthly)).Value,
-                    SeasonalQuest seasonal => QuestDto.From(_mapper.Map<GetSeasonalQuestDto>(seasonal)).Value,
-                    _ => throw new ArgumentException("Unknown QuestType")
+                    OneTimeQuest oneTime => QuestDto.From(_mapper.Map<GetOneTimeQuestDto>(q)).Value,
+                    DailyQuest daily => QuestDto.From(_mapper.Map<GetDailyQuestDto>(q)).Value,
+                    WeeklyQuest weekly => QuestDto.From(_mapper.Map<GetWeeklyQuestDto>(q)).Value,
+                    MonthlyQuest monthly => QuestDto.From(_mapper.Map<GetMonthlyQuestDto>(q)).Value,
+                    SeasonalQuest seasonal => QuestDto.From(_mapper.Map<GetSeasonalQuestDto>(q)).Value,
+                    _ => null,
                 };
             }).ToList();
 
+            _logger.LogInformation("Quests after mapping: {@mappedQests}", questList);
 
-            _logger.LogInformation("Quests after mapping: {@mappedQests}", mappedQuests);
-
-            return mappedQuests;
+            return questList;
         }
     }
 }

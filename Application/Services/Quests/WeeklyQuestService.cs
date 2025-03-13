@@ -12,17 +12,20 @@ namespace Application.Services.Quests
     public class WeeklyQuestService : IWeeklyQuestService
     {
         private readonly IWeeklyQuestRepository _repository;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<WeeklyQuestService> _logger;
 
         public WeeklyQuestService(
             IWeeklyQuestRepository repository,
             IMapper mapper,
-            ILogger<WeeklyQuestService> logger)
+            ILogger<WeeklyQuestService> logger,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _questMetadataRepository = questMetadataRepository;
         }
 
         public async Task<GetWeeklyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -53,7 +56,7 @@ namespace Application.Services.Quests
         }
         public async Task<IEnumerable<GetWeeklyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetUserSubtypeQuestsAsync(accountId, QuestTypeEnum.Weekly, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetWeeklyQuestDto>>(quests);

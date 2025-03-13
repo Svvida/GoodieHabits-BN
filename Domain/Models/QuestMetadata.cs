@@ -14,6 +14,7 @@ namespace Domain.Models
         public WeeklyQuest? WeeklyQuest { get; set; }
         public MonthlyQuest? MonthlyQuest { get; set; }
         public SeasonalQuest? SeasonalQuest { get; set; }
+        public ICollection<QuestMetadata_QuestLabel> QuestLabels { get; set; } = [];
         public QuestMetadata() { }
         public QuestMetadata(int id, QuestTypeEnum type, int accountId)
         {

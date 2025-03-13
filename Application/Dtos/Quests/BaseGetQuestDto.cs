@@ -1,4 +1,6 @@
-﻿namespace Application.Dtos.Quests
+﻿using Application.Dtos.Labels;
+
+namespace Application.Dtos.Quests
 {
     public abstract class BaseGetQuestDto
     {
@@ -11,5 +13,6 @@
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
         public virtual string? Type { get; set; }
+        public ICollection<GetQuestLabelDto> QuestLabels { get; set; } = [];
     }
 }
