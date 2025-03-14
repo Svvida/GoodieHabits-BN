@@ -2,6 +2,6 @@
 {
     public class CreateSeasonalQuestDto : BaseCreateQuestDto
     {
-        public required string Season { get; set; }
+        public string Season { get; set; } = string.Empty; // Prevents ASP.NET Core default validation errors.
     }
 }

@@ -1,8 +1,9 @@
 ﻿using Application.Dtos.Quests.OneTimeQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
+using Domain.Enum;
 using Domain.Exceptions;
-using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
 
@@ -13,45 +14,39 @@ namespace Application.Services.Quests
         private readonly IOneTimeQuestRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<OneTimeQuestService> _logger;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
 
         public OneTimeQuestService(
             IOneTimeQuestRepository repository,
             IMapper mapper,
-            ILogger<OneTimeQuestService> logger)
+            ILogger<OneTimeQuestService> logger,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<GetOneTimeQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetOneTimeQuestDto>(quest);
-        }
         public async Task<GetOneTimeQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, otq => otq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            if (quest.QuestType != QuestTypeEnum.OneTime)
+                throw new InvalidQuestTypeException(questId, QuestTypeEnum.OneTime, quest.QuestType);
 
             return _mapper.Map<GetOneTimeQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
-
-            return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetOneTimeQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetQuestsByTypeAsync(accountId, QuestTypeEnum.OneTime, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetOneTimeQuestDto>>(quests);
@@ -61,9 +56,7 @@ namespace Application.Services.Quests
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
-            oneTimeQuest.QuestMetadata.Id = oneTimeQuest.Id;
-            oneTimeQuest.QuestMetadata.QuestType = Domain.Enum.QuestTypeEnum.OneTime;
-            oneTimeQuest.QuestMetadata.AccountId = oneTimeQuest.QuestMetadata.AccountId;
+            _logger.LogInformation("OneTimeQuest after mapping: {@oneTimeQuest}", oneTimeQuest);
 
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
@@ -112,13 +105,13 @@ namespace Application.Services.Quests
 
         public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
+            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            await _repository.DeleteAsync(quest, cancellationToken);
+            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

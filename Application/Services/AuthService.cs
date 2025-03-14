@@ -34,7 +34,7 @@ namespace Application.Services
             JwtSecurityTokenHandler jwtSecurityTokenHandler,
             ILogger<AuthService> logger)
         {
-            _jwtSettings = jwtSettings.Value ?? throw new ArgumentException($"{nameof(jwtSettings)} is missing in configuration.", nameof(jwtSettings));
+            _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
             _mapper = mapper;

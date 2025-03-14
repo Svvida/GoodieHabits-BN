@@ -10,8 +10,10 @@ using Application.Services;
 using Application.Services.Quests;
 using Application.Validators;
 using Application.Validators.Accounts;
+using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -56,9 +58,6 @@ namespace Api
 
             // Build Application
             var app = builder.Build();
-
-            // Seed Data
-            await SeedDatabaseAsync(app);
 
             // Configure Middleware
             ConfigureMiddleware(app);
@@ -129,7 +128,7 @@ namespace Api
                                 Id = "Bearer"
                             }
                         },
-                        new string[] { }
+                        Array.Empty<string>()
                     }
                 });
             });
@@ -144,6 +143,7 @@ namespace Api
             builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
             builder.Services.AddScoped<IQuestMetadataRepository, QuestMetadataRepository>();
             builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
+            builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -152,9 +152,10 @@ namespace Api
             builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
             builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
-            builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
+            builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
+            builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -163,6 +164,8 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<PatchAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
@@ -175,10 +178,8 @@ namespace Api
                 cfg.AddProfile<MonthlyQuestProfile>();
                 cfg.AddProfile<SeasonalQuestProfile>();
                 cfg.AddProfile<AccountProfile>();
+                cfg.AddProfile<QuestLabelProfile>();
             });
-
-            // Register Database Seeder
-            builder.Services.AddScoped<DataSeeder>();
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -214,26 +215,6 @@ namespace Api
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
-        }
-
-        private static async Task SeedDatabaseAsync(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-
-            // Check if seeding is enabled
-            var seedData = configuration.GetValue<bool>("SeedData");
-            if (!seedData)
-            {
-                Log.Information("Seeding is disabled in the configuration.");
-                return;
-            }
-
-            Log.Information("Seeding is enabled. Starting seeding process...");
-
-            var seeder = serviceProvider.GetRequiredService<DataSeeder>();
-            await seeder.SeedAsync();
         }
 
         private async static Task ResetQuests(WebApplication app)

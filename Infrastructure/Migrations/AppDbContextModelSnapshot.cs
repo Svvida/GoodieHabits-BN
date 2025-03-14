@@ -194,6 +194,47 @@ namespace Infrastructure.Migrations
                     b.ToTable("One_Time_Quests", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.QuestLabel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BackgroundColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TextColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("Value");
+
+                    b.ToTable("Quest_Labels", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.QuestMetadata", b =>
                 {
                     b.Property<int>("Id")
@@ -218,6 +259,21 @@ namespace Infrastructure.Migrations
                     b.HasIndex("AccountId", "QuestType");
 
                     b.ToTable("Quests", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestMetadata_QuestLabel", b =>
+                {
+                    b.Property<int>("QuestMetadataId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuestLabelId")
+                        .HasColumnType("int");
+
+                    b.HasKey("QuestMetadataId", "QuestLabelId");
+
+                    b.HasIndex("QuestLabelId");
+
+                    b.ToTable("QuestMetadata_QuestLabel", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.SeasonalQuest", b =>
@@ -342,6 +398,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("QuestMetadata");
                 });
 
+            modelBuilder.Entity("Domain.Models.QuestLabel", b =>
+                {
+                    b.HasOne("Domain.Models.Account", "Account")
+                        .WithMany("Labels")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("Domain.Models.QuestMetadata", b =>
                 {
                     b.HasOne("Domain.Models.Account", "Account")
@@ -351,6 +418,23 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestMetadata_QuestLabel", b =>
+                {
+                    b.HasOne("Domain.Models.QuestLabel", "QuestLabel")
+                        .WithMany("QuestMetadataRelations")
+                        .HasForeignKey("QuestLabelId")
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.QuestMetadata", "QuestMetadata")
+                        .WithMany("QuestLabels")
+                        .HasForeignKey("QuestMetadataId")
+                        .IsRequired();
+
+                    b.Navigation("QuestLabel");
+
+                    b.Navigation("QuestMetadata");
                 });
 
             modelBuilder.Entity("Domain.Models.SeasonalQuest", b =>
@@ -377,7 +461,14 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.Account", b =>
                 {
+                    b.Navigation("Labels");
+
                     b.Navigation("Quests");
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestLabel", b =>
+                {
+                    b.Navigation("QuestMetadataRelations");
                 });
 
             modelBuilder.Entity("Domain.Models.QuestMetadata", b =>
@@ -387,6 +478,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("MonthlyQuest");
 
                     b.Navigation("OneTimeQuest");
+
+                    b.Navigation("QuestLabels");
 
                     b.Navigation("SeasonalQuest");
 

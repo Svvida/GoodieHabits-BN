@@ -3,7 +3,7 @@ using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
-using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 
 namespace Application.Services.Quests
@@ -11,41 +11,38 @@ namespace Application.Services.Quests
     public class SeasonalQuestService : ISeasonalQuestService
     {
         private readonly ISeasonalQuestRepository _repository;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
 
-        public SeasonalQuestService(ISeasonalQuestRepository repository, IMapper mapper)
+        public SeasonalQuestService(
+            ISeasonalQuestRepository repository,
+            IMapper mapper,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
+            _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<GetSeasonalQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetSeasonalQuestDto>(quest);
-        }
         public async Task<GetSeasonalQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, sq => sq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            if (quest.QuestType != QuestTypeEnum.Seasonal)
+                throw new InvalidQuestTypeException(questId, QuestTypeEnum.Seasonal, quest.QuestType);
 
             return _mapper.Map<GetSeasonalQuestDto>(quest);
         }
-        public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetSeasonalQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetQuestsByTypeAsync(accountId, QuestTypeEnum.Seasonal, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetSeasonalQuestDto>>(quests);
@@ -53,10 +50,6 @@ namespace Application.Services.Quests
         public async Task<int> CreateAsync(CreateSeasonalQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var seasonalQuest = _mapper.Map<SeasonalQuest>(createDto);
-
-            seasonalQuest.QuestMetadata.Id = seasonalQuest.Id;
-            seasonalQuest.QuestMetadata.AccountId = createDto.AccountId;
-            seasonalQuest.QuestMetadata.QuestType = QuestTypeEnum.Seasonal;
 
             await _repository.AddAsync(seasonalQuest, cancellationToken);
 
@@ -105,13 +98,13 @@ namespace Application.Services.Quests
 
         public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
+            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            await _repository.DeleteAsync(quest, cancellationToken);
+            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

@@ -8,12 +8,12 @@
         /// <summary>
         /// User's login (username or email).
         /// </summary>
-        public required string Login { get; set; }
+        public string Login { get; set; } = string.Empty; // Prevents ASP.NET Core default validation errors.
 
         /// <summary>
         /// User's password.
         /// </summary>
-        public required string Password { get; set; }
+        public string Password { get; set; } = string.Empty; // Prevents ASP.NET Core default validation errors.
     }
 
 }

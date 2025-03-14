@@ -1,5 +1,19 @@
-﻿namespace Application.Dtos.Quests
+﻿using System.Text.Json.Serialization;
+using Application.Dtos.Labels;
+using Application.Dtos.Quests.DailyQuest;
+using Application.Dtos.Quests.MonthlyQuest;
+using Application.Dtos.Quests.OneTimeQuest;
+using Application.Dtos.Quests.SeasonalQuest;
+using Application.Dtos.Quests.WeeklyQuest;
+
+namespace Application.Dtos.Quests
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+    [JsonDerivedType(typeof(GetOneTimeQuestDto), "GetOneTimeQuestDto")]
+    [JsonDerivedType(typeof(GetDailyQuestDto), "GetDailyQuestDto")]
+    [JsonDerivedType(typeof(GetWeeklyQuestDto), "GetWeeklyQuestDto")]
+    [JsonDerivedType(typeof(GetMonthlyQuestDto), "GetMonthlyQuestDto")]
+    [JsonDerivedType(typeof(GetSeasonalQuestDto), "GetSeasonalQuestDto")]
     public abstract class BaseGetQuestDto
     {
         public int Id { get; set; }
@@ -11,5 +25,6 @@
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
         public virtual string? Type { get; set; }
+        public ICollection<GetQuestLabelDto> QuestLabels { get; set; } = [];
     }
 }

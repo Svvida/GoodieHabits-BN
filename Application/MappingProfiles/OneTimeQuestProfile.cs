@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests.OneTimeQuest;
+﻿using Application.Dtos.Labels;
+using Application.Dtos.Quests.OneTimeQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
@@ -10,16 +11,44 @@ namespace Application.MappingProfiles
     {
         public OneTimeQuestProfile()
         {
+            CreateMap<QuestMetadata, GetOneTimeQuestDto>()
+                .ForMember(dest => dest.QuestLabels, opt => opt.MapFrom(src =>
+                    src.QuestLabels.Select(ql => new GetQuestLabelDto
+                    {
+                        Id = ql.QuestLabel.Id,
+                        Value = ql.QuestLabel.Value,
+                        BackgroundColor = ql.QuestLabel.BackgroundColor,
+                        TextColor = ql.QuestLabel.TextColor
+                    }).ToList()))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.OneTimeQuest!.Priority.ToString()))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.OneTimeQuest!.Title))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.OneTimeQuest!.Description))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.OneTimeQuest!.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.OneTimeQuest!.EndDate))
+                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.OneTimeQuest!.Emoji))
+                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.OneTimeQuest!.IsCompleted));
+
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<OneTimeQuest, GetOneTimeQuestDto>()
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()));
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.QuestLabels, opt => opt.Ignore());
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateOneTimeQuestDto, OneTimeQuest>()
                 .ForMember(dest => dest.QuestMetadata, opt => opt.MapFrom(src => new QuestMetadata
                 {
                     QuestType = QuestTypeEnum.OneTime,
-                    AccountId = src.AccountId
+                    AccountId = src.AccountId,
+                    QuestLabels = src.Labels.Select(ql => new QuestMetadata_QuestLabel
+                    {
+                        QuestLabel = new QuestLabel
+                        {
+                            AccountId = src.AccountId,
+                            Value = ql.Value,
+                            BackgroundColor = ql.BackgroundColor,
+                            TextColor = ql.TextColor
+                        }
+                    }).ToList()
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 

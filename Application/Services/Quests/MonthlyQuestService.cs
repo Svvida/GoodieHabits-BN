@@ -3,7 +3,7 @@ using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
-using Domain.Interfaces;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 
 namespace Application.Services.Quests
@@ -12,42 +12,37 @@ namespace Application.Services.Quests
     {
         private readonly IMonthlyQuestRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IQuestMetadataRepository _questMetadataRepository;
 
-        public MonthlyQuestService(IMonthlyQuestRepository repository, IMapper mapper)
+        public MonthlyQuestService(
+            IMonthlyQuestRepository repository,
+            IMapper mapper,
+            IQuestMetadataRepository questMetadataRepository)
         {
             _repository = repository;
             _mapper = mapper;
-        }
-
-        public async Task<GetMonthlyQuestDto?> GetQuestByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken);
-
-            return quest is null ? null : _mapper.Map<GetMonthlyQuestDto>(quest);
+            _questMetadataRepository = questMetadataRepository;
         }
 
         public async Task<GetMonthlyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(questId, cancellationToken, mq => mq.QuestMetadata);
+            var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
+
+            if (quest.QuestType != QuestTypeEnum.Monthly)
+                throw new InvalidQuestTypeException(questId, QuestTypeEnum.Monthly, quest.QuestType);
 
             return _mapper.Map<GetMonthlyQuestDto>(quest);
         }
 
-        public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var quests = await _repository.GetAllAsync(cancellationToken);
-
-            return _mapper.Map<IEnumerable<GetMonthlyQuestDto>>(quests);
-        }
         public async Task<IEnumerable<GetMonthlyQuestDto>> GetAllUserQuestsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetAllUserQuestsAsync(accountId, cancellationToken)
+            var quests = await _questMetadataRepository.GetQuestsByTypeAsync(accountId, QuestTypeEnum.Monthly, cancellationToken)
                 .ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetMonthlyQuestDto>>(quests);
@@ -55,10 +50,6 @@ namespace Application.Services.Quests
         public async Task<int> CreateAsync(CreateMonthlyQuestDto createDto, CancellationToken cancellationToken = default)
         {
             var monthlyQuest = _mapper.Map<MonthlyQuest>(createDto);
-
-            monthlyQuest.QuestMetadata.Id = monthlyQuest.Id;
-            monthlyQuest.QuestMetadata.AccountId = createDto.AccountId;
-            monthlyQuest.QuestMetadata.QuestType = QuestTypeEnum.Monthly;
 
             await _repository.AddAsync(monthlyQuest, cancellationToken);
 
@@ -107,13 +98,13 @@ namespace Application.Services.Quests
 
         public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetByIdAsync(id, cancellationToken, mq => mq.QuestMetadata).ConfigureAwait(false)
+            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (quest.QuestMetadata.AccountId != accountId)
+            if (quest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            await _repository.DeleteAsync(quest, cancellationToken);
+            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }
