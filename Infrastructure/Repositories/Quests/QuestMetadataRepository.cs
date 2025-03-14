@@ -25,31 +25,16 @@ namespace Infrastructure.Repositories.Quests
             DateTime today = DateTime.UtcNow.Date;
 
             var baseQuery = _context.QuestsMetadata
-                .Where(q => q.AccountId == accountId &&
-                    (
-                        (q.QuestType == QuestTypeEnum.OneTime && q.OneTimeQuest != null &&
-                            (!q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.StartDate.Value.Date <= today) &&
-                            (!q.OneTimeQuest.EndDate.HasValue || q.OneTimeQuest.EndDate.Value.Date >= today))
-
-                        || (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null &&
-                            (!q.DailyQuest.StartDate.HasValue || q.DailyQuest.StartDate.Value.Date <= today) &&
-                            (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today))
-
-                        || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
-                            (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
-                            (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today))
-
-                        || (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null &&
-                            (!q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.StartDate.Value.Date <= today) &&
-                            (!q.MonthlyQuest.EndDate.HasValue || q.MonthlyQuest.EndDate.Value.Date >= today))
-
-                        || (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null &&
-                            (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&
-                            (!q.SeasonalQuest.EndDate.HasValue || q.SeasonalQuest.EndDate.Value.Date >= today))
-                    ))
-                .Include(q => q.QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel)
+                .Where(q => q.AccountId == accountId)
                 .AsQueryable();
+
+            baseQuery = baseQuery.Where(q =>
+                (q.QuestType == QuestTypeEnum.OneTime && q.OneTimeQuest != null && IsQuestActive(q.OneTimeQuest.StartDate, q.OneTimeQuest.EndDate, today)) ||
+                (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null && IsQuestActive(q.DailyQuest.StartDate, q.DailyQuest.EndDate, today)) ||
+                (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null && IsQuestActive(q.WeeklyQuest.StartDate, q.WeeklyQuest.EndDate, today)) ||
+                (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null && IsQuestActive(q.MonthlyQuest.StartDate, q.MonthlyQuest.EndDate, today)) ||
+                (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null && IsQuestActive(q.SeasonalQuest.StartDate, q.SeasonalQuest.EndDate, today))
+            );
 
             baseQuery = baseQuery
                 .Select(q => new QuestMetadata
@@ -81,14 +66,24 @@ namespace Infrastructure.Repositories.Quests
             return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<QuestMetadata>> GetSubtypeQuestsAsync(
+        static bool IsQuestActive(DateTime? startDate, DateTime? endDate, DateTime today)
+        {
+            if (startDate.HasValue && startDate.Value.Date > today)
+                return false;
+
+            if (endDate.HasValue && endDate.Value.Date < today)
+                return false;
+
+            return true;
+        }
+
+        public async Task<IEnumerable<QuestMetadata>> GetQuestsByTypeAsync(
             int accountId,
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
             var quests = await _context.QuestsMetadata
-                .Where(q => q.AccountId == accountId &&
-                    q.QuestType == questType)
+                .Where(q => q.AccountId == accountId && q.QuestType == questType)
                 .Select(q => new QuestMetadata
                 {
                     Id = q.Id,
@@ -152,6 +147,18 @@ namespace Infrastructure.Repositories.Quests
             _logger.LogInformation("Fetched quest: {@quest}", quest);
 
             return quest;
+        }
+
+        public async Task<QuestMetadata?> GetQuestMetadataByIdAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuestsMetadata.FirstOrDefaultAsync(q => q.Id == questId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task DeleteAsync(QuestMetadata quest, CancellationToken cancellationToken = default)
+        {
+            _context.QuestsMetadata.Remove(quest);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -12,16 +12,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
-    public class QuestMetadataService : IQuestMetadataService
+    public class QuestService : IQuestService
     {
         private readonly IQuestMetadataRepository _repository;
         private readonly IMapper _mapper;
-        private readonly ILogger<QuestMetadataService> _logger;
+        private readonly ILogger<QuestService> _logger;
 
-        public QuestMetadataService(
+        public QuestService(
             IQuestMetadataRepository repository,
             IMapper mapper,
-            ILogger<QuestMetadataService> logger)
+            ILogger<QuestService> logger)
         {
             _repository = repository;
             _mapper = mapper;
@@ -57,3 +57,4 @@ namespace Application.Services.Quests
         }
     }
 }
+

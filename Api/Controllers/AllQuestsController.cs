@@ -12,11 +12,11 @@ namespace Api.Controllers
     [Authorize]
     public class AllQuestsController : ControllerBase
     {
-        private readonly IQuestMetadataService _questMetadataService;
+        private readonly IQuestService _questMetadataService;
         private readonly ILogger<AllQuestsController> _logger;
 
         public AllQuestsController(
-            IQuestMetadataService questMetadataService,
+            IQuestService questMetadataService,
             ILogger<AllQuestsController> logger)
         {
             _questMetadataService = questMetadataService;

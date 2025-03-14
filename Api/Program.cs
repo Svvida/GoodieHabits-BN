@@ -152,7 +152,7 @@ namespace Api
             builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
             builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
             builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
-            builder.Services.AddScoped<IQuestMetadataService, QuestMetadataService>();
+            builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();

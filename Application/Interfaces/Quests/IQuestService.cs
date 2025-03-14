@@ -2,7 +2,7 @@
 
 namespace Application.Interfaces.Quests
 {
-    public interface IQuestMetadataService
+    public interface IQuestService
     {
         Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(int accountId, CancellationToken cancellationToken = default);
     }
