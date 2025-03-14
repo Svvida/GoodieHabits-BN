@@ -56,6 +56,8 @@ namespace Application.Services.Quests
         {
             var dailyQuest = _mapper.Map<DailyQuest>(createDto);
 
+            _logger.LogInformation("DailyQuest created after mapping: {@dailyQuest}", dailyQuest);
+
             await _repository.AddAsync(dailyQuest, cancellationToken);
 
             return dailyQuest.Id;

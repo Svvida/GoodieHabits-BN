@@ -2,7 +2,7 @@
 {
     public abstract class BaseUpdateQuestDto
     {
-        public required string Title { get; set; }
+        public string Title { get; set; } = string.Empty;// Prevents ASP.NET Core default validation errors.
         public string? Description { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -56,6 +56,8 @@ namespace Application.Services.Quests
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
+            _logger.LogInformation("OneTimeQuest after mapping: {@oneTimeQuest}", oneTimeQuest);
+
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
             return oneTimeQuest.Id;

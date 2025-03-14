@@ -39,7 +39,17 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.QuestMetadata, opt => opt.MapFrom(src => new QuestMetadata
                 {
                     QuestType = QuestTypeEnum.Daily,
-                    AccountId = src.AccountId
+                    AccountId = src.AccountId,
+                    QuestLabels = src.Labels.Select(ql => new QuestMetadata_QuestLabel
+                    {
+                        QuestLabel = new QuestLabel
+                        {
+                            AccountId = src.AccountId,
+                            Value = ql.Value,
+                            BackgroundColor = ql.BackgroundColor,
+                            TextColor = ql.TextColor
+                        }
+                    }).ToList()
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
