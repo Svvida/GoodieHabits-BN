@@ -14,10 +14,10 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<QuestLabel?> GetLabelByIdAsync(int labelId, CancellationToken cancellationToken = default)
+        public async Task<QuestLabel?> GetLabelByIdAsync(int labelId, int accountId, CancellationToken cancellationToken = default)
         {
             return await _context.QuestLabels
-                .FirstOrDefaultAsync(ql => ql.Id == labelId, cancellationToken)
+                .FirstOrDefaultAsync(ql => ql.Id == labelId && ql.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false) ?? null;
         }
 
@@ -43,8 +43,23 @@ namespace Infrastructure.Repositories
         }
         public async Task DeleteLabelAsync(QuestLabel label, CancellationToken cancellationToken = default)
         {
-            _context.Remove(label);
+            var joinRecords = await _context.QuestMetadata_QuestLabels
+                .Where(qml => qml.QuestLabelId == label.Id)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            _context.QuestMetadata_QuestLabels.RemoveRange(joinRecords);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            _context.QuestLabels.Remove(label);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<QuestLabel?> GetLabelByValueAsync(string value, int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuestLabels
+                .FirstOrDefaultAsync(ql => ql.Value == value && ql.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false) ?? null;
         }
     }
 }

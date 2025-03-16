@@ -12,7 +12,7 @@ namespace Application.MappingProfiles
         public OneTimeQuestProfile()
         {
             CreateMap<QuestMetadata, GetOneTimeQuestDto>()
-                .ForMember(dest => dest.QuestLabels, opt => opt.MapFrom(src =>
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src =>
                     src.QuestLabels.Select(ql => new GetQuestLabelDto
                     {
                         Id = ql.QuestLabel.Id,
@@ -31,7 +31,7 @@ namespace Application.MappingProfiles
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<OneTimeQuest, GetOneTimeQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
-                .ForMember(dest => dest.QuestLabels, opt => opt.Ignore());
+                .ForMember(dest => dest.Labels, opt => opt.Ignore());
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateOneTimeQuestDto, OneTimeQuest>()
@@ -41,13 +41,7 @@ namespace Application.MappingProfiles
                     AccountId = src.AccountId,
                     QuestLabels = src.Labels.Select(ql => new QuestMetadata_QuestLabel
                     {
-                        QuestLabel = new QuestLabel
-                        {
-                            AccountId = src.AccountId,
-                            Value = ql.Value,
-                            BackgroundColor = ql.BackgroundColor,
-                            TextColor = ql.TextColor
-                        }
+                        QuestLabelId = ql
                     }).ToList()
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));

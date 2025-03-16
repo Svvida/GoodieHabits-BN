@@ -28,6 +28,9 @@ namespace Application.Services
 
         public async Task<int> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
         {
+            if (await _questLabelRepository.GetLabelByValueAsync(createDto.Value, createDto.AccountId, cancellationToken).ConfigureAwait(false) != null)
+                throw new ConflictException($"Label with value: {createDto.Value} already exists");
+
             var label = _mapper.Map<QuestLabel>(createDto);
             await _questLabelRepository.CreateLabelAsync(label, cancellationToken).ConfigureAwait(false);
 
@@ -36,7 +39,7 @@ namespace Application.Services
 
         public async Task PatchLabelAsync(int labelId, PatchQuestLabelDto patchDto, int accountId, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
+            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
 
             if (label.AccountId != accountId)
@@ -49,7 +52,7 @@ namespace Application.Services
 
         public async Task DeleteLabelAsync(int labelId, int accountId, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
+            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
 
             if (label.AccountId != accountId)

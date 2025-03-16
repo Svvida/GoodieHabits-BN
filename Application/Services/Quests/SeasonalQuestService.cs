@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests.SeasonalQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -13,15 +14,18 @@ namespace Application.Services.Quests
         private readonly ISeasonalQuestRepository _repository;
         private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
+        private readonly IQuestLabelsHandler _questLabelsHandler;
 
         public SeasonalQuestService(
             ISeasonalQuestRepository repository,
             IMapper mapper,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestMetadataRepository questMetadataRepository,
+            IQuestLabelsHandler questLabelsHandler)
         {
             _repository = repository;
             _mapper = mapper;
             _questMetadataRepository = questMetadataRepository;
+            _questLabelsHandler = questLabelsHandler;
         }
 
         public async Task<GetSeasonalQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
@@ -58,15 +62,32 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(int id, int accountId, UpdateSeasonalQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
+            var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
+            if (existingQuest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            _mapper.Map(updateDto, existingSeasonalQuest);
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (updateDto.StartDate.HasValue && existingQuest.SeasonalQuest!.EndDate.HasValue)
+            {
+                if (updateDto.StartDate.Value > existingQuest.SeasonalQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
 
-            await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (updateDto.EndDate.HasValue && existingQuest.SeasonalQuest!.StartDate.HasValue)
+            {
+                if (updateDto.EndDate.Value < existingQuest.SeasonalQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
+
+            _mapper.Map(updateDto, existingQuest.SeasonalQuest);
+
+            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            existingQuest.SeasonalQuest = questWithLabels.SeasonalQuest!;
+
+            await _repository.UpdateAsync(existingQuest.SeasonalQuest, cancellationToken);
         }
 
         public async Task PatchUserQuestAsync(int id, int accountId, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)

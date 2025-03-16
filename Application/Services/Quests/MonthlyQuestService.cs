@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests.MonthlyQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -13,15 +14,18 @@ namespace Application.Services.Quests
         private readonly IMonthlyQuestRepository _repository;
         private readonly IMapper _mapper;
         private readonly IQuestMetadataRepository _questMetadataRepository;
+        private readonly IQuestLabelsHandler _questLabelsHandler;
 
         public MonthlyQuestService(
             IMonthlyQuestRepository repository,
             IMapper mapper,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestMetadataRepository questMetadataRepository,
+            IQuestLabelsHandler questLabelsHandler)
         {
             _repository = repository;
             _mapper = mapper;
             _questMetadataRepository = questMetadataRepository;
+            _questLabelsHandler = questLabelsHandler;
         }
 
         public async Task<GetMonthlyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
@@ -58,15 +62,32 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(int id, int accountId, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+            var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
+            if (existingQuest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            _mapper.Map(updateDto, existingMonthlyQuest);
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (updateDto.StartDate.HasValue && existingQuest.MonthlyQuest!.EndDate.HasValue)
+            {
+                if (updateDto.StartDate.Value > existingQuest.MonthlyQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
 
-            await _repository.UpdateAsync(existingMonthlyQuest, cancellationToken);
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (updateDto.EndDate.HasValue && existingQuest.MonthlyQuest!.StartDate.HasValue)
+            {
+                if (updateDto.EndDate.Value < existingQuest.MonthlyQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
+
+            _mapper.Map(updateDto, existingQuest.MonthlyQuest);
+
+            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            existingQuest.MonthlyQuest = questWithLabels.MonthlyQuest!;
+
+            await _repository.UpdateAsync(existingQuest.MonthlyQuest, cancellationToken);
         }
 
         public async Task PatchUserQuestAsync(int id, int accountId, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)

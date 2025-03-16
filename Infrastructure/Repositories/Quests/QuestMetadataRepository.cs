@@ -78,17 +78,6 @@ namespace Infrastructure.Repositories.Quests
             return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        static bool IsQuestActive(DateTime? startDate, DateTime? endDate, DateTime today)
-        {
-            if (startDate.HasValue && startDate.Value.Date > today)
-                return false;
-
-            if (endDate.HasValue && endDate.Value.Date < today)
-                return false;
-
-            return true;
-        }
-
         public async Task<IEnumerable<QuestMetadata>> GetQuestsByTypeAsync(
             int accountId,
             QuestTypeEnum questType,
@@ -138,6 +127,8 @@ namespace Infrastructure.Repositories.Quests
                     AccountId = q.AccountId,
                     QuestLabels = q.QuestLabels.Select(ql => new QuestMetadata_QuestLabel
                     {
+                        QuestMetadataId = q.Id,
+                        QuestLabelId = ql.QuestLabelId,
                         QuestLabel = new QuestLabel
                         {
                             Id = ql.QuestLabel.Id,
@@ -171,6 +162,18 @@ namespace Infrastructure.Repositories.Quests
         {
             _context.QuestsMetadata.Remove(quest);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task AddQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToAdd, CancellationToken cancellationToken = default)
+        {
+            _context.QuestMetadata_QuestLabels.AddRange(labelsToAdd);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task RemoveQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToRemove, CancellationToken cancellationToken = default)
+        {
+            _context.QuestMetadata_QuestLabels.RemoveRange(labelsToRemove);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

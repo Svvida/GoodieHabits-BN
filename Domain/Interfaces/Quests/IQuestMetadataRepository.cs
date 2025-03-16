@@ -10,5 +10,7 @@ namespace Domain.Interfaces.Quests
         Task<QuestMetadata?> GetQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
         Task<QuestMetadata?> GetQuestMetadataByIdAsync(int questId, CancellationToken cancellationToken = default);
         Task DeleteAsync(QuestMetadata quest, CancellationToken cancellationToken = default);
+        Task AddQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToAdd, CancellationToken cancellationToken = default);
+        Task RemoveQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToRemove, CancellationToken cancellationToken = default);
     }
 }
