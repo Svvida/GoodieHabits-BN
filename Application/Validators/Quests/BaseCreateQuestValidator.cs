@@ -1,6 +1,5 @@
 ﻿using Application.Dtos.Quests;
 using Application.Validators.Helpers;
-using Application.Validators.QuestLabels;
 using Domain.Enum;
 using FluentValidation;
 
@@ -34,9 +33,6 @@ namespace Application.Validators.Quests
             RuleFor(x => x.Priority)
                 .IsEnumName(typeof(PriorityEnum), caseSensitive: true).When(x => x.Priority != null)
                 .WithMessage("{PropertyName} must be a valid priority type: 'Low', 'Medium', 'High'.");
-
-            RuleForEach(x => x.Labels)
-                .SetValidator(new CreateQuestLabelValidator());
         }
     }
 }

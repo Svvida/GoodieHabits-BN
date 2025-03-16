@@ -12,7 +12,7 @@ namespace Application.MappingProfiles
         public DailyQuestProfile()
         {
             CreateMap<QuestMetadata, GetDailyQuestDto>()
-                .ForMember(dest => dest.QuestLabels, opt => opt.MapFrom(src =>
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src =>
                     src.QuestLabels.Select(ql => new GetQuestLabelDto
                     {
                         Id = ql.QuestLabel.Id,
@@ -32,7 +32,7 @@ namespace Application.MappingProfiles
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<DailyQuest, GetDailyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
-                .ForMember(dest => dest.QuestLabels, opt => opt.Ignore());
+                .ForMember(dest => dest.Labels, opt => opt.Ignore());
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateDailyQuestDto, DailyQuest>()
@@ -42,19 +42,14 @@ namespace Application.MappingProfiles
                     AccountId = src.AccountId,
                     QuestLabels = src.Labels.Select(ql => new QuestMetadata_QuestLabel
                     {
-                        QuestLabel = new QuestLabel
-                        {
-                            AccountId = src.AccountId,
-                            Value = ql.Value,
-                            BackgroundColor = ql.BackgroundColor,
-                            TextColor = ql.TextColor
-                        }
+                        QuestLabelId = ql
                     }).ToList()
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<PatchDailyQuestDto, DailyQuest>()
+                .ForMember(dest => dest.QuestMetadata, opt => opt.Ignore())
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
                 .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom((src, dest) => src.IsCompleted ?? dest.IsCompleted))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));

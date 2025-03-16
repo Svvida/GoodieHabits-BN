@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests.WeeklyQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -15,17 +16,20 @@ namespace Application.Services.Quests
         private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<WeeklyQuestService> _logger;
+        private readonly IQuestLabelsHandler _questLabelsHandler;
 
         public WeeklyQuestService(
             IWeeklyQuestRepository repository,
             IMapper mapper,
             ILogger<WeeklyQuestService> logger,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestMetadataRepository questMetadataRepository,
+            IQuestLabelsHandler questLabelsHandler)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
             _questMetadataRepository = questMetadataRepository;
+            _questLabelsHandler = questLabelsHandler;
         }
 
         public async Task<GetWeeklyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
@@ -62,15 +66,32 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(int id, int accountId, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
+            var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (existingQuest.QuestMetadata.AccountId != accountId)
+            if (existingQuest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            _mapper.Map(updateDto, existingQuest);
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (updateDto.StartDate.HasValue && existingQuest.WeeklyQuest!.EndDate.HasValue)
+            {
+                if (updateDto.StartDate.Value > existingQuest.WeeklyQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
 
-            await _repository.UpdateAsync(existingQuest, cancellationToken);
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (updateDto.EndDate.HasValue && existingQuest.WeeklyQuest!.StartDate.HasValue)
+            {
+                if (updateDto.EndDate.Value < existingQuest.WeeklyQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
+
+            _mapper.Map(updateDto, existingQuest.WeeklyQuest);
+
+            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            existingQuest.WeeklyQuest = questWithLabels.WeeklyQuest!;
+
+            await _repository.UpdateAsync(existingQuest.WeeklyQuest, cancellationToken);
         }
 
         public async Task PatchUserQuestAsync(int id, int accountId, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)

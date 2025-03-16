@@ -1,8 +1,10 @@
 ﻿using Application.Dtos.Quests.DailyQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
+using Domain.Interfaces;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -15,17 +17,26 @@ namespace Application.Services.Quests
         private readonly IQuestMetadataRepository _questMetadataRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<DailyQuestService> _logger;
+        private readonly IQuestLabelService _questLabelService;
+        private readonly IQuestLabelRepository _questLabelRepository;
+        private readonly IQuestLabelsHandler _questLabelsHandler;
 
         public DailyQuestService(
             IDailyQuestRepository repository,
             IMapper mapper,
             ILogger<DailyQuestService> logger,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestMetadataRepository questMetadataRepository,
+            IQuestLabelService questLabelService,
+            IQuestLabelRepository questLabelRepository,
+            IQuestLabelsHandler questLabelsHandler)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
             _questMetadataRepository = questMetadataRepository;
+            _questLabelService = questLabelService;
+            _questLabelRepository = questLabelRepository;
+            _questLabelsHandler = questLabelsHandler;
         }
 
         public async Task<GetDailyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
@@ -65,21 +76,34 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(int id, int accountId, UpdateDailyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
+            var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            if (existingDailyQuest.QuestMetadata.AccountId != accountId)
+            _logger.LogInformation("DailyQuest before update: {@existingQuest}", existingQuest);
+
+            if (existingQuest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            if (existingDailyQuest.EndDate.HasValue && updateDto.StartDate.HasValue)
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (updateDto.StartDate.HasValue && existingQuest.DailyQuest!.EndDate.HasValue)
             {
-                if (existingDailyQuest.EndDate.Value < updateDto.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before start date.");
+                if (updateDto.StartDate.Value > existingQuest.DailyQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
             }
 
-            _mapper.Map(updateDto, existingDailyQuest);
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (updateDto.EndDate.HasValue && existingQuest.DailyQuest!.StartDate.HasValue)
+            {
+                if (updateDto.EndDate.Value < existingQuest.DailyQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
 
-            await _repository.UpdateAsync(existingDailyQuest, cancellationToken);
+            _mapper.Map(updateDto, existingQuest.DailyQuest);
+
+            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            existingQuest.DailyQuest = questWithLabels.DailyQuest!;
+
+            await _repository.UpdateAsync(existingQuest.DailyQuest, cancellationToken);
         }
 
         public async Task PatchUserQuestAsync(int id, int accountId, PatchDailyQuestDto patchDto, CancellationToken cancellationToken = default)

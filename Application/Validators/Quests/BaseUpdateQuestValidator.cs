@@ -31,6 +31,9 @@ namespace Application.Validators.Quests
             RuleFor(x => x.Priority)
                 .IsEnumName(typeof(PriorityEnum), caseSensitive: true).When(x => x.Priority != null)
                 .WithMessage("{PropertyName} must be a valid priority type: 'Low', 'Medium', 'High'.");
+
+            RuleFor(x => x.Labels)
+                .NotNull().WithMessage("{PropertyName} is required");
         }
     }
 }

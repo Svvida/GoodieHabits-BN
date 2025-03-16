@@ -3,6 +3,7 @@ using System.Text;
 using Api.Middlewares;
 using Application.Configurations;
 using Application.Dtos.Quests;
+using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Application.MappingProfiles;
@@ -156,6 +157,7 @@ namespace Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
+            builder.Services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

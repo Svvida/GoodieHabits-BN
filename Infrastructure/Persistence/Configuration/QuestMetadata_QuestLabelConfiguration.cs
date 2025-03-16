@@ -14,12 +14,12 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasOne(qml => qml.QuestMetadata)
                 .WithMany(qm => qm.QuestLabels)
                 .HasForeignKey(qml => qml.QuestMetadataId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(qml => qml.QuestLabel)
                 .WithMany(ql => ql.QuestMetadataRelations)
                 .HasForeignKey(qml => qml.QuestLabelId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

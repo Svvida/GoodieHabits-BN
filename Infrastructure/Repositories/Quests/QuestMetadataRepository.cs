@@ -25,28 +25,34 @@ namespace Infrastructure.Repositories.Quests
             DateTime today = DateTime.UtcNow.Date;
 
             var baseQuery = _context.QuestsMetadata
-                 .Where(q => q.AccountId == accountId &&
-                     (
-                         (q.QuestType == QuestTypeEnum.OneTime && q.OneTimeQuest != null &&
-                             (!q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.StartDate.Value.Date <= today) &&
-                             (!q.OneTimeQuest.EndDate.HasValue || q.OneTimeQuest.EndDate.Value.Date >= today))
+                .Where(q => q.AccountId == accountId)
+                .Where(q =>
+                    (q.QuestType == QuestTypeEnum.OneTime && q.OneTimeQuest != null &&
+                     (!q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.StartDate.Value.Date <= today) &&
+                     (!q.OneTimeQuest.EndDate.HasValue || q.OneTimeQuest.EndDate.Value.Date >= today) &&
+                     (q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.EndDate.HasValue))
 
-                         || (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null &&
-                             (!q.DailyQuest.StartDate.HasValue || q.DailyQuest.StartDate.Value.Date <= today) &&
-                             (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today))
+                    || (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null &&
+                        (!q.DailyQuest.StartDate.HasValue || q.DailyQuest.StartDate.Value.Date <= today) &&
+                        (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today) &&
+                        (q.DailyQuest.StartDate.HasValue || q.DailyQuest.EndDate.HasValue))
 
-                         || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
-                             (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
-                             (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today))
+                    || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
+                        (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
+                        (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today) &&
+                        (q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.EndDate.HasValue))
 
-                         || (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null &&
-                             (!q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.StartDate.Value.Date <= today) &&
-                             (!q.MonthlyQuest.EndDate.HasValue || q.MonthlyQuest.EndDate.Value.Date >= today))
+                    || (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null &&
+                        (!q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.StartDate.Value.Date <= today) &&
+                        (!q.MonthlyQuest.EndDate.HasValue || q.MonthlyQuest.EndDate.Value.Date >= today) &&
+                        (q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.EndDate.HasValue))
 
-                         || (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null &&
-                             (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&
-                             (!q.SeasonalQuest.EndDate.HasValue || q.SeasonalQuest.EndDate.Value.Date >= today))
-                     )).AsQueryable();
+                    || (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null &&
+                        (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&
+                        (!q.SeasonalQuest.EndDate.HasValue || q.SeasonalQuest.EndDate.Value.Date >= today) &&
+                        (q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.EndDate.HasValue))
+                )
+                .AsQueryable();
 
             baseQuery = baseQuery
                 .Select(q => new QuestMetadata
@@ -76,17 +82,6 @@ namespace Infrastructure.Repositories.Quests
                 .AsNoTracking();
 
             return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        static bool IsQuestActive(DateTime? startDate, DateTime? endDate, DateTime today)
-        {
-            if (startDate.HasValue && startDate.Value.Date > today)
-                return false;
-
-            if (endDate.HasValue && endDate.Value.Date < today)
-                return false;
-
-            return true;
         }
 
         public async Task<IEnumerable<QuestMetadata>> GetQuestsByTypeAsync(
@@ -138,6 +133,8 @@ namespace Infrastructure.Repositories.Quests
                     AccountId = q.AccountId,
                     QuestLabels = q.QuestLabels.Select(ql => new QuestMetadata_QuestLabel
                     {
+                        QuestMetadataId = q.Id,
+                        QuestLabelId = ql.QuestLabelId,
                         QuestLabel = new QuestLabel
                         {
                             Id = ql.QuestLabel.Id,
@@ -171,6 +168,18 @@ namespace Infrastructure.Repositories.Quests
         {
             _context.QuestsMetadata.Remove(quest);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task AddQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToAdd, CancellationToken cancellationToken = default)
+        {
+            _context.QuestMetadata_QuestLabels.AddRange(labelsToAdd);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task RemoveQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToRemove, CancellationToken cancellationToken = default)
+        {
+            _context.QuestMetadata_QuestLabels.RemoveRange(labelsToRemove);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

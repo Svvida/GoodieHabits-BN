@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests.DailyQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Application.Services;
 using Domain.Exceptions;
@@ -13,10 +14,14 @@ namespace Api.Controllers
     public class DailyQuestController : ControllerBase
     {
         private readonly IDailyQuestService _service;
+        private readonly IQuestLabelService _questLabelService;
 
-        public DailyQuestController(IDailyQuestService service)
+        public DailyQuestController(
+            IDailyQuestService service,
+            IQuestLabelService questLabelService)
         {
             _service = service;
+            _questLabelService = questLabelService;
         }
 
         [HttpGet("{id}")]
@@ -59,9 +64,16 @@ namespace Api.Controllers
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+                return Unauthorized("Invalid access token: missing account identifier.");
 
             createDto.AccountId = accountId;
+
+            //var userLabelDtos = await _questLabelService.GetUserLabelsAsync(accountId, cancellationToken);
+            //HashSet<int> userLabelsIds = userLabelDtos.Select(label => label.Id).ToHashSet();
+
+            //if (!createDto.Labels.IsSubsetOf(userLabelsIds))
+            //    return BadRequest("One or more og the specified labels do not belong to the user.");
+
 
             var createdId = await _service.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });

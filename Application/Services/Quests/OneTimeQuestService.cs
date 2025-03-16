@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Quests.OneTimeQuest;
+using Application.Interfaces;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -15,17 +16,20 @@ namespace Application.Services.Quests
         private readonly IMapper _mapper;
         private readonly ILogger<OneTimeQuestService> _logger;
         private readonly IQuestMetadataRepository _questMetadataRepository;
+        private readonly IQuestLabelsHandler _questLabelsHandler;
 
         public OneTimeQuestService(
             IOneTimeQuestRepository repository,
             IMapper mapper,
             ILogger<OneTimeQuestService> logger,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestMetadataRepository questMetadataRepository,
+            IQuestLabelsHandler questLabelsHandler)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
             _questMetadataRepository = questMetadataRepository;
+            _questLabelsHandler = questLabelsHandler;
         }
 
         public async Task<GetOneTimeQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
@@ -65,15 +69,32 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(int id, int accountId, UpdateOneTimeQuestDto updateDto, CancellationToken cancellationToken = default)
         {
-            var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
-                ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
+            var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (existingOneTimeQuest.QuestMetadata.AccountId != accountId)
+            if (existingQuest.AccountId != accountId)
                 throw new UnauthorizedException("You do not have permission to access this quest.");
 
-            _mapper.Map(updateDto, existingOneTimeQuest);
+            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
+            if (updateDto.StartDate.HasValue && existingQuest.OneTimeQuest!.EndDate.HasValue)
+            {
+                if (updateDto.StartDate.Value > existingQuest.OneTimeQuest.EndDate.Value)
+                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
+            }
 
-            await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
+            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
+            if (updateDto.EndDate.HasValue && existingQuest.OneTimeQuest!.StartDate.HasValue)
+            {
+                if (updateDto.EndDate.Value < existingQuest.OneTimeQuest.StartDate.Value)
+                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
+            }
+
+            _mapper.Map(updateDto, existingQuest.OneTimeQuest);
+
+            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            existingQuest.OneTimeQuest = questWithLabels.OneTimeQuest!;
+
+            await _repository.UpdateAsync(existingQuest.OneTimeQuest, cancellationToken);
         }
 
         public async Task PatchUserQuestAsync(int id, int accountId, PatchOneTimeQuestDto patchDto, CancellationToken cancellationToken = default)

@@ -25,6 +25,6 @@ namespace Application.Dtos.Quests
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
         public virtual string? Type { get; set; }
-        public ICollection<GetQuestLabelDto> QuestLabels { get; set; } = [];
+        public ICollection<GetQuestLabelDto> Labels { get; set; } = [];
     }
 }
