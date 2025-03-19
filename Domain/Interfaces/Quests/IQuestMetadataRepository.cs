@@ -12,5 +12,6 @@ namespace Domain.Interfaces.Quests
         Task DeleteAsync(QuestMetadata quest, CancellationToken cancellationToken = default);
         Task AddQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToAdd, CancellationToken cancellationToken = default);
         Task RemoveQuestLabelsAsync(List<QuestMetadata_QuestLabel> labelsToRemove, CancellationToken cancellationToken = default);
+        Task<bool> IsQuestOwnedByUserAsync(int questId, int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
     }
 }

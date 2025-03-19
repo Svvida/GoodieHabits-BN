@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Api.Converters;
 using Api.Middlewares;
 using Application.Configurations;
 using Application.Dtos.Quests;
@@ -14,10 +15,12 @@ using Application.Validators.Accounts;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Domain.Interfaces;
+using Domain.Interfaces.Authentication;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.Authentication;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Quests;
@@ -101,8 +104,12 @@ namespace Api
                     });
             });
 
-            // Add Controllers
-            builder.Services.AddControllers();
+            //Add Controllers
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
+                });
 
             // Add Swagger for API Documentation
             builder.Services.AddEndpointsApiExplorer();
@@ -158,6 +165,8 @@ namespace Api
             builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
             builder.Services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
+            builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
+            builder.Services.AddScoped<ITokenValidator, TokenValidator>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
