@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Api.Converters;
+using Api.Filters;
 using Api.Middlewares;
 using Application.Configurations;
 using Application.Dtos.Quests;
@@ -224,6 +225,9 @@ namespace Api
                     };
                 });
 
+            // Configure Authorization
+            builder.Services.AddScoped<QuestAuthorizationFilter>();
+
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
         }
@@ -240,6 +244,8 @@ namespace Api
         {
             try
             {
+                app.UseHttpsRedirection();
+
                 // Handle OPTIONS requests explicitly for Preflight
                 app.Use(async (context, next) =>
                 {

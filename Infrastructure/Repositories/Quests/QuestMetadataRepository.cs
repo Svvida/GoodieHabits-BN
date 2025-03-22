@@ -184,14 +184,12 @@ namespace Infrastructure.Repositories.Quests
         public async Task<bool> IsQuestOwnedByUserAsync(
             int questId,
             int accountId,
-            QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
             return await _context.QuestsMetadata
                 .AnyAsync(q => q.Id == questId &&
-                q.AccountId == accountId &&
-                q.QuestType == questType,
-                cancellationToken)
+                        q.AccountId == accountId,
+                        cancellationToken)
                 .ConfigureAwait(false);
         }
     }
