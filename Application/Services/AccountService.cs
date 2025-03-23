@@ -3,9 +3,6 @@ using Application.Interfaces;
 using AutoMapper;
 using Domain.Exceptions;
 using Domain.Interfaces;
-using Domain.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 
 namespace Application.Services
 {
@@ -13,19 +10,13 @@ namespace Application.Services
     {
         private readonly IAccountRepository _accountRepository;
         private readonly IMapper _mapper;
-        private readonly IPasswordHasher<Account> _passwordHasher;
-        private readonly ILogger<AccountService> _logger;
 
         public AccountService(
             IAccountRepository accountRepository,
-            IMapper mapper,
-            IPasswordHasher<Account> passwordHasher,
-            ILogger<AccountService> logger)
+            IMapper mapper)
         {
             _accountRepository = accountRepository;
             _mapper = mapper;
-            _passwordHasher = passwordHasher;
-            _logger = logger;
         }
 
         public async Task<IEnumerable<GetAccountDto>> GetAllAccountsAsync(CancellationToken cancellationToken = default)

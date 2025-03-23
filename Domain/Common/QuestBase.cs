@@ -19,8 +19,6 @@ namespace Domain.Common
         public QuestBase() { }
         public QuestBase(int id, string title, string? description, string? emoji, DateTime? startDate, DateTime? endDate, PriorityEnum? priority)
         {
-            ValidateDates(startDate, endDate);
-
             Id = id;
             Title = title;
             Description = description;
@@ -30,12 +28,25 @@ namespace Domain.Common
             Priority = priority;
         }
 
-        private static void ValidateDates(DateTime? startDate, DateTime? endDate)
+        public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate, bool allowPastDates)
         {
-            if (startDate is not null && endDate is not null && startDate > endDate)
+            if (!allowPastDates && newStartDate.HasValue && newStartDate < DateTime.UtcNow)
             {
-                throw new InvalidArgumentException("Start date must be before end date");
+                throw new InvalidArgumentException("Start date cannot be in the past.");
             }
+
+            if (newStartDate.HasValue && EndDate.HasValue && newStartDate > EndDate)
+            {
+                throw new InvalidArgumentException("Start date cannot be after the end date.");
+            }
+
+            if (newEndDate.HasValue && StartDate.HasValue && newEndDate < StartDate)
+            {
+                throw new InvalidArgumentException("End date cannot be before the start date.");
+            }
+
+            StartDate = newStartDate ?? StartDate;
+            EndDate = newEndDate ?? EndDate;
         }
     }
 }

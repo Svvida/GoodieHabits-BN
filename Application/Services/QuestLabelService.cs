@@ -37,26 +37,20 @@ namespace Application.Services
             return label.Id;
         }
 
-        public async Task PatchLabelAsync(int labelId, PatchQuestLabelDto patchDto, int accountId, CancellationToken cancellationToken = default)
+        public async Task PatchLabelAsync(int labelId, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, accountId, cancellationToken).ConfigureAwait(false)
+            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
-
-            if (label.AccountId != accountId)
-                throw new UnauthorizedException("You are not authorized to update this label");
 
             var mappedLabel = _mapper.Map(patchDto, label);
 
             await _questLabelRepository.UpdateLabelAsync(mappedLabel, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteLabelAsync(int labelId, int accountId, CancellationToken cancellationToken = default)
+        public async Task DeleteLabelAsync(int labelId, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, accountId, cancellationToken).ConfigureAwait(false)
+            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
-
-            if (label.AccountId != accountId)
-                throw new UnauthorizedException("You are not authorized to delete this label");
 
             await _questLabelRepository.DeleteLabelAsync(label, cancellationToken).ConfigureAwait(false);
         }

@@ -21,8 +21,12 @@ namespace Application.Validators.Quests
                 .Must(emoji => Checkers.IsSingleEmoji(emoji!)).When(x => !string.IsNullOrEmpty(x.Emoji))
                 .WithMessage("You must provide a valid single emoji.");
 
+            RuleFor(x => x.StartDate)
+                .GreaterThanOrEqualTo(_ => DateTime.UtcNow.Date).When(x => x.StartDate.HasValue)
+                .WithMessage("{PropertyName} must be greater then or equal to today's date.");
+
             RuleFor(x => x.EndDate)
-                .GreaterThan(_ => DateTime.UtcNow.Date).When(x => x.EndDate.HasValue)
+                .GreaterThanOrEqualTo(_ => DateTime.UtcNow.Date).When(x => x.EndDate.HasValue)
                 .WithMessage("{PropertyName} must be greater than or equal to today's date")
                 .GreaterThan(x => x.StartDate).When(x => x.StartDate.HasValue && x.EndDate.HasValue)
                 .WithMessage("{PropertyName} must be greater than {ComparisonProperty}");

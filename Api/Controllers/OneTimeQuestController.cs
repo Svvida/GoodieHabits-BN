@@ -1,6 +1,7 @@
-﻿using Application.Dtos.Quests.OneTimeQuest;
+﻿using Api.Filters;
+using Application.Dtos.Quests.OneTimeQuest;
 using Application.Interfaces.Quests;
-using Application.Services;
+using Domain;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,22 +13,21 @@ namespace Api.Controllers
     [Authorize]
     public class OneTimeQuestController : ControllerBase
     {
-        private readonly IOneTimeQuestService _service;
+        private readonly IOneTimeQuestService _oneTimeQuestService;
+        private readonly IQuestService _questService;
 
         public OneTimeQuestController(
-            IOneTimeQuestService oneTimeQuestService)
+            IOneTimeQuestService oneTimeQuestService, IQuestService questService)
         {
-            _service = oneTimeQuestService;
+            _oneTimeQuestService = oneTimeQuestService;
+            _questService = questService;
         }
 
         [HttpGet("{id}")]
+        [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetOneTimeQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            var quest = await _service.GetUserQuestByIdAsync(id, accountId, cancellationToken);
+            var quest = await _oneTimeQuestService.GetUserQuestByIdAsync(id, cancellationToken);
 
             if (quest is null)
             {
@@ -49,7 +49,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _oneTimeQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
@@ -64,47 +64,38 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
         [HttpPatch("{id}")]
+        [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> UpdateUserQuestPartial(
             int id,
             [FromBody] PatchOneTimeQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _service.PatchUserQuestAsync(id, accountId, patchDto, cancellationToken);
+            await _oneTimeQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }
 
         [HttpPut("{id}")]
+        [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> UpdateUserQuest(
             int id,
             [FromBody] UpdateOneTimeQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _service.UpdateUserQuestAsync(id, accountId, updateDto, cancellationToken);
+            await _oneTimeQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        [ServiceFilter(typeof(QuestAuthorizationFilter))]
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _service.DeleteUserQuestAsync(id, accountId, cancellationToken);
+            await _questService.DeleteQuestAsync(id, cancellationToken);
             return NoContent();
         }
     }

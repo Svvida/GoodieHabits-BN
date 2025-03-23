@@ -14,10 +14,10 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<QuestLabel?> GetLabelByIdAsync(int labelId, int accountId, CancellationToken cancellationToken = default)
+        public async Task<QuestLabel?> GetLabelByIdAsync(int labelId, CancellationToken cancellationToken = default)
         {
             return await _context.QuestLabels
-                .FirstOrDefaultAsync(ql => ql.Id == labelId && ql.AccountId == accountId, cancellationToken)
+                .FirstOrDefaultAsync(ql => ql.Id == labelId, cancellationToken)
                 .ConfigureAwait(false) ?? null;
         }
 
@@ -60,6 +60,13 @@ namespace Infrastructure.Repositories
             return await _context.QuestLabels
                 .FirstOrDefaultAsync(ql => ql.Value == value && ql.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false) ?? null;
+        }
+
+        public async Task<bool> IsLabelOwnedByUserAsync(int labelId, int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuestLabels
+                .AnyAsync(ql => ql.Id == labelId && ql.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

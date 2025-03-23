@@ -34,8 +34,7 @@ namespace Infrastructure.Repositories.Quests
 
                     || (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null &&
                         (!q.DailyQuest.StartDate.HasValue || q.DailyQuest.StartDate.Value.Date <= today) &&
-                        (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today) &&
-                        (q.DailyQuest.StartDate.HasValue || q.DailyQuest.EndDate.HasValue))
+                        (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today))
 
                     || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
                         (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
@@ -180,6 +179,18 @@ namespace Infrastructure.Repositories.Quests
         {
             _context.QuestMetadata_QuestLabels.RemoveRange(labelsToRemove);
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsQuestOwnedByUserAsync(
+            int questId,
+            int accountId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.QuestsMetadata
+                .AnyAsync(q => q.Id == questId &&
+                        q.AccountId == accountId,
+                        cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

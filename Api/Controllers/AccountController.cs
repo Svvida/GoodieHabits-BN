@@ -1,6 +1,6 @@
 ﻿using Application.Dtos.Accounts;
 using Application.Interfaces;
-using Application.Services;
+using Domain;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +18,6 @@ namespace Api.Controllers
         {
             _accountService = accountService;
         }
-
-        //[HttpGet("accounts")]
-        //[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<GetAccountDto>))]
-        //public async Task<ActionResult<IEnumerable<GetAccountDto>>> GetAccounts()
-        //{
-        //    var accounts = await _accountService.GetAllAccountsAsync();
-        //    return Ok(accounts);
-        //}
 
         [HttpGet("accounts/me")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAccountDto))]

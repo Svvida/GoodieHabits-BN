@@ -1,19 +1,18 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+﻿using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Application.Configurations;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
 using AutoMapper;
+using Domain;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Interfaces.Authentication;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services
 {
@@ -23,23 +22,26 @@ namespace Application.Services
         private readonly IAccountRepository _accountRepository;
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IMapper _mapper;
-        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
         private readonly ILogger<AuthService> _logger;
+        private readonly ITokenGenerator _tokenGenerator;
+        private readonly ITokenValidator _tokenValidator;
 
         public AuthService(
             IOptions<JwtSettings> jwtSettings,
             IAccountRepository accountRepository,
             IPasswordHasher<Account> passwordHasher,
             IMapper mapper,
-            JwtSecurityTokenHandler jwtSecurityTokenHandler,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            ITokenGenerator tokenGenerator,
+            ITokenValidator tokenValidator)
         {
             _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
             _mapper = mapper;
-            _jwtSecurityTokenHandler = jwtSecurityTokenHandler;
             _logger = logger;
+            _tokenGenerator = tokenGenerator;
+            _tokenValidator = tokenValidator;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken cancellationToken = default)
@@ -89,41 +91,14 @@ namespace Application.Services
 
         public async Task<RefreshResponseDto> RefreshAccessTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-                throw new InvalidArgumentException("Refresh token is required.");
-
-            if (!_jwtSecurityTokenHandler.CanReadToken(refreshToken))
-                throw new InvalidArgumentException("Invalid refresh token format.");
-
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ClockSkew = TimeSpan.Zero,
-                ValidateIssuerSigningKey = true,
-                ValidateLifetime = true,
-                ValidateIssuer = true,
-                ValidateAudience = false,
-                ValidIssuer = _jwtSettings.Issuer,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.RefreshToken.Key)),
-            };
-
-            SecurityToken validatedToken;
-            ClaimsPrincipal? principal;
-            try
-            {
-                principal = _jwtSecurityTokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out validatedToken);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogError("Invalid token payload: {ex}", ex);
-                throw new InvalidArgumentException("Invalid refresh token.");
-            }
+            ClaimsPrincipal principal = _tokenValidator.ValidateRefreshToken(refreshToken, _jwtSettings.Issuer, _jwtSettings.RefreshToken.Key);
 
             var accountId = principal.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountId))
-                throw new UnauthorizedException("Invalid refresh token: missing account identifier.");
+                throw new UnauthorizedException("Invalid refresh token");
 
             var account = await _accountRepository.GetByIdAsync(int.Parse(accountId), cancellationToken)
-                ?? throw new NotFoundException($"Account with id: {accountId} not found");
+                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
             return new RefreshResponseDto
             {
@@ -133,52 +108,25 @@ namespace Application.Services
 
         private string GenerateJwtToken(Account account)
         {
-            var claims = new Claim[]
-            {
-                new (JwtClaimTypes.AccountId, account.Id.ToString()),
-                new (JwtClaimTypes.Email, account.Email)
-            };
-
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.AccessToken.Key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessToken.ExpirationMinutes),
-                signingCredentials: credentials
+            return _tokenGenerator.GenerateJwtToken(
+                account,
+                _jwtSettings.Issuer,
+                _jwtSettings.Audience,
+                _jwtSettings.AccessToken.Key,
+                _jwtSettings.AccessToken.ExpirationMinutes
                 );
-            return _jwtSecurityTokenHandler.WriteToken(token);
         }
 
         private string GenerateRefreshToken(Account account)
         {
-            var claims = new Claim[]
-            {
-                new (JwtClaimTypes.AccountId, account.Id.ToString())
-            };
-
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.RefreshToken.Key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                issuer: _jwtSettings.Issuer,
-                expires: DateTime.UtcNow.AddDays(_jwtSettings.RefreshToken.ExpirationDays),
-                signingCredentials: credentials
+            return _tokenGenerator.GenerateRefreshToken(
+                account,
+                _jwtSettings.Issuer,
+                _jwtSettings.RefreshToken.Key,
+                _jwtSettings.RefreshToken.ExpirationDays
                 );
-
-            return _jwtSecurityTokenHandler.WriteToken(token);
         }
-
         private static bool IsEmail(string login) =>
             Regex.IsMatch(login, @"^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-    }
-
-    public static class JwtClaimTypes
-    {
-        public const string AccountId = "accountId";
-        public const string Email = "email";
     }
 }

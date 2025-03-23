@@ -32,15 +32,12 @@ namespace Application.Services.Quests
             _questLabelsHandler = questLabelsHandler;
         }
 
-        public async Task<GetWeeklyQuestDto?> GetUserQuestByIdAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        public async Task<GetWeeklyQuestDto?> GetUserQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
         {
             var quest = await _questMetadataRepository.GetQuestByIdAsync(questId, cancellationToken);
 
             if (quest is null)
                 return null;
-
-            if (quest.AccountId != accountId)
-                throw new UnauthorizedException("You do not have permission to access this quest.");
 
             if (quest.QuestType != QuestTypeEnum.Weekly)
                 throw new InvalidQuestTypeException(questId, QuestTypeEnum.Weekly, quest.QuestType);
@@ -64,57 +61,30 @@ namespace Application.Services.Quests
             return weeklyQuest.Id;
         }
 
-        public async Task UpdateUserQuestAsync(int id, int accountId, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
+        public async Task UpdateUserQuestAsync(int id, UpdateWeeklyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
             var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            if (existingQuest.AccountId != accountId)
-                throw new UnauthorizedException("You do not have permission to access this quest.");
+            if (existingQuest.QuestType != QuestTypeEnum.Weekly)
+                throw new InvalidQuestTypeException(id, QuestTypeEnum.Weekly, existingQuest.QuestType);
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (updateDto.StartDate.HasValue && existingQuest.WeeklyQuest!.EndDate.HasValue)
-            {
-                if (updateDto.StartDate.Value > existingQuest.WeeklyQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (updateDto.EndDate.HasValue && existingQuest.WeeklyQuest!.StartDate.HasValue)
-            {
-                if (updateDto.EndDate.Value < existingQuest.WeeklyQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
 
             _mapper.Map(updateDto, existingQuest.WeeklyQuest);
 
-            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            var questWithLabels = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
             existingQuest.WeeklyQuest = questWithLabels.WeeklyQuest!;
 
             await _repository.UpdateAsync(existingQuest.WeeklyQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, int accountId, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task PatchUserQuestAsync(int id, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            if (existingQuest.QuestMetadata.AccountId != accountId)
-                throw new UnauthorizedException("You do not have permission to access this quest.");
-
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (patchDto.StartDate.HasValue && existingQuest.EndDate.HasValue)
-            {
-                if (patchDto.StartDate.Value > existingQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (patchDto.EndDate.HasValue && existingQuest.StartDate.HasValue)
-            {
-                if (patchDto.EndDate.Value < existingQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             // **Fix: Manually Preserve WeekDays Before AutoMapper Mapping**
             List<WeekdayEnum> previousWeekdays = existingQuest.Weekdays;
@@ -126,17 +96,6 @@ namespace Application.Services.Quests
                 existingQuest.Weekdays = previousWeekdays;
 
             await _repository.UpdateAsync(existingQuest, cancellationToken);
-        }
-
-        public async Task DeleteUserQuestAsync(int id, int accountId, CancellationToken cancellationToken = default)
-        {
-            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            if (quest.AccountId != accountId)
-                throw new UnauthorizedException("You do not have permission to access this quest.");
-
-            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }
