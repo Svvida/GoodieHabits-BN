@@ -70,19 +70,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.OneTime)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.OneTime, existingQuest.QuestType);
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (updateDto.StartDate.HasValue && existingQuest.OneTimeQuest!.EndDate.HasValue)
-            {
-                if (updateDto.StartDate.Value > existingQuest.OneTimeQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (updateDto.EndDate.HasValue && existingQuest.OneTimeQuest!.StartDate.HasValue)
-            {
-                if (updateDto.EndDate.Value < existingQuest.OneTimeQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.OneTimeQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
 
             _mapper.Map(updateDto, existingQuest.OneTimeQuest);
 
@@ -97,19 +85,7 @@ namespace Application.Services.Quests
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (patchDto.StartDate.HasValue && existingOneTimeQuest.EndDate.HasValue)
-            {
-                if (patchDto.StartDate.Value > existingOneTimeQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (patchDto.EndDate.HasValue && existingOneTimeQuest.StartDate.HasValue)
-            {
-                if (patchDto.EndDate.Value < existingOneTimeQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingOneTimeQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             _mapper.Map(patchDto, existingOneTimeQuest);
 

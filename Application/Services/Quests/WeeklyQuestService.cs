@@ -69,19 +69,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Weekly)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Weekly, existingQuest.QuestType);
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (updateDto.StartDate.HasValue && existingQuest.WeeklyQuest!.EndDate.HasValue)
-            {
-                if (updateDto.StartDate.Value > existingQuest.WeeklyQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (updateDto.EndDate.HasValue && existingQuest.WeeklyQuest!.StartDate.HasValue)
-            {
-                if (updateDto.EndDate.Value < existingQuest.WeeklyQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
 
             _mapper.Map(updateDto, existingQuest.WeeklyQuest);
 
@@ -96,19 +84,7 @@ namespace Application.Services.Quests
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (patchDto.StartDate.HasValue && existingQuest.EndDate.HasValue)
-            {
-                if (patchDto.StartDate.Value > existingQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (patchDto.EndDate.HasValue && existingQuest.StartDate.HasValue)
-            {
-                if (patchDto.EndDate.Value < existingQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             // **Fix: Manually Preserve WeekDays Before AutoMapper Mapping**
             List<WeekdayEnum> previousWeekdays = existingQuest.Weekdays;

@@ -65,19 +65,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Monthly)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Monthly, existingQuest.QuestType);
 
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (updateDto.StartDate.HasValue && existingQuest.MonthlyQuest!.EndDate.HasValue)
-            {
-                if (updateDto.StartDate.Value > existingQuest.MonthlyQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (updateDto.EndDate.HasValue && existingQuest.MonthlyQuest!.StartDate.HasValue)
-            {
-                if (updateDto.EndDate.Value < existingQuest.MonthlyQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingQuest.MonthlyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
 
             _mapper.Map(updateDto, existingQuest.MonthlyQuest);
 
@@ -92,22 +80,7 @@ namespace Application.Services.Quests
             var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
-            //if (existingMonthlyQuest.QuestMetadata.AccountId != accountId)
-            //    throw new UnauthorizedException("You do not have permission to access this quest.");
-
-            // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
-            if (patchDto.StartDate.HasValue && existingMonthlyQuest.EndDate.HasValue)
-            {
-                if (patchDto.StartDate.Value > existingMonthlyQuest.EndDate.Value)
-                    throw new InvalidArgumentException("Start date cannot be after the existing end date.");
-            }
-
-            // Check if ONLY EndDate is being updated and ensure it's still valid with the existing StartDate
-            if (patchDto.EndDate.HasValue && existingMonthlyQuest.StartDate.HasValue)
-            {
-                if (patchDto.EndDate.Value < existingMonthlyQuest.StartDate.Value)
-                    throw new InvalidArgumentException("End date cannot be before the existing start date.");
-            }
+            existingMonthlyQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             _mapper.Map(patchDto, existingMonthlyQuest);
 
