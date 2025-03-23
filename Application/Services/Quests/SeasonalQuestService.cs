@@ -62,6 +62,9 @@ namespace Application.Services.Quests
             var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
+            if (existingQuest.QuestType != QuestTypeEnum.Seasonal)
+                throw new InvalidQuestTypeException(id, QuestTypeEnum.Seasonal, existingQuest.QuestType);
+
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (updateDto.StartDate.HasValue && existingQuest.SeasonalQuest!.EndDate.HasValue)
             {
@@ -78,7 +81,7 @@ namespace Application.Services.Quests
 
             _mapper.Map(updateDto, existingQuest.SeasonalQuest);
 
-            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            var questWithLabels = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
             existingQuest.SeasonalQuest = questWithLabels.SeasonalQuest!;
 
             await _repository.UpdateAsync(existingQuest.SeasonalQuest, cancellationToken);
@@ -88,9 +91,6 @@ namespace Application.Services.Quests
         {
             var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            //if (existingSeasonalQuest.QuestMetadata.AccountId != accountId)
-            //    throw new UnauthorizedException("You do not have permission to access this quest.");
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (patchDto.StartDate.HasValue && existingSeasonalQuest.EndDate.HasValue)
@@ -109,14 +109,6 @@ namespace Application.Services.Quests
             _mapper.Map(patchDto, existingSeasonalQuest);
 
             await _repository.UpdateAsync(existingSeasonalQuest, cancellationToken);
-        }
-
-        public async Task DeleteUserQuestAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

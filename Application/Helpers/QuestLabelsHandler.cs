@@ -25,19 +25,22 @@ namespace Application.Helpers
             _questMetadataRepository = questMetadataRepository;
         }
 
-        public async Task<QuestMetadata> HandlePatchLabelsAsync(
+        public async Task<QuestMetadata> HandleUpdateLabelsAsync(
             QuestMetadata quest,
             BaseUpdateQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
+            foreach (var labelId in updateDto.Labels)
+            {
+                bool isOwner = await _questLabelRepository.IsLabelOwnedByUserAsync(labelId, quest.AccountId, cancellationToken).ConfigureAwait(false);
+                if (!isOwner)
+                    throw new ForbiddenException($"Label with ID: {labelId} does not belong to the user.");
+            }
+
             var existingLabels = quest.QuestLabels.ToList();
 
-            _logger.LogInformation("Existing labels: {@existingLabels}", existingLabels);
-
             HashSet<int> newLabelsHashSet = [.. updateDto.Labels];
-            _logger.LogInformation("NewLabelsHashSet: {@newLabelsHashSet}.", newLabelsHashSet);
             HashSet<int> existingLabelsHashSet = [.. quest.QuestLabels.Select(x => x.QuestLabelId)];
-            _logger.LogInformation("ExistingLabelsHashSet: {@existingLabelsHashSet}.", existingLabelsHashSet);
 
             var labelsToAdd = updateDto.Labels
                 .Where(labelId => !existingLabelsHashSet.Contains(labelId))
@@ -47,18 +50,9 @@ namespace Application.Helpers
                     QuestLabelId = labelId
                 }).ToList();
 
-            foreach (var item in labelsToAdd)
-            {
-                var label = await _questLabelRepository.GetLabelByIdAsync(item.QuestLabelId, quest.AccountId, cancellationToken).ConfigureAwait(false)
-                    ?? throw new NotFoundException($"QuestLabel with ID: {item.QuestLabelId} not found");
-            }
-
             var labelsToRemove = existingLabels
                 .Where(existingLabel => !newLabelsHashSet.Contains(existingLabel.QuestLabelId))
                 .ToList();
-
-            _logger.LogInformation("Labels to add: {@labelsToAdd}", labelsToAdd);
-            _logger.LogInformation("Labels to remove: {@labelsToRemove}", labelsToRemove);
 
             await _questMetadataRepository.AddQuestLabelsAsync(labelsToAdd, cancellationToken);
             await _questMetadataRepository.RemoveQuestLabelsAsync(labelsToRemove, cancellationToken);

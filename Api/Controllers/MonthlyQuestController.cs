@@ -13,18 +13,20 @@ namespace Api.Controllers
     [Authorize]
     public class MonthlyQuestController : ControllerBase
     {
-        private readonly IMonthlyQuestService _service;
+        private readonly IMonthlyQuestService _monthlyQuestService;
+        private readonly IQuestService _questService;
 
-        public MonthlyQuestController(IMonthlyQuestService service)
+        public MonthlyQuestController(IMonthlyQuestService service, IQuestService questService)
         {
-            _service = service;
+            _monthlyQuestService = service;
+            _questService = questService;
         }
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetMonthlyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _service.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _monthlyQuestService.GetUserQuestByIdAsync(id, cancellationToken);
             if (quest is null)
             {
                 return NotFound(new ProblemDetails
@@ -45,7 +47,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _monthlyQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
@@ -60,7 +62,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            var createdId = await _monthlyQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -71,7 +73,7 @@ namespace Api.Controllers
             [FromBody] PatchMonthlyQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.PatchUserQuestAsync(id, patchDto, cancellationToken);
+            await _monthlyQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }
@@ -83,15 +85,15 @@ namespace Api.Controllers
             [FromBody] UpdateMonthlyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            await _monthlyQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            await _service.DeleteUserQuestAsync(id, cancellationToken);
+            await _questService.DeleteQuestAsync(id, cancellationToken);
             return NoContent();
         }
     }

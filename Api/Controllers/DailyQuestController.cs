@@ -1,6 +1,5 @@
 ﻿using Api.Filters;
 using Application.Dtos.Quests.DailyQuest;
-using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Domain;
 using Domain.Exceptions;
@@ -14,25 +13,25 @@ namespace Api.Controllers
     [Authorize]
     public class DailyQuestController : ControllerBase
     {
-        private readonly IDailyQuestService _service;
-        private readonly IQuestLabelService _questLabelService;
+        private readonly IDailyQuestService _dailyQuestService;
+        private readonly IQuestService _questService;
         private readonly ILogger<DailyQuestController> _logger;
 
         public DailyQuestController(
             IDailyQuestService service,
-            IQuestLabelService questLabelService,
-            ILogger<DailyQuestController> logger)
+            ILogger<DailyQuestController> logger,
+            IQuestService questService)
         {
-            _service = service;
-            _questLabelService = questLabelService;
+            _dailyQuestService = service;
             _logger = logger;
+            _questService = questService;
         }
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetDailyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _service.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _dailyQuestService.GetUserQuestByIdAsync(id, cancellationToken);
 
             if (quest is null)
             {
@@ -54,7 +53,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _dailyQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
@@ -69,14 +68,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            //var userLabelDtos = await _questLabelService.GetUserLabelsAsync(accountId, cancellationToken);
-            //HashSet<int> userLabelsIds = userLabelDtos.Select(label => label.Id).ToHashSet();
-
-            //if (!createDto.Labels.IsSubsetOf(userLabelsIds))
-            //    return BadRequest("One or more og the specified labels do not belong to the user.");
-
-
-            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            var createdId = await _dailyQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -87,7 +79,7 @@ namespace Api.Controllers
             [FromBody] PatchDailyQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.PatchUserQuestAsync(id, patchDto, cancellationToken);
+            await _dailyQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
             return NoContent();
         }
 
@@ -98,7 +90,7 @@ namespace Api.Controllers
             [FromBody] UpdateDailyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            await _dailyQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
@@ -106,7 +98,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await _service.DeleteUserQuestAsync(id, cancellationToken);
+            await _questService.DeleteQuestAsync(id, cancellationToken);
 
             return NoContent();
         }

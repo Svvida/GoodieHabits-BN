@@ -10,14 +10,14 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/all-quests")]
     [Authorize]
-    public class AllQuestsController : ControllerBase
+    public class QuestsController : ControllerBase
     {
         private readonly IQuestService _questMetadataService;
-        private readonly ILogger<AllQuestsController> _logger;
+        private readonly ILogger<QuestsController> _logger;
 
-        public AllQuestsController(
+        public QuestsController(
             IQuestService questMetadataService,
-            ILogger<AllQuestsController> logger)
+            ILogger<QuestsController> logger)
         {
             _questMetadataService = questMetadataService;
             _logger = logger;

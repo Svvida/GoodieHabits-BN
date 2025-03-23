@@ -57,8 +57,6 @@ namespace Application.Services.Quests
         {
             var oneTimeQuest = _mapper.Map<OneTimeQuest>(createDto);
 
-            _logger.LogInformation("OneTimeQuest after mapping: {@oneTimeQuest}", oneTimeQuest);
-
             await _repository.AddAsync(oneTimeQuest, cancellationToken);
 
             return oneTimeQuest.Id;
@@ -68,6 +66,9 @@ namespace Application.Services.Quests
         {
             var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingQuest.QuestType != QuestTypeEnum.OneTime)
+                throw new InvalidQuestTypeException(id, QuestTypeEnum.OneTime, existingQuest.QuestType);
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (updateDto.StartDate.HasValue && existingQuest.OneTimeQuest!.EndDate.HasValue)
@@ -85,7 +86,7 @@ namespace Application.Services.Quests
 
             _mapper.Map(updateDto, existingQuest.OneTimeQuest);
 
-            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            var questWithLabels = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
             existingQuest.OneTimeQuest = questWithLabels.OneTimeQuest!;
 
             await _repository.UpdateAsync(existingQuest.OneTimeQuest, cancellationToken);
@@ -113,14 +114,6 @@ namespace Application.Services.Quests
             _mapper.Map(patchDto, existingOneTimeQuest);
 
             await _repository.UpdateAsync(existingOneTimeQuest, cancellationToken);
-        }
-
-        public async Task DeleteUserQuestAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

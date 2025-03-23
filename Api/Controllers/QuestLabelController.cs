@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Labels;
+﻿using Api.Filters;
+using Application.Dtos.Labels;
 using Application.Interfaces;
 using Domain;
 using Domain.Exceptions;
@@ -44,23 +45,18 @@ namespace Api.Controllers
         }
 
         [HttpPatch("{id}")]
+        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
         public async Task<IActionResult> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _questLabelService.PatchLabelAsync(id, patchDto, accountId, cancellationToken);
+            await _questLabelService.PatchLabelAsync(id, patchDto, cancellationToken);
             return Ok();
         }
 
         [HttpDelete("{id}")]
+        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
         public async Task<IActionResult> DeleteLabelAsync(int id, CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-            await _questLabelService.DeleteLabelAsync(id, accountId, cancellationToken);
+            await _questLabelService.DeleteLabelAsync(id, cancellationToken);
             return Ok();
         }
     }

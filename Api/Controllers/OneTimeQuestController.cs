@@ -13,19 +13,21 @@ namespace Api.Controllers
     [Authorize]
     public class OneTimeQuestController : ControllerBase
     {
-        private readonly IOneTimeQuestService _service;
+        private readonly IOneTimeQuestService _oneTimeQuestService;
+        private readonly IQuestService _questService;
 
         public OneTimeQuestController(
-            IOneTimeQuestService oneTimeQuestService)
+            IOneTimeQuestService oneTimeQuestService, IQuestService questService)
         {
-            _service = oneTimeQuestService;
+            _oneTimeQuestService = oneTimeQuestService;
+            _questService = questService;
         }
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetOneTimeQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _service.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _oneTimeQuestService.GetUserQuestByIdAsync(id, cancellationToken);
 
             if (quest is null)
             {
@@ -47,7 +49,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _oneTimeQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
@@ -62,7 +64,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            var createdId = await _oneTimeQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -73,7 +75,7 @@ namespace Api.Controllers
             [FromBody] PatchOneTimeQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.PatchUserQuestAsync(id, patchDto, cancellationToken);
+            await _oneTimeQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }
@@ -85,15 +87,15 @@ namespace Api.Controllers
             [FromBody] UpdateOneTimeQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            await _oneTimeQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            await _service.DeleteUserQuestAsync(id, cancellationToken);
+            await _questService.DeleteQuestAsync(id, cancellationToken);
             return NoContent();
         }
     }

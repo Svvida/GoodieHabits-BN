@@ -227,6 +227,7 @@ namespace Api
 
             // Configure Authorization
             builder.Services.AddScoped<QuestAuthorizationFilter>();
+            builder.Services.AddScoped<QuestLabelAuthorizationFilter>();
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();

@@ -11,10 +11,12 @@ namespace Api.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(IAuthService authService)
+        public AuthenticationController(IAuthService authService, ILogger<AuthenticationController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost]

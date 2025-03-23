@@ -19,14 +19,6 @@ namespace Api.Controllers
             _accountService = accountService;
         }
 
-        //[HttpGet("accounts")]
-        //[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<GetAccountDto>))]
-        //public async Task<ActionResult<IEnumerable<GetAccountDto>>> GetAccounts()
-        //{
-        //    var accounts = await _accountService.GetAllAccountsAsync();
-        //    return Ok(accounts);
-        //}
-
         [HttpGet("accounts/me")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAccountDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ProblemDetails))]

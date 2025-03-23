@@ -13,18 +13,20 @@ namespace Api.Controllers
     [Authorize]
     public class WeeklyQuestController : ControllerBase
     {
-        private readonly IWeeklyQuestService _service;
+        private readonly IWeeklyQuestService _weeklyQuestService;
+        private readonly IQuestService _questService;
 
-        public WeeklyQuestController(IWeeklyQuestService service)
+        public WeeklyQuestController(IWeeklyQuestService service, IQuestService questService)
         {
-            _service = service;
+            _weeklyQuestService = service;
+            _questService = questService;
         }
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetWeeklyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _service.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _weeklyQuestService.GetUserQuestByIdAsync(id, cancellationToken);
 
             if (quest is null)
             {
@@ -46,7 +48,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _service.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _weeklyQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
 
@@ -60,7 +62,7 @@ namespace Api.Controllers
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             createDto.AccountId = accountId;
-            var createdId = await _service.CreateAsync(createDto, cancellationToken);
+            var createdId = await _weeklyQuestService.CreateAsync(createDto, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -71,7 +73,7 @@ namespace Api.Controllers
             [FromBody] PatchWeeklyQuestDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.PatchUserQuestAsync(id, patchDto, cancellationToken);
+            await _weeklyQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }
@@ -83,7 +85,7 @@ namespace Api.Controllers
             [FromBody] UpdateWeeklyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _service.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            await _weeklyQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
             return NoContent();
         }
 
@@ -91,7 +93,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await _service.DeleteUserQuestAsync(id, cancellationToken);
+            await _questService.DeleteQuestAsync(id, cancellationToken);
             return NoContent();
         }
     }

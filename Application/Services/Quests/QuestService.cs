@@ -6,6 +6,7 @@ using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
 using AutoMapper;
+using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -54,6 +55,14 @@ namespace Application.Services.Quests
             _logger.LogInformation("Quests after mapping: {@mappedQuests}", questList);
 
             return questList;
+        }
+
+        public async Task DeleteQuestAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _repository.GetQuestMetadataByIdAsync(questId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException("Quest with ID: {questId} not found");
+
+            await _repository.DeleteAsync(quest, cancellationToken).ConfigureAwait(false);
         }
     }
 }

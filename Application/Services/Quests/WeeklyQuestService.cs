@@ -66,6 +66,9 @@ namespace Application.Services.Quests
             var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
 
+            if (existingQuest.QuestType != QuestTypeEnum.Weekly)
+                throw new InvalidQuestTypeException(id, QuestTypeEnum.Weekly, existingQuest.QuestType);
+
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (updateDto.StartDate.HasValue && existingQuest.WeeklyQuest!.EndDate.HasValue)
             {
@@ -82,7 +85,7 @@ namespace Application.Services.Quests
 
             _mapper.Map(updateDto, existingQuest.WeeklyQuest);
 
-            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            var questWithLabels = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
             existingQuest.WeeklyQuest = questWithLabels.WeeklyQuest!;
 
             await _repository.UpdateAsync(existingQuest.WeeklyQuest, cancellationToken);
@@ -117,14 +120,6 @@ namespace Application.Services.Quests
                 existingQuest.Weekdays = previousWeekdays;
 
             await _repository.UpdateAsync(existingQuest, cancellationToken);
-        }
-
-        public async Task DeleteUserQuestAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }

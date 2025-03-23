@@ -60,7 +60,10 @@ namespace Application.Services.Quests
         public async Task UpdateUserQuestAsync(int id, UpdateMonthlyQuestDto updateDto, CancellationToken cancellationToken = default)
         {
             var existingQuest = await _questMetadataRepository.GetQuestByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
+                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
+
+            if (existingQuest.QuestType != QuestTypeEnum.Monthly)
+                throw new InvalidQuestTypeException(id, QuestTypeEnum.Monthly, existingQuest.QuestType);
 
             // Check if ONLY StartDate is being updated and ensure it's still valid with the existing EndDate
             if (updateDto.StartDate.HasValue && existingQuest.MonthlyQuest!.EndDate.HasValue)
@@ -78,7 +81,7 @@ namespace Application.Services.Quests
 
             _mapper.Map(updateDto, existingQuest.MonthlyQuest);
 
-            var questWithLabels = await _questLabelsHandler.HandlePatchLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            var questWithLabels = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
             existingQuest.MonthlyQuest = questWithLabels.MonthlyQuest!;
 
             await _repository.UpdateAsync(existingQuest.MonthlyQuest, cancellationToken);
@@ -109,14 +112,6 @@ namespace Application.Services.Quests
             _mapper.Map(patchDto, existingMonthlyQuest);
 
             await _repository.UpdateAsync(existingMonthlyQuest, cancellationToken);
-        }
-
-        public async Task DeleteUserQuestAsync(int id, CancellationToken cancellationToken = default)
-        {
-            var quest = await _questMetadataRepository.GetQuestMetadataByIdAsync(id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            await _questMetadataRepository.DeleteAsync(quest, cancellationToken);
         }
     }
 }
