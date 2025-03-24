@@ -4,6 +4,7 @@ using Application.Dtos.Quests.MonthlyQuest;
 using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
+using Application.Helpers;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -33,7 +34,9 @@ namespace Application.Services.Quests
         public async Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(
             int accountId, CancellationToken cancellationToken = default)
         {
-            var quests = await _repository.GetActiveQuestsAsync(accountId, cancellationToken)
+            SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
+
+            var quests = await _repository.GetActiveQuestsAsync(accountId, currentSeason, cancellationToken)
                 .ConfigureAwait(false);
 
             _logger.LogInformation("Quests before mapping: {@quests}", quests);

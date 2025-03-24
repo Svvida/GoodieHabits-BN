@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories.Quests
             _logger = logger;
         }
 
-        public async Task<IEnumerable<QuestMetadata>> GetActiveQuestsAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<QuestMetadata>> GetActiveQuestsAsync(int accountId, SeasonEnum currentSeason, CancellationToken cancellationToken = default)
         {
             DateTime today = DateTime.UtcNow.Date;
 
@@ -28,27 +28,27 @@ namespace Infrastructure.Repositories.Quests
                 .Where(q => q.AccountId == accountId)
                 .Where(q =>
                     (q.QuestType == QuestTypeEnum.OneTime && q.OneTimeQuest != null &&
-                     (!q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.StartDate.Value.Date <= today) &&
-                     (!q.OneTimeQuest.EndDate.HasValue || q.OneTimeQuest.EndDate.Value.Date >= today) &&
-                     (q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.EndDate.HasValue))
+                        (q.OneTimeQuest.StartDate ?? DateTime.MinValue) <= today &&
+                        (q.OneTimeQuest.EndDate ?? DateTime.MaxValue) >= today &&
+                        (q.OneTimeQuest.StartDate.HasValue || q.OneTimeQuest.EndDate.HasValue))
 
                     || (q.QuestType == QuestTypeEnum.Daily && q.DailyQuest != null &&
-                        (!q.DailyQuest.StartDate.HasValue || q.DailyQuest.StartDate.Value.Date <= today) &&
-                        (!q.DailyQuest.EndDate.HasValue || q.DailyQuest.EndDate.Value.Date >= today))
+                        (q.DailyQuest.StartDate ?? DateTime.MinValue) <= today &&
+                        (q.DailyQuest.EndDate ?? DateTime.MaxValue) >= today)
 
                     || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
-                        (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
-                        (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today))
+                        (q.WeeklyQuest.StartDate ?? DateTime.MinValue) <= today &&
+                        (q.WeeklyQuest.EndDate ?? DateTime.MaxValue) >= today)
 
                     || (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null &&
-                        (!q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.StartDate.Value.Date <= today) &&
-                        (!q.MonthlyQuest.EndDate.HasValue || q.MonthlyQuest.EndDate.Value.Date >= today) &&
-                        (q.MonthlyQuest.StartDay >= today.Day && q.MonthlyQuest.EndDay <= today.Day))
+                        (q.MonthlyQuest.StartDate ?? DateTime.MinValue) <= today &&
+                        (q.MonthlyQuest.EndDate ?? DateTime.MaxValue) >= today &&
+                        (q.MonthlyQuest.StartDay <= today.Day && q.MonthlyQuest.EndDay >= today.Day))
 
                     || (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null &&
-                        (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&
-                        (!q.SeasonalQuest.EndDate.HasValue || q.SeasonalQuest.EndDate.Value.Date >= today) &&
-                        (q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.EndDate.HasValue))
+                        q.SeasonalQuest.Season == currentSeason &&
+                        (q.SeasonalQuest.StartDate ?? DateTime.MinValue) <= today &&
+                        (q.SeasonalQuest.EndDate ?? DateTime.MaxValue) >= today)
                 )
                 .AsQueryable();
 
