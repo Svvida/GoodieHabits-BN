@@ -38,13 +38,12 @@ namespace Infrastructure.Repositories.Quests
 
                     || (q.QuestType == QuestTypeEnum.Weekly && q.WeeklyQuest != null &&
                         (!q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.StartDate.Value.Date <= today) &&
-                        (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today) &&
-                        (q.WeeklyQuest.StartDate.HasValue || q.WeeklyQuest.EndDate.HasValue))
+                        (!q.WeeklyQuest.EndDate.HasValue || q.WeeklyQuest.EndDate.Value.Date >= today))
 
                     || (q.QuestType == QuestTypeEnum.Monthly && q.MonthlyQuest != null &&
                         (!q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.StartDate.Value.Date <= today) &&
                         (!q.MonthlyQuest.EndDate.HasValue || q.MonthlyQuest.EndDate.Value.Date >= today) &&
-                        (q.MonthlyQuest.StartDate.HasValue || q.MonthlyQuest.EndDate.HasValue))
+                        (q.MonthlyQuest.StartDay >= today.Day && q.MonthlyQuest.EndDay <= today.Day))
 
                     || (q.QuestType == QuestTypeEnum.Seasonal && q.SeasonalQuest != null &&
                         (!q.SeasonalQuest.StartDate.HasValue || q.SeasonalQuest.StartDate.Value.Date <= today) &&

@@ -70,7 +70,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.OneTime)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.OneTime, existingQuest.QuestType);
 
-            existingQuest.OneTimeQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.OneTimeQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.OneTimeQuest);
 
@@ -85,7 +85,7 @@ namespace Application.Services.Quests
             var existingOneTimeQuest = await _repository.GetByIdAsync(id, cancellationToken, otq => otq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"OneTimeQuest with Id {id} was not found.");
 
-            existingOneTimeQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
+            existingOneTimeQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate);
 
             _mapper.Map(patchDto, existingOneTimeQuest);
 

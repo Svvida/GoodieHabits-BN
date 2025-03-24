@@ -69,7 +69,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Weekly)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Weekly, existingQuest.QuestType);
 
-            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.WeeklyQuest);
 
@@ -84,7 +84,7 @@ namespace Application.Services.Quests
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            existingQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
+            existingQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate);
 
             // **Fix: Manually Preserve WeekDays Before AutoMapper Mapping**
             List<WeekdayEnum> previousWeekdays = existingQuest.Weekdays;

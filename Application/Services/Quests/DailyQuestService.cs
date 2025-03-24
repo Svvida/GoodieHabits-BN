@@ -72,7 +72,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Daily)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Daily, existingQuest.QuestType);
 
-            existingQuest.DailyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.DailyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.DailyQuest);
 
@@ -87,7 +87,7 @@ namespace Application.Services.Quests
             var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            existingDailyQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
+            existingDailyQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate);
 
             if (existingDailyQuest.IsCompleted == false && patchDto.IsCompleted == true)
                 existingDailyQuest.LastCompleted = DateTime.UtcNow;
