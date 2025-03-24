@@ -75,12 +75,10 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest.SeasonalQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(int id, SeasonalQuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            existingSeasonalQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate);
 
             _mapper.Map(patchDto, existingSeasonalQuest);
 

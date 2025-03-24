@@ -7,7 +7,7 @@ namespace Application.Interfaces.Quests
         GetDailyQuestDto,
         CreateDailyQuestDto,
         UpdateDailyQuestDto,
-        PatchDailyQuestDto>
+        DailyQuestCompletionPatchDto>
     {
     }
 }

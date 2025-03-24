@@ -7,7 +7,7 @@ namespace Application.Interfaces.Quests
         GetMonthlyQuestDto,
         CreateMonthlyQuestDto,
         UpdateMonthlyQuestDto,
-        PatchMonthlyQuestDto>
+        MonthlyQuestCompletionPatchDto>
     {
     }
 }

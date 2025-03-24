@@ -82,12 +82,10 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest.DailyQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, PatchDailyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(int id, DailyQuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingDailyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
-
-            existingDailyQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate);
 
             if (existingDailyQuest.IsCompleted == false && patchDto.IsCompleted == true)
                 existingDailyQuest.LastCompleted = DateTime.UtcNow;
