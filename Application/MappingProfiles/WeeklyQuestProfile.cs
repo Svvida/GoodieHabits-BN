@@ -50,10 +50,8 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Weekdays, opt => opt.MapFrom(src => src.Weekdays.ConvertAll(w => Enum.Parse<WeekdayEnum>(w))));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
-            CreateMap<PatchWeeklyQuestDto, WeeklyQuest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+            CreateMap<WeeklyQuestCompletionPatchDto, WeeklyQuest>()
                 .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom((src, dest) => src.IsCompleted ?? dest.IsCompleted))
-                .ForMember(dest => dest.Weekdays, opt => opt.MapFrom(src => src.Weekdays!.ConvertAll(w => Enum.Parse<WeekdayEnum>(w))))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Update DTO -> Entity (Convert String -> Enum)

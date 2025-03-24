@@ -28,13 +28,13 @@ namespace Domain.Common
             Priority = priority;
         }
 
-        public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate, bool allowPastDates)
+        public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate)
         {
-            if (!allowPastDates && newStartDate.HasValue && newStartDate < DateTime.UtcNow)
+            if (newStartDate.HasValue && newEndDate.HasValue)
             {
-                throw new InvalidArgumentException("Start date cannot be in the past.");
+                StartDate = newStartDate;
+                EndDate = newEndDate;
             }
-
             if (newStartDate.HasValue && EndDate.HasValue && newStartDate > EndDate)
             {
                 throw new InvalidArgumentException("Start date cannot be after the end date.");

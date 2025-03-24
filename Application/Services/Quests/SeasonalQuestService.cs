@@ -65,7 +65,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Seasonal)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Seasonal, existingQuest.QuestType);
 
-            existingQuest.SeasonalQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.SeasonalQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.SeasonalQuest);
 
@@ -75,12 +75,10 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest.SeasonalQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, PatchSeasonalQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(int id, SeasonalQuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingSeasonalQuest = await _repository.GetByIdAsync(id, cancellationToken, sq => sq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            existingSeasonalQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             _mapper.Map(patchDto, existingSeasonalQuest);
 

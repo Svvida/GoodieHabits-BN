@@ -65,7 +65,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Monthly)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Monthly, existingQuest.QuestType);
 
-            existingQuest.MonthlyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.MonthlyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.MonthlyQuest);
 
@@ -75,12 +75,10 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest.MonthlyQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, PatchMonthlyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(int id, MonthlyQuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingMonthlyQuest = await _repository.GetByIdAsync(id, cancellationToken, dq => dq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with Id {id} was not found.");
-
-            existingMonthlyQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
 
             _mapper.Map(patchDto, existingMonthlyQuest);
 

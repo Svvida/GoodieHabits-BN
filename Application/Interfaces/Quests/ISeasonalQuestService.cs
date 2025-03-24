@@ -7,7 +7,7 @@ namespace Application.Interfaces.Quests
         GetSeasonalQuestDto,
         CreateSeasonalQuestDto,
         UpdateSeasonalQuestDto,
-        PatchSeasonalQuestDto>
+        SeasonalQuestCompletionPatchDto>
     {
     }
 }

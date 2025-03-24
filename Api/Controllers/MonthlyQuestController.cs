@@ -66,14 +66,14 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{id}/completion")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> UpdatePartial(
+        public async Task<IActionResult> PatchQuestCompletion(
             int id,
-            [FromBody] PatchMonthlyQuestDto patchDto,
+            [FromBody] MonthlyQuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _monthlyQuestService.PatchUserQuestAsync(id, patchDto, cancellationToken);
+            await _monthlyQuestService.UpdateQuestCompletionAsync(id, patchDto, cancellationToken);
             return NoContent();
 
         }

@@ -7,7 +7,7 @@ namespace Application.Interfaces.Quests
         GetOneTimeQuestDto,
         CreateOneTimeQuestDto,
         UpdateOneTimeQuestDto,
-        PatchOneTimeQuestDto>
+        OneTimeQuestCompletionDto>
     {
     }
 }

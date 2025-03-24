@@ -69,7 +69,7 @@ namespace Application.Services.Quests
             if (existingQuest.QuestType != QuestTypeEnum.Weekly)
                 throw new InvalidQuestTypeException(id, QuestTypeEnum.Weekly, existingQuest.QuestType);
 
-            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate, false);
+            existingQuest.WeeklyQuest!.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             _mapper.Map(updateDto, existingQuest.WeeklyQuest);
 
@@ -79,21 +79,12 @@ namespace Application.Services.Quests
             await _repository.UpdateAsync(existingQuest.WeeklyQuest, cancellationToken);
         }
 
-        public async Task PatchUserQuestAsync(int id, PatchWeeklyQuestDto patchDto, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(int id, WeeklyQuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
             var existingQuest = await _repository.GetByIdAsync(id, cancellationToken, wq => wq.QuestMetadata).ConfigureAwait(false)
                 ?? throw new NotFoundException($"DailyQuest with Id {id} was not found.");
 
-            existingQuest.UpdateDates(patchDto.StartDate, patchDto.EndDate, false);
-
-            // **Fix: Manually Preserve WeekDays Before AutoMapper Mapping**
-            List<WeekdayEnum> previousWeekdays = existingQuest.Weekdays;
-
             _mapper.Map(patchDto, existingQuest);
-
-            // **Fix: Restore Weekdays If Not Provided**
-            if (patchDto.Weekdays is null)
-                existingQuest.Weekdays = previousWeekdays;
 
             await _repository.UpdateAsync(existingQuest, cancellationToken);
         }
