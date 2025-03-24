@@ -24,9 +24,9 @@ namespace Application.Helpers
             if (seasonRange is null)
                 return false;
 
-            if (startDate.HasValue && (startDate < seasonRange.Value.start || startDate > seasonRange.Value.end))
+            if (startDate.HasValue && (startDate < seasonRange.Value.start.AddDays(-1) || startDate > seasonRange.Value.end))
                 return false;
-            if (endDate.HasValue && (endDate > seasonRange.Value.end || endDate < seasonRange.Value.start))
+            if (endDate.HasValue && (endDate > seasonRange.Value.end || endDate < seasonRange.Value.start.AddDays(-1)))
                 return false;
 
             return true;
