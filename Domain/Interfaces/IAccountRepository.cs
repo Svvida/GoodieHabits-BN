@@ -7,6 +7,6 @@ namespace Domain.Interfaces
     {
         Task<Account?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<Account?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
-        // In delete method, we need to manually delete QuestMetadata_QuestLabels
+        // In delete method, we need to manually delete Quest_QuestLabels
     }
 }

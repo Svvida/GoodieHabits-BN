@@ -13,20 +13,20 @@ namespace Application.Helpers
     {
         private readonly IQuestLabelRepository _questLabelRepository;
         private readonly ILogger<QuestLabelsHandler> _logger;
-        private readonly IQuestMetadataRepository _questMetadataRepository;
+        private readonly IQuestRepository _questRepository;
 
         public QuestLabelsHandler(
             IQuestLabelRepository questLabelRepository,
             ILogger<QuestLabelsHandler> logger,
-            IQuestMetadataRepository questMetadataRepository)
+            IQuestRepository questRepository)
         {
             _questLabelRepository = questLabelRepository;
             _logger = logger;
-            _questMetadataRepository = questMetadataRepository;
+            _questRepository = questRepository;
         }
 
-        public async Task<QuestMetadata> HandleUpdateLabelsAsync(
-            QuestMetadata quest,
+        public async Task<Quest> HandleUpdateLabelsAsync(
+            Quest quest,
             BaseUpdateQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
@@ -37,16 +37,16 @@ namespace Application.Helpers
                     throw new ForbiddenException($"Label with ID: {labelId} does not belong to the user.");
             }
 
-            var existingLabels = quest.QuestLabels.ToList();
+            var existingLabels = quest.Quest_QuestLabels.ToList();
 
             HashSet<int> newLabelsHashSet = [.. updateDto.Labels];
-            HashSet<int> existingLabelsHashSet = [.. quest.QuestLabels.Select(x => x.QuestLabelId)];
+            HashSet<int> existingLabelsHashSet = [.. quest.Quest_QuestLabels.Select(x => x.QuestLabelId)];
 
             var labelsToAdd = updateDto.Labels
                 .Where(labelId => !existingLabelsHashSet.Contains(labelId))
-                .Select(labelId => new QuestMetadata_QuestLabel
+                .Select(labelId => new Quest_QuestLabel
                 {
-                    QuestMetadataId = quest.Id,
+                    QuestId = quest.Id,
                     QuestLabelId = labelId
                 }).ToList();
 
@@ -54,8 +54,8 @@ namespace Application.Helpers
                 .Where(existingLabel => !newLabelsHashSet.Contains(existingLabel.QuestLabelId))
                 .ToList();
 
-            await _questMetadataRepository.AddQuestLabelsAsync(labelsToAdd, cancellationToken);
-            await _questMetadataRepository.RemoveQuestLabelsAsync(labelsToRemove, cancellationToken);
+            await _questRepository.AddQuestLabelsAsync(labelsToAdd, cancellationToken);
+            await _questRepository.RemoveQuestLabelsAsync(labelsToRemove, cancellationToken);
 
             return quest;
         }

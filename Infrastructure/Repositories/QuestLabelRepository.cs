@@ -43,14 +43,6 @@ namespace Infrastructure.Repositories
         }
         public async Task DeleteLabelAsync(QuestLabel label, CancellationToken cancellationToken = default)
         {
-            var joinRecords = await _context.QuestMetadata_QuestLabels
-                .Where(qml => qml.QuestLabelId == label.Id)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            _context.QuestMetadata_QuestLabels.RemoveRange(joinRecords);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
             _context.QuestLabels.Remove(label);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

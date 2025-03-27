@@ -8,21 +8,19 @@ using Application.Helpers;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
-using Domain.Exceptions;
 using Domain.Interfaces.Quests;
-using Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
     public class QuestService : IQuestService
     {
-        private readonly IQuestMetadataRepository _repository;
+        private readonly IQuestRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<QuestService> _logger;
 
         public QuestService(
-            IQuestMetadataRepository repository,
+            IQuestRepository repository,
             IMapper mapper,
             ILogger<QuestService> logger)
         {
@@ -41,26 +39,18 @@ namespace Application.Services.Quests
 
             _logger.LogInformation("Quests before mapping: {@quests}", quests);
 
-            var today = (WeekdayEnum)DateTime.UtcNow.DayOfWeek;
-
             var questList = quests
-                .Where(q =>
-                {
-                    var actualQuest = q.GetActualQuest();
-                    return actualQuest is not WeeklyQuest weekly || weekly.Weekdays.Contains(today);
-                })
+                .Where(q => q != null)
                 .Select(q =>
-                    (BaseGetQuestDto)(q.GetActualQuest() switch
+                    (BaseGetQuestDto)(q.QuestType switch
                     {
-                        OneTimeQuest oneTime => _mapper.Map<GetOneTimeQuestDto>(q),
-                        DailyQuest daily => _mapper.Map<GetDailyQuestDto>(q),
-                        WeeklyQuest weekly => _mapper.Map<GetWeeklyQuestDto>(q),
-                        MonthlyQuest monthly => _mapper.Map<GetMonthlyQuestDto>(q),
-                        SeasonalQuest seasonal => _mapper.Map<GetSeasonalQuestDto>(q),
-                        _ => null
-                    })!
-                )
-                .Where(q => q is not null)
+                        QuestTypeEnum.OneTime => _mapper.Map<GetOneTimeQuestDto>(q),
+                        QuestTypeEnum.Daily => _mapper.Map<GetDailyQuestDto>(q),
+                        QuestTypeEnum.Weekly => _mapper.Map<GetWeeklyQuestDto>(q),
+                        QuestTypeEnum.Monthly => _mapper.Map<GetMonthlyQuestDto>(q),
+                        QuestTypeEnum.Seasonal => _mapper.Map<GetSeasonalQuestDto>(q),
+                        _ => throw new ArgumentException("Invalid quest type")
+                    }))
                 .ToList();
 
             _logger.LogInformation("Quests after mapping: {@mappedQuests}", questList);
@@ -70,10 +60,7 @@ namespace Application.Services.Quests
 
         public async Task DeleteQuestAsync(int questId, CancellationToken cancellationToken = default)
         {
-            var quest = await _repository.GetQuestMetadataByIdAsync(questId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException("Quest with ID: {questId} not found");
-
-            await _repository.DeleteAsync(quest, cancellationToken).ConfigureAwait(false);
+            await _repository.DeleteQuestByIdAsync(questId, cancellationToken).ConfigureAwait(false);
         }
     }
 }

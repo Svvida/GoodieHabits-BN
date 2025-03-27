@@ -19,12 +19,6 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<GetAccountDto>> GetAllAccountsAsync(CancellationToken cancellationToken = default)
-        {
-            var accounts = await _accountRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
-            return _mapper.Map<IEnumerable<GetAccountDto>>(accounts);
-        }
-
         public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
         {
             var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Labels).ConfigureAwait(false)

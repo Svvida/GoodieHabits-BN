@@ -12,14 +12,14 @@ namespace Api.Controllers
     [Authorize]
     public class QuestsController : ControllerBase
     {
-        private readonly IQuestService _questMetadataService;
+        private readonly IQuestService _questService;
         private readonly ILogger<QuestsController> _logger;
 
         public QuestsController(
-            IQuestService questMetadataService,
+            IQuestService questService,
             ILogger<QuestsController> logger)
         {
-            _questMetadataService = questMetadataService;
+            _questService = questService;
             _logger = logger;
         }
 
@@ -30,7 +30,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _questMetadataService.GetActiveQuestsAsync(accountId, cancellationToken);
+            var quests = await _questService.GetActiveQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
     }

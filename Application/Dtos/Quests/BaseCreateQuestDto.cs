@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Domain.Enum;
 
 namespace Application.Dtos.Quests
 {
@@ -13,5 +14,7 @@ namespace Application.Dtos.Quests
         public HashSet<int> Labels { get; set; } = [];
         [JsonIgnore]
         public int AccountId { get; set; }
+        [JsonIgnore]
+        public virtual QuestTypeEnum QuestType { get; set; }
     }
 }

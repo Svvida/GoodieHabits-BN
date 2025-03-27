@@ -9,7 +9,7 @@ namespace Application.Validators.Accounts
         public PatchAccountValidator()
         {
             RuleFor(x => x.Nickname)
-                .Length(1, 20).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.")
+                .Length(1, 15).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.")
                 .Matches("^[a-zA-Z0-9.!_-]*$").WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: . ! _ -")
                 .When(x => !string.IsNullOrEmpty(x.Nickname));
 
