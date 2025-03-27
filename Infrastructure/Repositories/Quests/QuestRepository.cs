@@ -56,53 +56,7 @@ namespace Infrastructure.Repositories.Quests
                 .AsNoTracking()
                 .AsQueryable();
 
-            baseQuery = baseQuery
-                .Select(q => new Quest
-                {
-                    Id = q.Id,
-                    QuestType = q.QuestType,
-                    Title = q.Title,
-                    Description = q.Description,
-                    Priority = q.Priority,
-                    IsCompleted = q.IsCompleted,
-                    Emoji = q.Emoji,
-                    StartDate = q.StartDate,
-                    EndDate = q.EndDate,
-
-                    Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
-                    {
-                        QuestLabel = new QuestLabel
-                        {
-                            Id = ql.QuestLabelId,
-                            Value = ql.QuestLabel.Value,
-                            BackgroundColor = ql.QuestLabel.BackgroundColor,
-                            TextColor = ql.QuestLabel.TextColor
-                        }
-                    }).ToList(),
-
-                    SeasonalQuest_Season = q.SeasonalQuest_Season != null
-                        ? new SeasonalQuest_Season
-                        {
-                            Season = q.SeasonalQuest_Season.Season
-                        } : null,
-
-                    MonthlyQuest_Days = q.MonthlyQuest_Days != null
-                        ? new MonthlyQuest_Days
-                        {
-                            StartDay = q.MonthlyQuest_Days.StartDay,
-                            EndDay = q.MonthlyQuest_Days.EndDay
-                        } : null,
-
-                    WeeklyQuest_Days = q.WeeklyQuest_Days != null
-                        ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
-                        {
-                            Weekday = wd.Weekday
-                        }).ToList()
-                        : new List<WeeklyQuest_Day>()
-                })
-                .AsNoTracking();
-
-            var result = await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
+            var result = await ApplyQuestProjection(baseQuery).ToListAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Fetched {@result} quests from repository.", result);
             return result;
         }
@@ -131,8 +85,9 @@ namespace Infrastructure.Repositories.Quests
                 quests = quests.Include(q => q.SeasonalQuest_Season).AsNoTracking();
             }
 
-            _logger.LogInformation("Fetched {@quests} quests from repository.", quests);
-            return await quests.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+            var result = await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("Fetched {@result} quests from repository.", result);
+            return result;
         }
 
         public async Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -156,8 +111,9 @@ namespace Infrastructure.Repositories.Quests
                 quest = quest.Include(q => q.SeasonalQuest_Season).AsNoTracking();
             }
 
-            _logger.LogInformation("Fetched {@quests} quests from repository.", quest);
-            return await quest.AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("Fetched {@result} quests from repository.", result);
+            return result;
         }
 
         public async Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
@@ -170,7 +126,7 @@ namespace Infrastructure.Repositories.Quests
             {
                 // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
                 _logger.LogWarning("Quest with id {questId} not found.", questId);
-                throw new InvalidArgumentException($"Failed to delete quest with ID {questId}.  Possible authorization failure or data inconsistency.")
+                throw new InvalidArgumentException($"Failed to delete quest with ID {questId}.  Possible authorization failure or data inconsistency.");
             }
         }
 
@@ -208,6 +164,55 @@ namespace Infrastructure.Repositories.Quests
         {
             _context.Quests.Update(quest);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)
+        {
+            return query.Select(q => new Quest
+            {
+                Id = q.Id,
+                QuestType = q.QuestType,
+                Title = q.Title,
+                Description = q.Description,
+                Priority = q.Priority,
+                IsCompleted = q.IsCompleted,
+                Emoji = q.Emoji,
+                StartDate = q.StartDate,
+                EndDate = q.EndDate,
+
+                Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
+                {
+                    QuestLabel = new QuestLabel
+                    {
+                        Id = ql.QuestLabelId,
+                        Value = ql.QuestLabel.Value,
+                        BackgroundColor = ql.QuestLabel.BackgroundColor,
+                        TextColor = ql.QuestLabel.TextColor
+                    }
+                }).ToList(),
+
+                SeasonalQuest_Season = q.SeasonalQuest_Season != null
+                    ? new SeasonalQuest_Season
+                    {
+                        Season = q.SeasonalQuest_Season.Season
+                    }
+                    : null,
+
+                MonthlyQuest_Days = q.MonthlyQuest_Days != null
+                    ? new MonthlyQuest_Days
+                    {
+                        StartDay = q.MonthlyQuest_Days.StartDay,
+                        EndDay = q.MonthlyQuest_Days.EndDay
+                    }
+                    : null,
+
+                WeeklyQuest_Days = q.WeeklyQuest_Days != null
+                    ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
+                    {
+                        Weekday = wd.Weekday
+                    }).ToList()
+                    : new List<WeeklyQuest_Day>()
+            }).AsNoTracking();
         }
     }
 }
