@@ -21,7 +21,7 @@ namespace Application.MappingProfiles
                         TextColor = label.TextColor
                     }).ToList()
                 }))
-                .ForMember(dest => dest.Nickname, opt => opt.MapFrom(src => src.Username));
+                .ForMember(dest => dest.Nickname, opt => opt.MapFrom(src => src.Nickname));
 
             // Create DTO -> Entity
             CreateMap<CreateAccountDto, Account>()
@@ -29,7 +29,7 @@ namespace Application.MappingProfiles
 
             // Patch DTO -> Entity
             CreateMap<PatchAccountDto, Account>()
-                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Nickname))
+                .ForMember(dest => dest.Nickname, opt => opt.MapFrom(src => src.Nickname))
                 .ForAllMembers(opt => opt.Condition((src, member, srcMember) => srcMember != null));
         }
     }

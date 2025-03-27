@@ -5,6 +5,6 @@ namespace Application.Interfaces
 {
     public interface IQuestLabelsHandler
     {
-        Task<QuestMetadata> HandleUpdateLabelsAsync(QuestMetadata quest, BaseUpdateQuestDto updateDto, CancellationToken cancellationToken = default);
+        Task<Quest> HandleUpdateLabelsAsync(Quest quest, BaseUpdateQuestDto updateDto, CancellationToken cancellationToken = default);
     }
 }

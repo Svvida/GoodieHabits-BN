@@ -1,31 +1,37 @@
-﻿using Domain.Enum;
+﻿using Domain.Common;
+using Domain.Enum;
 using Domain.Exceptions;
-using Domain.Models;
 
-namespace Domain.Common
+namespace Domain.Models
 {
-    public abstract class QuestBase : EntityBase
+    public class Quest : EntityBase
     {
         public int Id { get; set; }
+        public int AccountId { get; set; }
+        public QuestTypeEnum QuestType { get; set; }
         public required string Title { get; set; }
         public string? Description { get; set; } = null;
+        public PriorityEnum? Priority { get; set; } = null;
         public bool IsCompleted { get; set; } = false;
         public string? Emoji { get; set; } = null;
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;
-        public PriorityEnum? Priority { get; set; } = null;
-        public QuestMetadata QuestMetadata { get; set; } = null!;
+        public DateTime? LastCompletedAt { get; set; } = null;
+        public DateTime? NextResetAt { get; set; } = null;
 
-        public QuestBase() { }
-        public QuestBase(int id, string title, string? description, string? emoji, DateTime? startDate, DateTime? endDate, PriorityEnum? priority)
+        public Account Account { get; set; } = null!;
+        public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = [];
+        public MonthlyQuest_Days? MonthlyQuest_Days { get; set; } = null;
+        public ICollection<WeeklyQuest_Day> WeeklyQuest_Days { get; set; } = [];
+        public SeasonalQuest_Season? SeasonalQuest_Season { get; set; } = null;
+
+        public Quest() { }
+        public Quest(int id, int accountId, QuestTypeEnum questType, string title)
         {
             Id = id;
+            AccountId = accountId;
+            QuestType = questType;
             Title = title;
-            Description = description;
-            Emoji = emoji;
-            StartDate = startDate;
-            EndDate = endDate;
-            Priority = priority;
         }
 
         public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate)
@@ -36,14 +42,10 @@ namespace Domain.Common
                 EndDate = newEndDate;
             }
             if (newStartDate.HasValue && EndDate.HasValue && newStartDate > EndDate)
-            {
                 throw new InvalidArgumentException("Start date cannot be after the end date.");
-            }
 
             if (newEndDate.HasValue && StartDate.HasValue && newEndDate < StartDate)
-            {
                 throw new InvalidArgumentException("End date cannot be before the start date.");
-            }
 
             StartDate = newStartDate ?? StartDate;
             EndDate = newEndDate ?? EndDate;

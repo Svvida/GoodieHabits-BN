@@ -10,14 +10,13 @@ namespace Infrastructure.Persistence
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Account> Accounts { get; set; }
-        public DbSet<QuestMetadata> QuestsMetadata { get; set; }
-        public DbSet<OneTimeQuest> OneTimeQuests { get; set; }
-        public DbSet<DailyQuest> DailyQuests { get; set; }
-        public DbSet<WeeklyQuest> WeeklyQuests { get; set; }
-        public DbSet<MonthlyQuest> MonthlyQuests { get; set; }
-        public DbSet<SeasonalQuest> SeasonalQuests { get; set; }
+        public DbSet<Quest> Quests { get; set; }
+        public DbSet<MonthlyQuest_Days> MonthlyQuest_Days { get; set; }
+        public DbSet<WeeklyQuest_Day> WeeklyQuest_Days { get; set; }
+        public DbSet<SeasonalQuest_Season> SeasonalQuest_Seasons { get; set; }
         public DbSet<QuestLabel> QuestLabels { get; set; }
-        public DbSet<QuestMetadata_QuestLabel> QuestMetadata_QuestLabels { get; set; }
+        public DbSet<Quest_QuestLabel> Quest_QuestLabels { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
 
         public override int SaveChanges()
         {
@@ -50,14 +49,13 @@ namespace Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
-            modelBuilder.ApplyConfiguration(new OneTimeQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new SeasonalQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new QuestMetadataConfiguration());
-            modelBuilder.ApplyConfiguration(new DailyQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new WeeklyQuestConfiguration());
-            modelBuilder.ApplyConfiguration(new MonthlyQuestConfiguration());
+            modelBuilder.ApplyConfiguration(new MonthlyQuest_DaysConfiguration());
+            modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
+            modelBuilder.ApplyConfiguration(new Quest_QuestLabelConfiguration());
+            modelBuilder.ApplyConfiguration(new QuestConfiguration());
             modelBuilder.ApplyConfiguration(new QuestLabelConfiguration());
-            modelBuilder.ApplyConfiguration(new QuestMetadata_QuestLabelConfiguration());
+            modelBuilder.ApplyConfiguration(new SeasonalQuest_SeasonConfiguration());
+            modelBuilder.ApplyConfiguration(new WeeklyQuest_DaysConfiguration());
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Domain.Models
         public required string TextColor { get; set; }
 
         public Account Account { get; set; } = null!;
-        public ICollection<QuestMetadata_QuestLabel> QuestMetadataRelations { get; set; } = null!;
+        public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = null!;
 
         public QuestLabel() { }
         public QuestLabel(int id, int accountId, string value, string backgroundColor, string textColor)

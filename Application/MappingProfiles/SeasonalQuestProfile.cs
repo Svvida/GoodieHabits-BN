@@ -11,50 +11,38 @@ namespace Application.MappingProfiles
     {
         public SeasonalQuestProfile()
         {
-            CreateMap<QuestMetadata, GetSeasonalQuestDto>()
-                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src =>
-                    src.QuestLabels.Select(ql => new GetQuestLabelDto
-                    {
-                        Id = ql.QuestLabel.Id,
-                        Value = ql.QuestLabel.Value,
-                        BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        TextColor = ql.QuestLabel.TextColor
-                    }).ToList()))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.SeasonalQuest!.Priority.ToString()))
-                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.SeasonalQuest!.Title))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.SeasonalQuest!.Description))
-                .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.SeasonalQuest!.Season.ToString()))
-                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.SeasonalQuest!.StartDate))
-                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.SeasonalQuest!.EndDate))
-                .ForMember(dest => dest.Emoji, opt => opt.MapFrom(src => src.SeasonalQuest!.Emoji))
-                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.SeasonalQuest!.IsCompleted));
-
             // Entity -> DTO (Convert Enum -> String for Response)
-            CreateMap<SeasonalQuest, GetSeasonalQuestDto>()
-                .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.Season.ToString()))
+            CreateMap<Quest, GetSeasonalQuestDto>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
+                .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.SeasonalQuest_Season!.Season.ToString()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
-                .ForMember(dest => dest.Labels, opt => opt.Ignore());
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels.Select(ql => new GetQuestLabelDto
+                {
+                    Id = ql.QuestLabel.Id,
+                    Value = ql.QuestLabel.Value,
+                    BackgroundColor = ql.QuestLabel.BackgroundColor,
+                    TextColor = ql.QuestLabel.TextColor
+                }).ToList()));
 
             // Create DTO -> Entity (Convert String -> Enum)
-            CreateMap<CreateSeasonalQuestDto, SeasonalQuest>()
-                .ForMember(dest => dest.QuestMetadata, opt => opt.MapFrom(src => new QuestMetadata
+            CreateMap<CreateSeasonalQuestDto, Quest>()
+                .ForMember(dest => dest.Quest_QuestLabels, opt => opt.MapFrom(src => src.Labels.Select(ql => new Quest_QuestLabel
                 {
-                    QuestType = QuestTypeEnum.Seasonal,
-                    AccountId = src.AccountId,
-                    QuestLabels = src.Labels.Select(ql => new QuestMetadata_QuestLabel
-                    {
-                        QuestLabelId = ql
-                    }).ToList()
+                    QuestLabelId = ql
+                }).ToList()))
+                .ForMember(dest => dest.SeasonalQuest_Season, opt => opt.MapFrom(src => new SeasonalQuest_Season
+                {
+                    Season = Enum.Parse<SeasonEnum>(src.Season, true)
                 }))
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
-            CreateMap<SeasonalQuestCompletionPatchDto, SeasonalQuest>()
+            CreateMap<SeasonalQuestCompletionPatchDto, Quest>()
                 .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom((src, dest) => src.IsCompleted ?? dest.IsCompleted))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Update DTO -> Entity (Convert String -> Enum)
-            CreateMap<UpdateSeasonalQuestDto, SeasonalQuest>()
+            CreateMap<UpdateSeasonalQuestDto, Quest>()
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
         }
     }

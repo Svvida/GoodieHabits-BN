@@ -13,9 +13,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasKey(a => a.Id);
 
             builder.HasIndex(a => a.Email).IsUnique();
-            builder.HasIndex(a => a.Username).IsUnique();
+            builder.HasIndex(a => a.Nickname).IsUnique();
 
-            builder.Property(a => a.Username)
+            builder.Property(a => a.Nickname)
                 .IsRequired(false)
                 .HasMaxLength(50);
 
@@ -25,7 +25,13 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(a => a.Email)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .HasConversion(email => email.ToLower(), email => email);
+
+            builder.Property(a => a.TimeZone)
+                .IsRequired()
+                .HasDefaultValue("Etc/UTC")
+                .HasMaxLength(32);
 
             builder.Property(a => a.CreatedAt)
                 .IsRequired();

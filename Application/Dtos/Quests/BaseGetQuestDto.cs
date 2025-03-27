@@ -24,7 +24,7 @@ namespace Application.Dtos.Quests
         public string? Emoji { get; set; }
         public bool IsCompleted { get; set; }
         public string? Priority { get; set; }
-        public virtual string? Type { get; set; }
+        public string? Type { get; set; }
         public ICollection<GetQuestLabelDto> Labels { get; set; } = [];
     }
 }

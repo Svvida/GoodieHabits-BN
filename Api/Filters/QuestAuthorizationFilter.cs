@@ -7,12 +7,12 @@ namespace Api.Filters
 {
     public class QuestAuthorizationFilter : IAsyncAuthorizationFilter
     {
-        private readonly IQuestMetadataRepository _questMetadataRepository;
+        private readonly IQuestRepository _questRepository;
         private readonly ILogger<QuestAuthorizationFilter> _logger;
 
-        public QuestAuthorizationFilter(IQuestMetadataRepository questMetadataRepository, ILogger<QuestAuthorizationFilter> logger)
+        public QuestAuthorizationFilter(IQuestRepository questRepository, ILogger<QuestAuthorizationFilter> logger)
         {
-            _questMetadataRepository = questMetadataRepository;
+            _questRepository = questRepository;
             _logger = logger;
         }
 
@@ -28,7 +28,7 @@ namespace Api.Filters
                 return;
             }
 
-            bool isOwner = await _questMetadataRepository.IsQuestOwnedByUserAsync(questId.Value, accountId.Value);
+            bool isOwner = await _questRepository.IsQuestOwnedByUserAsync(questId.Value, accountId.Value);
 
             if (!isOwner)
             {
