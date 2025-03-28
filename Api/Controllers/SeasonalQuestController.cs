@@ -2,6 +2,7 @@
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Interfaces.Quests;
 using Domain;
+using Domain.Enum;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ namespace Api.Controllers
     {
         private readonly ISeasonalQuestService _seasonalQuestService;
         private readonly IQuestService _questService;
+        private static QuestTypeEnum QuestType => QuestTypeEnum.Seasonal;
 
         public SeasonalQuestController(ISeasonalQuestService service, IQuestService questService)
         {
@@ -26,7 +28,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetSeasonalQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _seasonalQuestService.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _questService.GetUserQuestByIdAsync(id, QuestType, cancellationToken);
 
             if (quest is null)
             {
@@ -48,7 +50,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _seasonalQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _questService.GetAllUserQuestsByTypeAsync(accountId, QuestType, cancellationToken);
             return Ok(quests);
         }
 
@@ -63,7 +65,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _seasonalQuestService.CreateAsync(createDto, cancellationToken);
+            var createdId = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -74,7 +76,8 @@ namespace Api.Controllers
             [FromBody] SeasonalQuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _seasonalQuestService.UpdateQuestCompletionAsync(id, patchDto, cancellationToken);
+            patchDto.Id = id;
+            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
             return NoContent();
 
         }
@@ -86,7 +89,8 @@ namespace Api.Controllers
             [FromBody] UpdateSeasonalQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _seasonalQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            updateDto.Id = id;
+            await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
             return NoContent();
         }
 

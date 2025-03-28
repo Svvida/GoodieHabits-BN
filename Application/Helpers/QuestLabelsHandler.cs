@@ -30,9 +30,11 @@ namespace Application.Helpers
             BaseUpdateQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
+
             foreach (var labelId in updateDto.Labels)
             {
                 bool isOwner = await _questLabelRepository.IsLabelOwnedByUserAsync(labelId, quest.AccountId, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation($"AccountId: {quest.AccountId} and LabelId: {labelId}, isOwner?: {isOwner}");
                 if (!isOwner)
                     throw new ForbiddenException($"Label with ID: {labelId} does not belong to the user.");
             }
@@ -52,10 +54,17 @@ namespace Application.Helpers
 
             var labelsToRemove = existingLabels
                 .Where(existingLabel => !newLabelsHashSet.Contains(existingLabel.QuestLabelId))
+                .Select(existingLabel => new Quest_QuestLabel
+                {
+                    QuestId = existingLabel.QuestId,
+                    QuestLabelId = existingLabel.QuestLabelId
+                })
                 .ToList();
 
-            await _questRepository.AddQuestLabelsAsync(labelsToAdd, cancellationToken);
-            await _questRepository.RemoveQuestLabelsAsync(labelsToRemove, cancellationToken);
+            if (labelsToRemove.Count != 0)
+                _questRepository.RemoveQuestLabels(labelsToRemove);
+            if (labelsToAdd.Count != 0)
+                _questRepository.AddQuestLabels(labelsToAdd);
 
             return quest;
         }

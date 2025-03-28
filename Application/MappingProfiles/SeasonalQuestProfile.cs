@@ -43,7 +43,8 @@ namespace Application.MappingProfiles
 
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateSeasonalQuestDto, Quest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForPath(dest => dest.SeasonalQuest_Season!.Season, opt => opt.MapFrom(src => Enum.Parse<SeasonEnum>(src.Season, true)));
         }
     }
 }
