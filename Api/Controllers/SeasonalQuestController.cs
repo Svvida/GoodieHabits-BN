@@ -14,13 +14,11 @@ namespace Api.Controllers
     [Authorize]
     public class SeasonalQuestController : ControllerBase
     {
-        private readonly ISeasonalQuestService _seasonalQuestService;
         private readonly IQuestService _questService;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Seasonal;
 
-        public SeasonalQuestController(ISeasonalQuestService service, IQuestService questService)
+        public SeasonalQuestController(IQuestService questService)
         {
-            _seasonalQuestService = service;
             _questService = questService;
         }
 

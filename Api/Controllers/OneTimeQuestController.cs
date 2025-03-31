@@ -14,14 +14,11 @@ namespace Api.Controllers
     [Authorize]
     public class OneTimeQuestController : ControllerBase
     {
-        private readonly IOneTimeQuestService _oneTimeQuestService;
         private readonly IQuestService _questService;
         private static QuestTypeEnum QuestType => QuestTypeEnum.OneTime;
 
-        public OneTimeQuestController(
-            IOneTimeQuestService oneTimeQuestService, IQuestService questService)
+        public OneTimeQuestController(IQuestService questService)
         {
-            _oneTimeQuestService = oneTimeQuestService;
             _questService = questService;
         }
 

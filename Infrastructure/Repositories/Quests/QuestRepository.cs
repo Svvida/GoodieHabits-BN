@@ -179,6 +179,14 @@ namespace Infrastructure.Repositories.Quests
             {
                 Id = q.Id,
                 AccountId = q.AccountId,
+                Account = new Account
+                {
+                    Id = q.Account.Id,
+                    Nickname = q.Account.Nickname,
+                    HashPassword = q.Account.HashPassword,
+                    Email = q.Account.Email,
+                    TimeZone = q.Account.TimeZone
+                },
                 QuestType = q.QuestType,
                 Title = q.Title,
                 Description = q.Description,
@@ -187,6 +195,8 @@ namespace Infrastructure.Repositories.Quests
                 Emoji = q.Emoji,
                 StartDate = q.StartDate,
                 EndDate = q.EndDate,
+                LastCompletedAt = q.LastCompletedAt,
+                NextResetAt = q.NextResetAt,
 
                 Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
                 {

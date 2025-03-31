@@ -14,17 +14,14 @@ namespace Api.Controllers
     [Authorize]
     public class DailyQuestController : ControllerBase
     {
-        private readonly IDailyQuestService _dailyQuestService;
         private readonly IQuestService _questService;
         private readonly ILogger<DailyQuestController> _logger;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Daily;
 
         public DailyQuestController(
-            IDailyQuestService service,
             ILogger<DailyQuestController> logger,
             IQuestService questService)
         {
-            _dailyQuestService = service;
             _logger = logger;
             _questService = questService;
         }

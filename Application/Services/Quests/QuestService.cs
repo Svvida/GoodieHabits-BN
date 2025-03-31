@@ -91,7 +91,12 @@ namespace Application.Services.Quests
             {
                 var weeklyUpdateDto = (UpdateWeeklyQuestDto)updateDto;
                 existingQuest = _questWeekdaysHandler.HandleUpdateWeekdays(existingQuest, weeklyUpdateDto);
+                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
             }
+
+            if (questType == QuestTypeEnum.Monthly)
+                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
+
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
 
@@ -101,9 +106,15 @@ namespace Application.Services.Quests
                 ?? throw new NotFoundException($"Quest with ID: {patchDto.Id} not found");
 
             if (existingQuest.IsCompleted == false && patchDto.IsCompleted == true)
+            {
                 existingQuest.LastCompletedAt = DateTime.UtcNow;
+                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
+            }
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
+
+            _logger.LogInformation("Completed quest after mapping: {@existingQuest}", existingQuest);
+
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
 

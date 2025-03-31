@@ -68,7 +68,7 @@ namespace Api
             ConfigureMiddleware(app);
 
             // Reset daily questes on startup
-            //await ResetQuests(app);
+            await ResetQuests(app);
 
             Log.Information("Application started");
             await app.RunAsync();
@@ -169,16 +169,11 @@ namespace Api
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IQuestRepository, QuestRepository>();
-            //builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
+            builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
             builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
-            builder.Services.AddScoped<IDailyQuestService, DailyQuestService>();
-            builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
-            builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
-            builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             //builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
@@ -255,13 +250,13 @@ namespace Api
             builder.Services.AddScoped<TimeZoneUpdateFilter>();
         }
 
-        //private async static Task ResetQuests(WebApplication app)
-        //{
-        //    using var scope = app.Services.CreateScope();
-        //    var serviceProvider = scope.ServiceProvider;
-        //    var questsResetService = serviceProvider.GetRequiredService<IQuestResetService>();
-        //    await questsResetService.ResetDailyQuestsAsync();
-        //}
+        private async static Task ResetQuests(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
+            await questsResetService.ResetQuestsAsync();
+        }
 
         private static void ConfigureMiddleware(WebApplication app)
         {

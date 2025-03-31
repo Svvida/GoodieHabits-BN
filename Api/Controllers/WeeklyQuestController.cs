@@ -14,13 +14,11 @@ namespace Api.Controllers
     [Authorize]
     public class WeeklyQuestController : ControllerBase
     {
-        private readonly IWeeklyQuestService _weeklyQuestService;
         private readonly IQuestService _questService;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Weekly;
 
-        public WeeklyQuestController(IWeeklyQuestService service, IQuestService questService)
+        public WeeklyQuestController(IQuestService questService)
         {
-            _weeklyQuestService = service;
             _questService = questService;
         }
 

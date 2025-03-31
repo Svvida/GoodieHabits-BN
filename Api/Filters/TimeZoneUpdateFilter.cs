@@ -1,6 +1,8 @@
 ﻿using Domain;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NodaTime;
 
 namespace Api.Filters
 {
@@ -22,6 +24,12 @@ namespace Api.Filters
 
             if (userId is not null && httpContext.Request.Headers.TryGetValue("x-time-zone", out var timeZoneValue))
             {
+                if (!IsValidTimeZone(timeZoneValue.ToString()))
+                {
+                    _logger.LogWarning($"Invalid time zone received: {timeZoneValue}. Rejecting request.");
+                    throw new NotFoundException($"Invalid time zone: {timeZoneValue}");
+                }
+
                 var user = await _accountRepository.GetByIdAsync(userId.Value);
 
                 if (user is not null && user.TimeZone != timeZoneValue)
@@ -33,6 +41,11 @@ namespace Api.Filters
             }
 
             await next();
+        }
+
+        private static bool IsValidTimeZone(string timeZoneId)
+        {
+            return DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) != null;
         }
 
         private static int? GetAccountIdFromContext(ActionExecutingContext context)
