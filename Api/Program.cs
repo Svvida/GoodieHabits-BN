@@ -176,7 +176,7 @@ namespace Api
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            //builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
+            builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
             builder.Services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
             builder.Services.AddScoped<IQuestWeekdaysHandler, QuestWeekdaysHandler>();

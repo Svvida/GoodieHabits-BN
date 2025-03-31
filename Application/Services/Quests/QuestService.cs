@@ -25,6 +25,7 @@ namespace Application.Services.Quests
         private readonly IMapper _mapper;
         private readonly ILogger<QuestService> _logger;
         private readonly IQuestLabelRepository _questLabelRepository;
+        private readonly IQuestResetService _questResetService;
 
         public QuestService(
             IQuestRepository repository,
@@ -32,7 +33,8 @@ namespace Application.Services.Quests
             IQuestWeekdaysHandler questWeekdaysHandler,
             IMapper mapper,
             ILogger<QuestService> logger,
-            IQuestLabelRepository questLabelRepository)
+            IQuestLabelRepository questLabelRepository,
+            IQuestResetService questResetService)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -40,6 +42,7 @@ namespace Application.Services.Quests
             _mapper = mapper;
             _logger = logger;
             _questLabelRepository = questLabelRepository;
+            _questResetService = questResetService;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -91,11 +94,11 @@ namespace Application.Services.Quests
             {
                 var weeklyUpdateDto = (UpdateWeeklyQuestDto)updateDto;
                 existingQuest = _questWeekdaysHandler.HandleUpdateWeekdays(existingQuest, weeklyUpdateDto);
-                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
+                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
             }
 
             if (questType == QuestTypeEnum.Monthly)
-                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
+                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
 
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
@@ -108,7 +111,7 @@ namespace Application.Services.Quests
             if (existingQuest.IsCompleted == false && patchDto.IsCompleted == true)
             {
                 existingQuest.LastCompletedAt = DateTime.UtcNow;
-                existingQuest.NextResetAt = QuestResetCalculator.GetNextResetTimeUtc(existingQuest, _logger);
+                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
             }
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
