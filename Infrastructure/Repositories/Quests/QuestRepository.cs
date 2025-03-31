@@ -185,7 +185,9 @@ namespace Infrastructure.Repositories.Quests
                     Nickname = q.Account.Nickname,
                     HashPassword = q.Account.HashPassword,
                     Email = q.Account.Email,
-                    TimeZone = q.Account.TimeZone
+                    TimeZone = q.Account.TimeZone,
+                    CreatedAt = q.Account.CreatedAt,
+                    UpdatedAt = q.Account.UpdatedAt
                 },
                 QuestType = q.QuestType,
                 Title = q.Title,
@@ -197,6 +199,8 @@ namespace Infrastructure.Repositories.Quests
                 EndDate = q.EndDate,
                 LastCompletedAt = q.LastCompletedAt,
                 NextResetAt = q.NextResetAt,
+                UpdatedAt = q.UpdatedAt,
+                CreatedAt = q.CreatedAt,
 
                 Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
                 {
@@ -208,7 +212,9 @@ namespace Infrastructure.Repositories.Quests
                         AccountId = q.AccountId,
                         Value = ql.QuestLabel.Value,
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        TextColor = ql.QuestLabel.TextColor
+                        TextColor = ql.QuestLabel.TextColor,
+                        UpdatedAt = ql.QuestLabel.UpdatedAt,
+                        CreatedAt = ql.QuestLabel.CreatedAt
                     }
                 }).ToList(),
 
