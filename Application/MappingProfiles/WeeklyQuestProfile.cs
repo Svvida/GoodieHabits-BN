@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests.WeeklyQuest;
+﻿using Application.Dtos.Labels;
+using Application.Dtos.Quests.WeeklyQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
@@ -16,7 +17,13 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
                 .ForMember(dest => dest.Weekdays, opt => opt.MapFrom(src => src.WeeklyQuest_Days.Select(wq =>
                     wq.Weekday.ToString()).ToList()))
-                .ForMember(dest => dest.Labels, opt => opt.Ignore());
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels.Select(ql => new GetQuestLabelDto
+                {
+                    Id = ql.QuestLabelId,
+                    Value = ql.QuestLabel.Value,
+                    BackgroundColor = ql.QuestLabel.BackgroundColor,
+                    TextColor = ql.QuestLabel.TextColor
+                }).ToList()));
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateWeeklyQuestDto, Quest>()
@@ -24,8 +31,11 @@ namespace Application.MappingProfiles
                 {
                     QuestLabelId = ql
                 }).ToList()))
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
-                .ForMember(dest => dest.WeeklyQuest_Days, opt => opt.MapFrom(src => src.Weekdays.ConvertAll(w => Enum.Parse<WeekdayEnum>(w))));
+                .ForMember(dest => dest.WeeklyQuest_Days, opt => opt.MapFrom(src => src.Weekdays.Select(wd => new WeeklyQuest_Day
+                {
+                    Weekday = Enum.Parse<WeekdayEnum>(wd)
+                }).ToList()))
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<WeeklyQuestCompletionPatchDto, Quest>()
@@ -34,8 +44,7 @@ namespace Application.MappingProfiles
 
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateWeeklyQuestDto, Quest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
-                .ForMember(dest => dest.WeeklyQuest_Days, opt => opt.MapFrom(src => src.Weekdays.ConvertAll(w => Enum.Parse<WeekdayEnum>(w))));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
         }
     }
 }

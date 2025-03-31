@@ -130,16 +130,14 @@ namespace Infrastructure.Repositories.Quests
             }
         }
 
-        public async Task AddQuestLabelsAsync(List<Quest_QuestLabel> labelsToAdd, CancellationToken cancellationToken = default)
+        public void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd)
         {
             _context.Quest_QuestLabels.AddRange(labelsToAdd);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RemoveQuestLabelsAsync(List<Quest_QuestLabel> labelsToRemove, CancellationToken cancellationToken = default)
+        public void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove)
         {
             _context.Quest_QuestLabels.RemoveRange(labelsToRemove);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<bool> IsQuestOwnedByUserAsync(
@@ -166,11 +164,31 @@ namespace Infrastructure.Repositories.Quests
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        public void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd)
+        {
+            _context.WeeklyQuest_Days.AddRange(weekdaysToAdd);
+        }
+        public void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove)
+        {
+            _context.WeeklyQuest_Days.RemoveRange(weekdaysToRemove);
+        }
+
         private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)
         {
             return query.Select(q => new Quest
             {
                 Id = q.Id,
+                AccountId = q.AccountId,
+                Account = new Account
+                {
+                    Id = q.Account.Id,
+                    Nickname = q.Account.Nickname,
+                    HashPassword = q.Account.HashPassword,
+                    Email = q.Account.Email,
+                    TimeZone = q.Account.TimeZone,
+                    CreatedAt = q.Account.CreatedAt,
+                    UpdatedAt = q.Account.UpdatedAt
+                },
                 QuestType = q.QuestType,
                 Title = q.Title,
                 Description = q.Description,
@@ -179,21 +197,32 @@ namespace Infrastructure.Repositories.Quests
                 Emoji = q.Emoji,
                 StartDate = q.StartDate,
                 EndDate = q.EndDate,
+                LastCompletedAt = q.LastCompletedAt,
+                NextResetAt = q.NextResetAt,
+                UpdatedAt = q.UpdatedAt,
+                CreatedAt = q.CreatedAt,
 
                 Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
                 {
+                    QuestId = q.Id,
+                    QuestLabelId = ql.QuestLabelId,
                     QuestLabel = new QuestLabel
                     {
                         Id = ql.QuestLabelId,
+                        AccountId = q.AccountId,
                         Value = ql.QuestLabel.Value,
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        TextColor = ql.QuestLabel.TextColor
+                        TextColor = ql.QuestLabel.TextColor,
+                        UpdatedAt = ql.QuestLabel.UpdatedAt,
+                        CreatedAt = ql.QuestLabel.CreatedAt
                     }
                 }).ToList(),
 
                 SeasonalQuest_Season = q.SeasonalQuest_Season != null
                     ? new SeasonalQuest_Season
                     {
+                        Id = q.SeasonalQuest_Season.Id,
+                        QuestId = q.Id,
                         Season = q.SeasonalQuest_Season.Season
                     }
                     : null,
@@ -201,6 +230,8 @@ namespace Infrastructure.Repositories.Quests
                 MonthlyQuest_Days = q.MonthlyQuest_Days != null
                     ? new MonthlyQuest_Days
                     {
+                        Id = q.MonthlyQuest_Days.Id,
+                        QuestId = q.Id,
                         StartDay = q.MonthlyQuest_Days.StartDay,
                         EndDay = q.MonthlyQuest_Days.EndDay
                     }
@@ -209,6 +240,8 @@ namespace Infrastructure.Repositories.Quests
                 WeeklyQuest_Days = q.WeeklyQuest_Days != null
                     ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
                     {
+                        Id = wd.Id,
+                        QuestId = q.Id,
                         Weekday = wd.Weekday
                     }).ToList()
                     : new List<WeeklyQuest_Day>()

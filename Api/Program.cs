@@ -68,7 +68,7 @@ namespace Api
             ConfigureMiddleware(app);
 
             // Reset daily questes on startup
-            //await ResetQuests(app);
+            await ResetQuests(app);
 
             Log.Information("Application started");
             await app.RunAsync();
@@ -140,32 +140,46 @@ namespace Api
                         Array.Empty<string>()
                     }
                 });
+
+                options.AddSecurityDefinition("x-time-zone", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Name = "x-time-zone",
+                    Type = SecuritySchemeType.ApiKey,
+                    Description = "Specify the user's timezone in IANA format (e.g., 'America/New_York')"
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "x-time-zone"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
             builder.Services.AddFluentValidationRulesToSwagger();
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-            //builder.Services.AddScoped<IOneTimeQuestRepository, OneTimeQuestRepository>();
-            //builder.Services.AddScoped<IDailyQuestRepository, DailyQuestRepository>();
-            //builder.Services.AddScoped<IWeeklyQuestRepository, WeeklyQuestRepository>();
-            //builder.Services.AddScoped<IMonthlyQuestRepository, MonthlyQuestRepository>();
-            //builder.Services.AddScoped<ISeasonalQuestRepository, SeasonalQuestRepository>();
             builder.Services.AddScoped<IQuestRepository, QuestRepository>();
-            //builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
+            builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
             builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IOneTimeQuestService, OneTimeQuestService>();
-            builder.Services.AddScoped<IDailyQuestService, DailyQuestService>();
-            builder.Services.AddScoped<IWeeklyQuestService, WeeklyQuestService>();
-            builder.Services.AddScoped<IMonthlyQuestService, MonthlyQuestService>();
-            builder.Services.AddScoped<ISeasonalQuestService, SeasonalQuestService>();
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            //builder.Services.AddScoped<IQuestResetService, QuestsResetService>();
+            builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
             builder.Services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
+            builder.Services.AddScoped<IQuestWeekdaysHandler, QuestWeekdaysHandler>();
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
 
@@ -231,15 +245,18 @@ namespace Api
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
+
+            // Register filters
+            builder.Services.AddScoped<TimeZoneUpdateFilter>();
         }
 
-        //private async static Task ResetQuests(WebApplication app)
-        //{
-        //    using var scope = app.Services.CreateScope();
-        //    var serviceProvider = scope.ServiceProvider;
-        //    var questsResetService = serviceProvider.GetRequiredService<IQuestResetService>();
-        //    await questsResetService.ResetDailyQuestsAsync();
-        //}
+        private async static Task ResetQuests(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
+            await questsResetService.ResetQuestsAsync();
+        }
 
         private static void ConfigureMiddleware(WebApplication app)
         {

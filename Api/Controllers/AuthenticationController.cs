@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Accounts;
+﻿using Api.Filters;
+using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -62,6 +63,7 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RefreshResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
+        [ServiceFilter(typeof(TimeZoneUpdateFilter))]
         public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
             [FromBody] RefreshRequestDto refreshRequestDto,
             CancellationToken cancellationToken = default)

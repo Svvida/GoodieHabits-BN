@@ -2,6 +2,7 @@
 using Application.Dtos.Quests.DailyQuest;
 using Application.Interfaces.Quests;
 using Domain;
+using Domain.Enum;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,16 +14,14 @@ namespace Api.Controllers
     [Authorize]
     public class DailyQuestController : ControllerBase
     {
-        private readonly IDailyQuestService _dailyQuestService;
         private readonly IQuestService _questService;
         private readonly ILogger<DailyQuestController> _logger;
+        private static QuestTypeEnum QuestType => QuestTypeEnum.Daily;
 
         public DailyQuestController(
-            IDailyQuestService service,
             ILogger<DailyQuestController> logger,
             IQuestService questService)
         {
-            _dailyQuestService = service;
             _logger = logger;
             _questService = questService;
         }
@@ -31,7 +30,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetDailyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
-            var quest = await _dailyQuestService.GetUserQuestByIdAsync(id, cancellationToken);
+            var quest = await _questService.GetUserQuestByIdAsync(id, QuestType, cancellationToken);
 
             if (quest is null)
             {
@@ -53,7 +52,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var quests = await _dailyQuestService.GetAllUserQuestsAsync(accountId, cancellationToken);
+            var quests = await _questService.GetAllUserQuestsByTypeAsync(accountId, QuestType, cancellationToken);
             return Ok(quests);
         }
 
@@ -68,7 +67,7 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _dailyQuestService.CreateAsync(createDto, cancellationToken);
+            var createdId = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
         }
 
@@ -79,7 +78,8 @@ namespace Api.Controllers
             [FromBody] DailyQuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            await _dailyQuestService.UpdateQuestCompletionAsync(id, patchDto, cancellationToken);
+            patchDto.Id = id;
+            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
             return NoContent();
         }
 
@@ -90,7 +90,8 @@ namespace Api.Controllers
             [FromBody] UpdateDailyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            await _dailyQuestService.UpdateUserQuestAsync(id, updateDto, cancellationToken);
+            updateDto.Id = id;
+            await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
             return NoContent();
         }
 

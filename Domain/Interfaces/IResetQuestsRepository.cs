@@ -2,6 +2,6 @@
 {
     public interface IResetQuestsRepository
     {
-        Task ResetDailyQuestsAsync(CancellationToken cancellationToken = default);
+        Task ResetQuestsAsync(CancellationToken cancellationToken = default);
     }
 }

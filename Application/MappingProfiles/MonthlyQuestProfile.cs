@@ -46,7 +46,9 @@ namespace Application.MappingProfiles
 
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateMonthlyQuestDto, Quest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForPath(dest => dest.MonthlyQuest_Days!.StartDay, opt => opt.MapFrom(src => src.StartDay))
+                .ForPath(dest => dest.MonthlyQuest_Days!.EndDay, opt => opt.MapFrom(src => src.EndDay));
         }
     }
 }

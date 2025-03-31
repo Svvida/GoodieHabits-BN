@@ -8,14 +8,14 @@ namespace Domain.Models
         public string? Nickname { get; set; }
         public required string HashPassword { get; set; }
         public required string Email { get; set; }
-        public string? TimeZone { get; set; } = "Etc/UTC";
+        public string TimeZone { get; set; } = "Etc/UTC";
         public ICollection<Quest> Quests { get; set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public UserProfile Profile { get; set; } = null!;
 
         public Account() { }
 
-        public Account(int accountId, string hashPassword, string email, string? timeZone)
+        public Account(int accountId, string hashPassword, string email, string timeZone)
         {
             Id = accountId;
             HashPassword = hashPassword;

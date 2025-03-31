@@ -1,7 +1,11 @@
-﻿namespace Application.Dtos.Quests
+﻿using System.Text.Json.Serialization;
+
+namespace Application.Dtos.Quests
 {
     public abstract class BaseUpdateQuestDto
     {
+        [JsonIgnore]
+        public int Id { get; set; }
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public DateTime? StartDate { get; set; }
