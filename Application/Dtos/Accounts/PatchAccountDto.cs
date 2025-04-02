@@ -2,7 +2,7 @@
 {
     public class PatchAccountDto
     {
-        public string? Nickname { get; set; }
+        public string? Login { get; set; }
         public string? Email { get; set; }
     }
 }

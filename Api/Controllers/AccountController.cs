@@ -50,8 +50,8 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            if (patchDto.Nickname is not null)
-                patchDto.Nickname = patchDto.Nickname.Trim();
+            if (patchDto.Login is not null)
+                patchDto.Login = patchDto.Login.Trim();
 
             if (patchDto.Email is not null)
                 patchDto.Email = patchDto.Email.Trim();

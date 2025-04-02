@@ -8,10 +8,10 @@ namespace Application.Validators.Accounts
     {
         public PatchAccountValidator()
         {
-            RuleFor(x => x.Nickname)
+            RuleFor(x => x.Login)
                 .Length(1, 15).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.")
                 .Matches("^[a-zA-Z0-9.!_-]*$").WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: . ! _ -")
-                .When(x => !string.IsNullOrEmpty(x.Nickname));
+                .When(x => !string.IsNullOrEmpty(x.Login));
 
             RuleFor(x => x.Email)
                 .MaximumLength(100).WithMessage("{PropertyName} must not exceed 100 characters")

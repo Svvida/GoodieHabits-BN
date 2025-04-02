@@ -12,7 +12,7 @@ namespace Infrastructure.Repositories
 
         public async Task<Account?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
-            return await _context.Accounts.FirstOrDefaultAsync(a => a.Nickname == username, cancellationToken).ConfigureAwait(false)
+            return await _context.Accounts.FirstOrDefaultAsync(a => a.Login == username, cancellationToken).ConfigureAwait(false)
                 ?? null;
         }
 

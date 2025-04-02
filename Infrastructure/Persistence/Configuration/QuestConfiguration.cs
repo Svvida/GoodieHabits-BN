@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configuration
 {
-    public class QuestConfiguration : IEntityTypeConfiguration<Quest>
+    internal class QuestConfiguration : IEntityTypeConfiguration<Quest>
     {
         public void Configure(EntityTypeBuilder<Quest> builder)
         {

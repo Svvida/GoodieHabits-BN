@@ -5,7 +5,7 @@ namespace Domain.Models
     public class Account : EntityBase
     {
         public int Id { get; set; }
-        public string? Nickname { get; set; }
+        public string? Login { get; set; }
         public required string HashPassword { get; set; }
         public required string Email { get; set; }
         public string TimeZone { get; set; } = "Etc/UTC";
