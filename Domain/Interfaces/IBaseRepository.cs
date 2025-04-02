@@ -10,6 +10,7 @@ namespace Domain.Interfaces
             Task AddAsync(T entity, CancellationToken cancellationToken = default);
             Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
             Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
+            Task<bool> ExistsByFieldAsync<TValue>(Expression<Func<T, TValue>> field, TValue value, CancellationToken cancellationToken = default);
         }
     }
 }

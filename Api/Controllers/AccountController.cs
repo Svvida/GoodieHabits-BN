@@ -41,9 +41,9 @@ namespace Api.Controllers
             return Ok(account);
         }
 
-        [HttpPatch("accounts/me")]
+        [HttpPut("accounts/me")]
         public async Task<IActionResult> PatchAccount(
-            PatchAccountDto patchDto,
+            UpdateAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
@@ -52,11 +52,12 @@ namespace Api.Controllers
 
             if (patchDto.Login is not null)
                 patchDto.Login = patchDto.Login.Trim();
-
             if (patchDto.Email is not null)
                 patchDto.Email = patchDto.Email.Trim();
+            if (patchDto.Nickname is not null)
+                patchDto.Nickname = patchDto.Nickname.Trim();
 
-            await _accountService.PatchAccountAsync(accountId, patchDto, cancellationToken);
+            await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
             return NoContent();
         }
     }

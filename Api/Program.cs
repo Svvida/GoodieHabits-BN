@@ -171,6 +171,7 @@ namespace Api
             builder.Services.AddScoped<IQuestRepository, QuestRepository>();
             builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
             builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
+            builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -188,7 +189,7 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<BaseQuestCompletionPatchValidator<BaseQuestCompletionPatchDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<PatchAccountValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<UpdateAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
