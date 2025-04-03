@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configuration
 {
-    public class SeasonalQuest_SeasonConfiguration : IEntityTypeConfiguration<SeasonalQuest_Season>
+    internal class SeasonalQuest_SeasonConfiguration : IEntityTypeConfiguration<SeasonalQuest_Season>
     {
         public void Configure(EntityTypeBuilder<SeasonalQuest_Season> builder)
         {

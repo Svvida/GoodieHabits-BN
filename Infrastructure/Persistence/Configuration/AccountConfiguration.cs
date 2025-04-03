@@ -13,9 +13,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasKey(a => a.Id);
 
             builder.HasIndex(a => a.Email).IsUnique();
-            builder.HasIndex(a => a.Nickname).IsUnique();
+            builder.HasIndex(a => a.Login).IsUnique();
 
-            builder.Property(a => a.Nickname)
+            builder.Property(a => a.Login)
                 .IsRequired(false)
                 .HasMaxLength(50);
 

@@ -17,6 +17,8 @@ namespace Infrastructure.Persistence
         public DbSet<QuestLabel> QuestLabels { get; set; }
         public DbSet<Quest_QuestLabel> Quest_QuestLabels { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<Badge> Badges { get; set; }
+        public DbSet<UserProfile_Badge> UserProfile_Badges { get; set; }
 
         public override int SaveChanges()
         {
@@ -56,6 +58,8 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new QuestLabelConfiguration());
             modelBuilder.ApplyConfiguration(new SeasonalQuest_SeasonConfiguration());
             modelBuilder.ApplyConfiguration(new WeeklyQuest_DaysConfiguration());
+            modelBuilder.ApplyConfiguration(new BadgeConfiguration());
+            modelBuilder.ApplyConfiguration(new UserProfile_BadgeConfiguration());
         }
     }
 }

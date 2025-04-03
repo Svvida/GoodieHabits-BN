@@ -182,7 +182,7 @@ namespace Infrastructure.Repositories.Quests
                 Account = new Account
                 {
                     Id = q.Account.Id,
-                    Nickname = q.Account.Nickname,
+                    Login = q.Account.Login,
                     HashPassword = q.Account.HashPassword,
                     Email = q.Account.Email,
                     TimeZone = q.Account.TimeZone,

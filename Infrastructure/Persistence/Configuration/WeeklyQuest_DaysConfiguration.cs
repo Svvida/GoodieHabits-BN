@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configuration
 {
-    public class WeeklyQuest_DaysConfiguration : IEntityTypeConfiguration<WeeklyQuest_Day>
+    internal class WeeklyQuest_DaysConfiguration : IEntityTypeConfiguration<WeeklyQuest_Day>
     {
         public void Configure(EntityTypeBuilder<WeeklyQuest_Day> builder)
         {

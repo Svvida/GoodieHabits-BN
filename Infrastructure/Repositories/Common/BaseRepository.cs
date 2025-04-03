@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Domain.Interfaces.Domain.Interfaces;
 using Infrastructure.Persistence;
+using Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Common
@@ -49,6 +50,15 @@ namespace Infrastructure.Repositories.Common
         {
             _context.Set<T>().Remove(entity);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<bool> ExistsByFieldAsync<TValue>(
+            Expression<Func<T, TValue>> field,
+            TValue value,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<T>().AnyAsync(e => EF.Property<TValue>(e, field.GetMemberName())!.Equals(value), cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
