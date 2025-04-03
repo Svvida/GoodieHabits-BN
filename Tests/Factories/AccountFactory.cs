@@ -14,5 +14,22 @@ namespace Tests.Factories
                 TimeZone = TimeZone
             };
         }
+
+        public static Account CreateAccountWithProfile(int accountId, string hashPassword, string email, string timeZone)
+        {
+            return new Account(accountId, hashPassword, email, timeZone)
+            {
+                Id = accountId,
+                HashPassword = hashPassword,
+                Email = email,
+                TimeZone = timeZone,
+                Profile = new UserProfile
+                {
+                    AccountId = accountId,
+                    Nickname = "TestNickname",
+                    Bio = "TestBio"
+                }
+            };
+        }
     }
 }
