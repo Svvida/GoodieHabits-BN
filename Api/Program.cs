@@ -11,8 +11,8 @@ using Application.Interfaces.Quests;
 using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
-using Application.Validators;
 using Application.Validators.Accounts;
+using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Domain.Interfaces;
@@ -193,6 +193,7 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
