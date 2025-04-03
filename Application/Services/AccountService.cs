@@ -3,6 +3,8 @@ using Application.Interfaces;
 using AutoMapper;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Services
 {
@@ -11,15 +13,18 @@ namespace Application.Services
         private readonly IAccountRepository _accountRepository;
         private readonly IMapper _mapper;
         private readonly IUserProfileRepository _userProfileRepository;
+        private readonly IPasswordHasher<Account> _passwordHasher;
 
         public AccountService(
             IAccountRepository accountRepository,
             IMapper mapper,
-            IUserProfileRepository userProfileRepository)
+            IUserProfileRepository userProfileRepository,
+            IPasswordHasher<Account> passwordHasher)
         {
             _accountRepository = accountRepository;
             _mapper = mapper;
             _userProfileRepository = userProfileRepository;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
@@ -54,6 +59,20 @@ namespace Application.Services
             }
 
             _mapper.Map(patchDto, account);
+
+            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task ChangePasswordAsync(int accountId, ChangePasswordDto resetPasswordDto, CancellationToken cancellationToken = default)
+        {
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
+
+            var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, resetPasswordDto.OldPassword);
+            if (result == PasswordVerificationResult.Failed)
+                throw new UnauthorizedException("Invalid password");
+
+            account.HashPassword = _passwordHasher.HashPassword(account, resetPasswordDto.NewPassword);
 
             await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
         }

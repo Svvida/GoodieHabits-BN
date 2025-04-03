@@ -41,7 +41,7 @@ namespace Api.Controllers
             return Ok(account);
         }
 
-        [HttpPut("accounts/me")]
+        [HttpPatch("accounts/me")]
         public async Task<IActionResult> PatchAccount(
             UpdateAccountDto patchDto,
             CancellationToken cancellationToken = default)
@@ -58,6 +58,22 @@ namespace Api.Controllers
                 patchDto.Nickname = patchDto.Nickname.Trim();
 
             await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPut("accounts/me/password")]
+        public async Task<IActionResult> ChangePassword(
+            ChangePasswordDto changePasswordDto,
+            CancellationToken cancellationToken = default)
+        {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            changePasswordDto.OldPassword = changePasswordDto.OldPassword.Trim();
+            changePasswordDto.NewPassword = changePasswordDto.NewPassword.Trim();
+
+            await _accountService.ChangePasswordAsync(accountId, changePasswordDto, cancellationToken);
             return NoContent();
         }
     }

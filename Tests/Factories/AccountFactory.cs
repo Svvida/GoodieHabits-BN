@@ -4,23 +4,23 @@ namespace Tests.Factories
 {
     public static class AccountFactory
     {
-        public static Account CreateAccount(int accountId, string hashPassword, string email, string TimeZone)
+        public static Account CreateAccount(int accountId, string email, string? initialHashedPassword = null, string TimeZone = "Etc/UTC")
         {
-            return new Account(accountId, hashPassword, email, TimeZone)
+            return new Account
             {
                 Id = accountId,
-                HashPassword = hashPassword,
+                HashPassword = initialHashedPassword ?? $"hashed_password_for_{accountId}",
                 Email = email,
                 TimeZone = TimeZone
             };
         }
 
-        public static Account CreateAccountWithProfile(int accountId, string hashPassword, string email, string timeZone)
+        public static Account CreateAccountWithProfile(int accountId, string email, string? initialHashedPassword = null, string timeZone = "Etc/UTC")
         {
-            return new Account(accountId, hashPassword, email, timeZone)
+            return new Account
             {
                 Id = accountId,
-                HashPassword = hashPassword,
+                HashPassword = initialHashedPassword ?? $"hashed_password_for_{accountId}",
                 Email = email,
                 TimeZone = timeZone,
                 Profile = new UserProfile

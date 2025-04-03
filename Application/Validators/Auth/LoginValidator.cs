@@ -2,7 +2,7 @@
 using Application.Validators.Helpers;
 using FluentValidation;
 
-namespace Application.Validators
+namespace Application.Validators.Auth
 {
     public class LoginValidator : AbstractValidator<LoginDto>
     {
