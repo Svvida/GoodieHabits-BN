@@ -7,6 +7,7 @@ using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
 using Moq;
 using Tests.Factories;
 
@@ -17,6 +18,7 @@ namespace Tests.Services
         private readonly AccountService _accountService;
         private readonly Mock<IAccountRepository> _accountRepositoryMock = new();
         private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock = new();
+        private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock = new();
         private readonly IMapper _realMapper;
 
         public AccountServiceTests()
@@ -27,17 +29,19 @@ namespace Tests.Services
             });
             _realMapper = config.CreateMapper();
 
+
             _accountService = new AccountService(
                 _accountRepositoryMock.Object,
                 _realMapper,
-                _userProfileRepositoryMock.Object);
+                _userProfileRepositoryMock.Object,
+                _passwordHasherMock.Object);
         }
 
         [Fact]
         public async Task GetAccountByIdAsync_ShouldReturnAccount_WhenAccountExists()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "password", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
             var expectedDto = new GetAccountDto
             {
                 Login = account.Login,
@@ -82,7 +86,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldUpdateAccount_WhenValid()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashedpwd", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
             var updateDto = new UpdateAccountDto
             {
                 Login = "NewLogin",
@@ -117,7 +121,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldThrowConflictExeption_WhenLoginExists()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashpwd", "test@email.com", "Etc/Utc");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
             var updateDto = new UpdateAccountDto
             {
                 Login = "NewLogin"
@@ -143,7 +147,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldThrowConflictException_WhenEmailExists()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashedpwd", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
             var updateDto = new UpdateAccountDto
             {
                 Email = "existing@email.com"
@@ -169,7 +173,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldThrowConflictException_WhenNicknameExists()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashedpwd", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
             var updateDto = new UpdateAccountDto
             {
                 Nickname = "ExistingNickname"
@@ -195,7 +199,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldClearFields_WhenNotProvidedInUpdateDto()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashedPwd", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
 
             // CreateDto without Nickname & Bio
             var updateDto = new UpdateAccountDto
@@ -222,7 +226,7 @@ namespace Tests.Services
         public async Task UpdateAccountAsync_ShouldUpdateFileds_WhenProvidedInUpdateDto()
         {
             // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "hashedPwd", "test@email.com", "Etc/UTC");
+            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
 
             var updateDto = new UpdateAccountDto
             {
@@ -244,6 +248,114 @@ namespace Tests.Services
             account.Email.Should().Be(updateDto.Email);
             account.Profile.Nickname.Should().Be(updateDto.Nickname);
             account.Profile.Bio.Should().Be(updateDto.Bio);
+        }
+
+        [Fact]
+        public async Task ChangePasswordAsync_ShouldChangePassword_WhenOldPasswordIsValid()
+        {
+            // Arrange
+            int accountId = 1;
+            string oldPassword = "oldPassword";
+            string newPassword = "newPassword";
+            string initialHashedPassword = "hashed_old_password";
+            string newlyHashedPassword = "hashed_new_password";
+
+            var account = AccountFactory.CreateAccount(accountId, "test@email.com", initialHashedPassword);
+            var changePasswordDto = new ChangePasswordDto
+            {
+                OldPassword = oldPassword,
+                NewPassword = newPassword
+            };
+
+            _accountRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(account);
+
+            _passwordHasherMock
+                .Setup(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, changePasswordDto.OldPassword))
+                .Returns(PasswordVerificationResult.Success);
+
+            _passwordHasherMock
+                .Setup(hasher => hasher.HashPassword(account, changePasswordDto.NewPassword))
+                .Returns(newlyHashedPassword);
+
+            _accountRepositoryMock
+                .Setup(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _accountService.ChangePasswordAsync(accountId, changePasswordDto, CancellationToken.None);
+
+            // Assert
+            _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, initialHashedPassword, oldPassword), Times.Once);
+
+            _passwordHasherMock.Verify(hasher => hasher.HashPassword(account, newPassword), Times.Once);
+
+            account.HashPassword.Should().Be(newlyHashedPassword);
+
+            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(
+                It.Is<Account>(a => a.Id == accountId && a.HashPassword == newlyHashedPassword),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ChangePasswordAsync_ShouldThrowUnauthorizedException_WhenOldPasswordIsInvalid()
+        {
+            // Arrange
+            int accountId = 1;
+            string correctOldPasswordHash = "hashed_old_password";
+            var account = AccountFactory.CreateAccount(accountId, "test@email.com", correctOldPasswordHash);
+            var changePasswordDto = new ChangePasswordDto
+            {
+                OldPassword = "wrongOldPassword",
+                NewPassword = "newPassword"
+            };
+
+            _accountRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(account);
+
+            _passwordHasherMock
+                .Setup(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, changePasswordDto.OldPassword))
+                .Returns(PasswordVerificationResult.Failed);
+
+            // Act
+            Func<Task> act = async () => await _accountService.ChangePasswordAsync(accountId, changePasswordDto, CancellationToken.None);
+
+            // Assert
+            await act.Should().ThrowAsync<UnauthorizedException>()
+                .WithMessage("Invalid password");
+
+            _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, correctOldPasswordHash, changePasswordDto.OldPassword), Times.Once);
+            _passwordHasherMock.Verify(hasher => hasher.HashPassword(It.IsAny<Account>(), It.IsAny<string>()), Times.Never);
+            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ChangePasswordAsync_ShouldThrowNotFoundException_WhenAccountDoesNotExists()
+        {
+            // Arrange
+            int nonExistentAccountId = 999;
+            var changePasswordDto = new ChangePasswordDto
+            {
+                OldPassword = "oldPassword",
+                NewPassword = "newPassword"
+            };
+
+            _accountRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(nonExistentAccountId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Account?)null);
+
+            // Act
+            Func<Task> act = async () => await _accountService.ChangePasswordAsync(nonExistentAccountId, changePasswordDto, CancellationToken.None);
+
+            // Assert
+            await act.Should().ThrowAsync<NotFoundException>()
+                .WithMessage($"Account with ID: {nonExistentAccountId} not found");
+
+            _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(It.IsAny<Account>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _passwordHasherMock.Verify(hasher => hasher.HashPassword(It.IsAny<Account>(), It.IsAny<string>()), Times.Never);
+            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }
