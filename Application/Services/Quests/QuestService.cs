@@ -14,6 +14,7 @@ using Domain.Interfaces;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 
 namespace Application.Services.Quests
 {
@@ -26,6 +27,7 @@ namespace Application.Services.Quests
         private readonly ILogger<QuestService> _logger;
         private readonly IQuestLabelRepository _questLabelRepository;
         private readonly IQuestResetService _questResetService;
+        private readonly IAccountRepository _accountRepository;
 
         public QuestService(
             IQuestRepository repository,
@@ -34,7 +36,8 @@ namespace Application.Services.Quests
             IMapper mapper,
             ILogger<QuestService> logger,
             IQuestLabelRepository questLabelRepository,
-            IQuestResetService questResetService)
+            IQuestResetService questResetService,
+            IAccountRepository accountRepository)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -43,6 +46,7 @@ namespace Application.Services.Quests
             _logger = logger;
             _questLabelRepository = questLabelRepository;
             _questResetService = questResetService;
+            _accountRepository = accountRepository;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -124,9 +128,21 @@ namespace Application.Services.Quests
         public async Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(
             int accountId, CancellationToken cancellationToken = default)
         {
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
+
+            var userTimezone = DateTimeZoneProviders.Tzdb[account.TimeZone]
+                ?? throw new InvalidArgumentException($"Invalid timezone: {account.TimeZone}");
+
+            var nowUtc = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowUtc.InZone(userTimezone).LocalDateTime;
+
+            var todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
+            var todayEnd = todayStart.AddDays(1).AddTicks(-1);
+
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 
-            var quests = await _questRepository.GetActiveQuestsAsync(accountId, currentSeason, cancellationToken)
+            var quests = await _questRepository.GetActiveQuestsAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
                 .ConfigureAwait(false);
 
             _logger.LogInformation("Quests before mapping: {@quests}", quests);
