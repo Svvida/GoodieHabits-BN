@@ -69,7 +69,7 @@ namespace Application.Services
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
             var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, resetPasswordDto.OldPassword);
-            if (result == PasswordVerificationResult.Failed)
+            if (result != PasswordVerificationResult.Success)
                 throw new UnauthorizedException("Invalid password");
 
             account.HashPassword = _passwordHasher.HashPassword(account, resetPasswordDto.NewPassword);
