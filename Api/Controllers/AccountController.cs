@@ -41,8 +41,8 @@ namespace Api.Controllers
             return Ok(account);
         }
 
-        [HttpPatch("accounts/me")]
-        public async Task<IActionResult> PatchAccount(
+        [HttpPut("accounts/me")]
+        public async Task<IActionResult> UpdateAccount(
             UpdateAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
