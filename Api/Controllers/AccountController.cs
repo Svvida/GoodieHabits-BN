@@ -50,13 +50,6 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            if (patchDto.Login is not null)
-                patchDto.Login = patchDto.Login.Trim();
-            if (patchDto.Email is not null)
-                patchDto.Email = patchDto.Email.Trim();
-            if (patchDto.Nickname is not null)
-                patchDto.Nickname = patchDto.Nickname.Trim();
-
             await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
             return NoContent();
         }
@@ -69,9 +62,6 @@ namespace Api.Controllers
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            changePasswordDto.OldPassword = changePasswordDto.OldPassword.Trim();
-            changePasswordDto.NewPassword = changePasswordDto.NewPassword.Trim();
 
             await _accountService.ChangePasswordAsync(accountId, changePasswordDto, cancellationToken);
             return NoContent();

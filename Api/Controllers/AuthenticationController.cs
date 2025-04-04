@@ -12,12 +12,10 @@ namespace Api.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(IAuthService authService, ILogger<AuthenticationController> logger)
+        public AuthenticationController(IAuthService authService)
         {
             _authService = authService;
-            _logger = logger;
         }
 
         [HttpPost]
@@ -30,13 +28,7 @@ namespace Api.Controllers
             [FromBody] LoginDto loginDto,
             CancellationToken cancellationToken = default)
         {
-            var trimmedData = new LoginDto
-            {
-                Login = loginDto.Login.Trim(),
-                Password = loginDto.Password.Trim()
-            };
-
-            var authResponse = await _authService.LoginAsync(trimmedData, cancellationToken);
+            var authResponse = await _authService.LoginAsync(loginDto, cancellationToken);
             return Ok(authResponse);
         }
 
@@ -49,12 +41,7 @@ namespace Api.Controllers
             [FromBody] CreateAccountDto createDto,
             CancellationToken cancellationToken = default)
         {
-            var trimmedData = new CreateAccountDto
-            {
-                Email = createDto.Email.Trim(),
-                Password = createDto.Password.Trim()
-            };
-            var authResponse = await _authService.RegisterAsync(trimmedData, cancellationToken);
+            var authResponse = await _authService.RegisterAsync(createDto, cancellationToken);
             return Created(nameof(CreateAccount), authResponse);
         }
 
@@ -68,7 +55,7 @@ namespace Api.Controllers
             [FromBody] RefreshRequestDto refreshRequestDto,
             CancellationToken cancellationToken = default)
         {
-            var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken.Trim(), cancellationToken);
+            var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken, cancellationToken);
             return Ok(refreshResponse);
         }
     }

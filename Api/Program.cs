@@ -109,6 +109,7 @@ namespace Api
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                     options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
                 });
 
