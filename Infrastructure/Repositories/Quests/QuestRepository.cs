@@ -190,7 +190,29 @@ namespace Infrastructure.Repositories.Quests
                     Email = q.Account.Email,
                     TimeZone = q.Account.TimeZone,
                     CreatedAt = q.Account.CreatedAt,
-                    UpdatedAt = q.Account.UpdatedAt
+                    UpdatedAt = q.Account.UpdatedAt,
+                    Profile = new UserProfile
+                    {
+                        Id = q.Account.Profile.Id,
+                        AccountId = q.AccountId,
+                        TotalQuests = q.Account.Profile.TotalQuests,
+                        CompletedQuests = q.Account.Profile.CompletedQuests,
+                        TotalExperience = q.Account.Profile.TotalExperience,
+                        CurrentExperience = q.Account.Profile.CurrentExperience,
+                        CreatedAt = q.Account.Profile.CreatedAt,
+                        UpdatedAt = q.Account.Profile.UpdatedAt,
+                        UserProfile_Badges = q.Account.Profile.UserProfile_Badges.Select(upb => new UserProfile_Badge
+                        {
+                            BadgeId = upb.BadgeId,
+                            UserProfileId = upb.UserProfileId,
+                            EarnedAt = upb.EarnedAt,
+                            Badge = new Badge
+                            {
+                                Id = upb.Badge.Id,
+                                Text = upb.Badge.Text
+                            }
+                        }).ToList()
+                    }
                 },
                 QuestType = q.QuestType,
                 Title = q.Title,

@@ -34,7 +34,6 @@ namespace Application.MappingProfiles
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<OneTimeQuestCompletionDto, Quest>()
-                .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom((src, dest) => src.IsCompleted ?? dest.IsCompleted))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Update DTO -> Entity (Convert String -> Enum)
