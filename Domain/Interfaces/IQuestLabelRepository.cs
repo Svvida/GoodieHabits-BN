@@ -11,5 +11,6 @@ namespace Domain.Interfaces
         Task DeleteLabelAsync(QuestLabel label, CancellationToken cancellationToken = default);
         Task<QuestLabel?> GetLabelByValueAsync(string value, int accountId, CancellationToken cancellationToken = default);
         Task<bool> IsLabelOwnedByUserAsync(int labelId, int accountId, CancellationToken cancellationToken = default);
+        Task DeleteQuestLabelsByAccountIdAsync(int accountId, CancellationToken cancellationToken = default);
     }
 }
