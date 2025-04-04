@@ -19,6 +19,7 @@ namespace Tests.Services
         private readonly Mock<IAccountRepository> _accountRepositoryMock = new();
         private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock = new();
         private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock = new();
+        private readonly Mock<IQuestLabelRepository> _questLabelRepositoryMock = new();
         private readonly IMapper _realMapper;
 
         public AccountServiceTests()
@@ -34,7 +35,8 @@ namespace Tests.Services
                 _accountRepositoryMock.Object,
                 _realMapper,
                 _userProfileRepositoryMock.Object,
-                _passwordHasherMock.Object);
+                _passwordHasherMock.Object,
+                _questLabelRepositoryMock.Object);
         }
 
         [Fact]
@@ -356,6 +358,79 @@ namespace Tests.Services
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(It.IsAny<Account>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
             _passwordHasherMock.Verify(hasher => hasher.HashPassword(It.IsAny<Account>(), It.IsAny<string>()), Times.Never);
             _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteAccountAsync_ShouldThrowUnauthorizedException_WhenPasswordIsInvalid()
+        {
+            // Arrange
+            const int accountId = 1;
+            const string correctOldPasswordHash = "hashed_old_password";
+            var account = AccountFactory.CreateAccount(accountId, "test@email.com", correctOldPasswordHash);
+            var deleteAccountDto = new DeleteAccountDto
+            {
+                Password = "wrongOldPassword"
+            };
+
+            _accountRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(account);
+
+            _passwordHasherMock
+                .Setup(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password))
+                .Returns(PasswordVerificationResult.Failed);
+
+            // act
+            Func<Task> act = async () => await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, CancellationToken.None);
+
+            // Assert
+            await act.Should().ThrowAsync<UnauthorizedException>()
+                .WithMessage("Invalid password");
+
+            _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
+            _questLabelRepositoryMock.Verify(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, CancellationToken.None), Times.Never);
+            _accountRepositoryMock.Verify(repo => repo.DeleteAsync(It.IsAny<Account>(), CancellationToken.None), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteAccountAsync_ShouldDeleteAccountAndQuestLabels()
+        {
+            // Arrange
+            const int accountId = 1;
+            const string correctOldPasswordHash = "hashed_old_password";
+            var account = AccountFactory.CreateAccount(accountId, "test@email.com", correctOldPasswordHash);
+            var deleteAccountDto = new DeleteAccountDto
+            {
+                Password = "correctOldPassword"
+            };
+
+            _accountRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(account);
+
+            _passwordHasherMock
+                .Setup(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password))
+                .Returns(PasswordVerificationResult.Success);
+
+            _accountRepositoryMock
+                .Setup(repo => repo.DeleteAsync(account, It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            _questLabelRepositoryMock
+                .Setup(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            Func<Task> act = async () => await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, CancellationToken.None);
+
+            // Assert
+            await act.Should().NotThrowAsync();
+            _questLabelRepositoryMock.Verify(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, CancellationToken.None), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.DeleteAsync(account, CancellationToken.None), Times.Once);
+            _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
+
+            _accountRepositoryMock.Verify();
+            _questLabelRepositoryMock.Verify();
         }
     }
 }
