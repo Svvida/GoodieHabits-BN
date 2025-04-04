@@ -14,17 +14,20 @@ namespace Application.Services
         private readonly IMapper _mapper;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IPasswordHasher<Account> _passwordHasher;
+        private readonly IQuestLabelRepository _questLabelRepository;
 
         public AccountService(
             IAccountRepository accountRepository,
             IMapper mapper,
             IUserProfileRepository userProfileRepository,
-            IPasswordHasher<Account> passwordHasher)
+            IPasswordHasher<Account> passwordHasher,
+            IQuestLabelRepository questLabelRepository)
         {
             _accountRepository = accountRepository;
             _mapper = mapper;
             _userProfileRepository = userProfileRepository;
             _passwordHasher = passwordHasher;
+            _questLabelRepository = questLabelRepository;
         }
 
         public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
@@ -75,6 +78,19 @@ namespace Application.Services
             account.HashPassword = _passwordHasher.HashPassword(account, resetPasswordDto.NewPassword);
 
             await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task DeleteAccountAsync(int accountId, DeleteAccountDto deleteAccountDto, CancellationToken cancellationToken = default)
+        {
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
+
+            var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password);
+            if (result != PasswordVerificationResult.Success)
+                throw new UnauthorizedException("Invalid password");
+
+            await _questLabelRepository.DeleteQuestLabelsByAccountIdAsync(accountId, cancellationToken).ConfigureAwait(false);
+            await _accountRepository.DeleteAsync(account, cancellationToken).ConfigureAwait(false);
         }
     }
 }
