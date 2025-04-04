@@ -28,6 +28,7 @@ namespace Application.Services.Quests
         private readonly IQuestLabelRepository _questLabelRepository;
         private readonly IQuestResetService _questResetService;
         private readonly IAccountRepository _accountRepository;
+        private readonly IUserProfileRepository _userProfileRepository;
 
         public QuestService(
             IQuestRepository repository,
@@ -37,7 +38,8 @@ namespace Application.Services.Quests
             ILogger<QuestService> logger,
             IQuestLabelRepository questLabelRepository,
             IQuestResetService questResetService,
-            IAccountRepository accountRepository)
+            IAccountRepository accountRepository,
+            IUserProfileRepository userProfileRepository)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -47,6 +49,7 @@ namespace Application.Services.Quests
             _questLabelRepository = questLabelRepository;
             _questResetService = questResetService;
             _accountRepository = accountRepository;
+            _userProfileRepository = userProfileRepository;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -67,17 +70,29 @@ namespace Application.Services.Quests
         }
         public async Task<int> CreateUserQuestAsync(BaseCreateQuestDto createDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            foreach (var label in createDto.Labels)
+            // Check if the account is owner of the labels
+            foreach (var labelId in createDto.Labels)
             {
-                var isOwner = await _questLabelRepository.IsLabelOwnedByUserAsync(label, createDto.AccountId, cancellationToken)
+                var isOwner = await _questLabelRepository.IsLabelOwnedByUserAsync(labelId, createDto.AccountId, cancellationToken)
                     .ConfigureAwait(false);
                 if (!isOwner)
-                    throw new ForbiddenException($"Label with ID: {label} does not belong to the user.");
+                    throw new ForbiddenException($"Label with ID: {labelId} does not belong to the user.");
             }
 
             var quest = _mapper.Map<Quest>(createDto);
             _logger.LogInformation("Quest created after mapping: {@quest}", quest);
+
             await _questRepository.AddQuestAsync(quest, cancellationToken);
+
+            // For now keeping fetch-update logic to increment the total quests count and keep tracking by EF Core
+            // Later we can consider using a more efficient approach like ExecuteUpdate
+            var userProfile = await _userProfileRepository.GetByAccountIdAsync(createDto.AccountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"User profile with account ID: {createDto.AccountId} not found");
+
+            userProfile.TotalQuests++;
+
+            await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
+
             return quest.Id;
         }
 
@@ -112,9 +127,40 @@ namespace Application.Services.Quests
             var existingQuest = await _questRepository.GetQuestByIdAsync(patchDto.Id, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {patchDto.Id} not found");
 
-            if (existingQuest.IsCompleted == false && patchDto.IsCompleted == true)
+            if (existingQuest.Account is null || string.IsNullOrWhiteSpace(existingQuest.Account.TimeZone))
             {
-                existingQuest.LastCompletedAt = DateTime.UtcNow;
+                _logger.LogError("Account {AccountId} data or TimeZone is missing for Quest {QuestId}. Cannot accurately perform daily completion check.", existingQuest.AccountId, existingQuest.Id);
+                throw new InvalidArgumentException($"TimeZone information is missing for the account associated with Quest {existingQuest.Id}.");
+            }
+
+            bool justCompleted = !existingQuest.IsCompleted && patchDto.IsCompleted;
+            bool shouldIncrementCount = false;
+            Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
+
+            if (justCompleted)
+            {
+                DateTimeZone? userTimeZone = DateTimeZoneProviders.Tzdb[existingQuest.Account.TimeZone]
+                    ?? throw new NotFoundException($"Timezone with ID: {existingQuest.Account.TimeZone} not found");
+
+                LocalDateTime nowUserLocal = nowUtc.InZone(userTimeZone).LocalDateTime;
+
+                if (!existingQuest.LastCompletedAt.HasValue)
+                {
+                    shouldIncrementCount = true;
+                }
+                else
+                {
+                    Instant lastCompletedAtUtc = Instant.FromDateTimeUtc(DateTime.SpecifyKind(existingQuest.LastCompletedAt.Value, DateTimeKind.Utc));
+                    LocalDateTime lastCompletedAtUserLocal = lastCompletedAtUtc.InZone(userTimeZone).LocalDateTime;
+
+                    if (lastCompletedAtUserLocal.Date < nowUserLocal.Date)
+                        shouldIncrementCount = true;
+                    else
+                        _logger.LogInformation($"Quest {existingQuest.Id} already completed today: {nowUserLocal} in user's timezone {existingQuest.Account.TimeZone}. Last Completion: {lastCompletedAtUserLocal}");
+
+                }
+
+                existingQuest.LastCompletedAt = nowUtc.ToDateTimeUtc();
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
             }
 
@@ -123,6 +169,16 @@ namespace Application.Services.Quests
             _logger.LogInformation("Completed quest after mapping: {@existingQuest}", existingQuest);
 
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
+
+            if (shouldIncrementCount)
+            {
+                var userProfile = await _userProfileRepository.GetByAccountIdAsync(existingQuest.AccountId, cancellationToken).ConfigureAwait(false)
+                    ?? throw new NotFoundException($"User profile with account ID: {existingQuest.AccountId} not found");
+
+                userProfile.CompletedQuests++;
+                await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("Incremented CompletedQuests count for Account {AccountId}", existingQuest.AccountId);
+            }
         }
 
         public async Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(
@@ -131,14 +187,14 @@ namespace Application.Services.Quests
             var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
-            var userTimezone = DateTimeZoneProviders.Tzdb[account.TimeZone]
+            DateTimeZone? userTimezone = DateTimeZoneProviders.Tzdb[account.TimeZone]
                 ?? throw new InvalidArgumentException($"Invalid timezone: {account.TimeZone}");
 
-            var nowUtc = SystemClock.Instance.GetCurrentInstant();
-            var nowLocal = nowUtc.InZone(userTimezone).LocalDateTime;
+            Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
+            LocalDateTime nowLocal = nowUtc.InZone(userTimezone).LocalDateTime;
 
-            var todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
-            var todayEnd = todayStart.AddDays(1).AddTicks(-1);
+            DateTime todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
+            DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 

@@ -6,6 +6,6 @@ namespace Application.Dtos.Quests
     {
         [JsonIgnore]
         public int Id { get; set; }
-        public bool? IsCompleted { get; set; }
+        public bool IsCompleted { get; set; }
     }
 }
