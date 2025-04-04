@@ -50,18 +50,18 @@ namespace Application.Services
             if (IsEmail(loginDto.Login))
             {
                 account = await _accountRepository.GetByEmailAsync(loginDto.Login, cancellationToken)
-                ?? throw new NotFoundException($"Account with email: {loginDto.Login} not found");
+                ?? throw new UnauthorizedException("Invalid credentials.");
             }
             else
             {
                 account = await _accountRepository.GetByUsernameAsync(loginDto.Login, cancellationToken)
-                ?? throw new NotFoundException($"Account with login: {loginDto.Login} not found");
+                ?? throw new UnauthorizedException("Invalid credentials.");
             }
 
             var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, loginDto.Password);
 
             if (result == PasswordVerificationResult.Failed)
-                throw new UnauthorizedException("Invalid password");
+                throw new UnauthorizedException("Invalid credentials.");
 
             var response = new AuthResponseDto
             {
