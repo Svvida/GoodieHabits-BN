@@ -4,6 +4,7 @@ using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
 using Application.Configurations;
+using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
 using Application.Helpers;
 using Application.Interfaces;
@@ -184,6 +185,7 @@ namespace Api
             builder.Services.AddScoped<IQuestWeekdaysHandler, QuestWeekdaysHandler>();
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
+            builder.Services.AddSingleton<ILevelingService, LevelingService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -200,16 +202,7 @@ namespace Api
             builder.Services.AddFluentValidationClientsideAdapters();
 
             // Register AutoMapper profiles
-            builder.Services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile<OneTimeQuestProfile>();
-                cfg.AddProfile<DailyQuestProfile>();
-                cfg.AddProfile<WeeklyQuestProfile>();
-                cfg.AddProfile<MonthlyQuestProfile>();
-                cfg.AddProfile<SeasonalQuestProfile>();
-                cfg.AddProfile<AccountProfile>();
-                cfg.AddProfile<QuestLabelProfile>();
-            });
+            builder.Services.AddAutoMapper(typeof(AccountProfile).Assembly); // Automatically register all profiles in the assembly
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -227,6 +220,7 @@ namespace Api
 
             // Register configurations
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+            builder.Services.Configure<LevelingOptions>(builder.Configuration.GetSection(LevelingOptions.SectionName));
 
             // Configure Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Default is not necessary since we use only one scheme

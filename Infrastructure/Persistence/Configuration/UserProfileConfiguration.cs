@@ -18,15 +18,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(p => p.Avatar)
                 .IsRequired(false);
 
-            builder.Property(p => p.UserLevel)
-                .IsRequired()
-                .HasDefaultValue(1);
-
-            builder.Property(p => p.TotalExperience)
-                .IsRequired()
-                .HasDefaultValue(0);
-
-            builder.Property(p => p.CurrentExperience)
+            builder.Property(p => p.TotalXp)
                 .IsRequired()
                 .HasDefaultValue(0);
 

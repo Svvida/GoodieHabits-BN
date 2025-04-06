@@ -172,12 +172,15 @@ namespace Application.Services.Quests
 
             if (shouldIncrementCount)
             {
+                int xpGained = 10;
                 var userProfile = await _userProfileRepository.GetByAccountIdAsync(existingQuest.AccountId, cancellationToken).ConfigureAwait(false)
                     ?? throw new NotFoundException($"User profile with account ID: {existingQuest.AccountId} not found");
 
                 userProfile.CompletedQuests++;
+                userProfile.TotalXp += xpGained;
+
                 await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
-                _logger.LogInformation("Incremented CompletedQuests count for Account {AccountId}", existingQuest.AccountId);
+                _logger.LogInformation("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}", xpGained, existingQuest.AccountId);
             }
         }
 

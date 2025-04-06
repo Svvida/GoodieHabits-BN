@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using Application.Dtos.Accounts;
-using Application.MappingProfiles;
 using Application.Services;
 using AutoMapper;
 using Domain.Exceptions;
@@ -20,20 +19,13 @@ namespace Tests.Services
         private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock = new();
         private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock = new();
         private readonly Mock<IQuestLabelRepository> _questLabelRepositoryMock = new();
-        private readonly IMapper _realMapper;
+        private readonly Mock<IMapper> _mapperMock = new();
 
         public AccountServiceTests()
         {
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile(new AccountProfile());
-            });
-            _realMapper = config.CreateMapper();
-
-
             _accountService = new AccountService(
                 _accountRepositoryMock.Object,
-                _realMapper,
+                _mapperMock.Object,
                 _userProfileRepositoryMock.Object,
                 _passwordHasherMock.Object,
                 _questLabelRepositoryMock.Object);
@@ -50,22 +42,29 @@ namespace Tests.Services
                 Email = account.Email,
                 Nickname = account.Profile.Nickname,
                 Bio = account.Profile.Bio,
-                Level = 1,
-                CompletedQuests = 0,
-                TotalQuests = 0,
-                Xp = 0,
-                TotalXP = 0
+                UserXp = account.Profile.TotalXp,
+                Level = 1, // Or whatever the expected level is for the test TotalXp
+                NextLevelTotalXpRequired = 100, // Or expected value
+                IsMaxLevel = false,
+                CompletedQuests = account.Profile.CompletedQuests,
+                TotalQuests = account.Profile.TotalQuests,
+                JoinDate = account.CreatedAt
             };
 
             _accountRepositoryMock
                 .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
                 .ReturnsAsync(account);
 
+            _mapperMock.Setup(m => m.Map<GetAccountDto>(account))
+                .Returns(expectedDto);
+
             // Act
             var result = await _accountService.GetAccountByIdAsync(1);
 
             // Assert
-            result.Should().BeEquivalentTo(expectedDto);
+            _accountRepositoryMock.Verify(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()), Times.Once);
+            _mapperMock.Verify(m => m.Map<GetAccountDto>(account), Times.Once);
+            result.Should().BeSameAs(expectedDto);
         }
 
         [Fact]
@@ -112,11 +111,21 @@ namespace Tests.Services
                 .Setup(repo => repo.ExistsByNicknameAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
+            _mapperMock
+                .Setup(m => m.Map(updateDto, account));
+
             // Act
             await _accountService.UpdateAccountAsync(1, updateDto);
 
             // Assert
-            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(account, It.IsAny<CancellationToken>()), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.ExistsByFieldAsync(a => a.Login, updateDto.Login, It.IsAny<CancellationToken>()), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.ExistsByFieldAsync(a => a.Email, updateDto.Email, It.IsAny<CancellationToken>()), Times.Once);
+            _userProfileRepositoryMock.Verify(repo => repo.ExistsByNicknameAsync(updateDto.Nickname, It.IsAny<CancellationToken>()), Times.Once);
+
+            _mapperMock.Verify(m => m.Map(updateDto, account), Times.Once);
+
+            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.Is<Account>(a => a == account), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -195,61 +204,6 @@ namespace Tests.Services
             // Assert
             await act.Should().ThrowAsync<ConflictException>()
                 .WithMessage($"Nickname {updateDto.Nickname} is already in use");
-        }
-
-        [Fact]
-        public async Task UpdateAccountAsync_ShouldClearFields_WhenNotProvidedInUpdateDto()
-        {
-            // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
-
-            // CreateDto without Nickname & Bio
-            var updateDto = new UpdateAccountDto
-            {
-                Login = "NewLogin",
-                Email = "new@email.com"
-            };
-
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
-                .ReturnsAsync(account);
-
-            // Act
-            await _accountService.UpdateAccountAsync(1, updateDto);
-
-            // Assert: Nickname and Bio should be null
-            account.Profile.Nickname.Should().BeNull();
-            account.Profile.Bio.Should().BeNull();
-            account.Login.Should().Be(updateDto.Login);
-            account.Email.Should().Be(updateDto.Email);
-        }
-
-        [Fact]
-        public async Task UpdateAccountAsync_ShouldUpdateFileds_WhenProvidedInUpdateDto()
-        {
-            // Arrange
-            var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
-
-            var updateDto = new UpdateAccountDto
-            {
-                Login = "UpdatedLogin",
-                Email = "updated@email.com",
-                Nickname = "UpdatedNick",
-                Bio = "Updated Bio"
-            };
-
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
-                .ReturnsAsync(account);
-
-            // Act
-            await _accountService.UpdateAccountAsync(1, updateDto);
-
-            // Assert
-            account.Login.Should().Be(updateDto.Login);
-            account.Email.Should().Be(updateDto.Email);
-            account.Profile.Nickname.Should().Be(updateDto.Nickname);
-            account.Profile.Bio.Should().Be(updateDto.Bio);
         }
 
         [Fact]

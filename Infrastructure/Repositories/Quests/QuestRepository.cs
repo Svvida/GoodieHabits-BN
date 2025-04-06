@@ -197,8 +197,7 @@ namespace Infrastructure.Repositories.Quests
                         AccountId = q.AccountId,
                         TotalQuests = q.Account.Profile.TotalQuests,
                         CompletedQuests = q.Account.Profile.CompletedQuests,
-                        TotalExperience = q.Account.Profile.TotalExperience,
-                        CurrentExperience = q.Account.Profile.CurrentExperience,
+                        TotalXp = q.Account.Profile.TotalXp,
                         CreatedAt = q.Account.Profile.CreatedAt,
                         UpdatedAt = q.Account.Profile.UpdatedAt,
                         UserProfile_Badges = q.Account.Profile.UserProfile_Badges.Select(upb => new UserProfile_Badge
