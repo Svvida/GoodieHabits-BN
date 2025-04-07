@@ -198,6 +198,10 @@ namespace Application.Services.Quests
 
             DateTime todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
             DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
+            _logger.LogInformation("Today start: {TodayStart}, Today end: {TodayEnd}",
+                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
+
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 
