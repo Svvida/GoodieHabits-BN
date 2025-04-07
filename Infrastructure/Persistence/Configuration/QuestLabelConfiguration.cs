@@ -15,15 +15,18 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(ql => ql.Value)
                 .IsRequired()
-                .HasMaxLength(25);
+                .HasMaxLength(25)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
             builder.Property(ql => ql.BackgroundColor)
                 .IsRequired()
-                .HasMaxLength(7);
+                .HasMaxLength(7)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
             builder.Property(ql => ql.TextColor)
                 .IsRequired()
-                .HasMaxLength(7);
+                .HasMaxLength(7)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
             builder.HasOne(ql => ql.Account)
                 .WithMany(a => a.Labels)

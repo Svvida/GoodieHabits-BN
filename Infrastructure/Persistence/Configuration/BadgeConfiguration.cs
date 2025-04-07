@@ -12,14 +12,14 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.HasKey(b => b.Id);
 
-            builder.HasIndex(b => b.Type)
-                .IsUnique();
+            builder.HasIndex(b => b.Type).IsUnique();
 
             builder.Property(b => b.Type)
                 .IsRequired();
 
             builder.Property(b => b.Text)
-                .IsRequired();
+                .IsRequired()
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
         }
     }
 }
