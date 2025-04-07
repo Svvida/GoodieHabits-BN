@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<bool> ExistsByNicknameAsync(string nickname, CancellationToken cancellationToken = default)
+        public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
         {
             return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname, cancellationToken)
                 .ConfigureAwait(false);

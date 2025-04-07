@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250407172803_ChangeDbColumnsCollation")]
+    partial class ChangeDbColumnsCollation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -290,13 +293,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<int>("CompletedQuests")
                         .ValueGeneratedOnAdd()
@@ -307,9 +308,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Nickname")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TotalQuests")
                         .ValueGeneratedOnAdd()
@@ -328,10 +327,6 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("AccountId")
                         .IsUnique();
-
-                    b.HasIndex("Nickname")
-                        .IsUnique()
-                        .HasFilter("[Nickname] IS NOT NULL");
 
                     b.ToTable("UserProfiles", (string)null);
                 });

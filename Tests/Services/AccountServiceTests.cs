@@ -100,15 +100,15 @@ namespace Tests.Services
                 .ReturnsAsync(account);
 
             _accountRepositoryMock
-                .Setup(repo => repo.ExistsByFieldAsync(a => a.Login, updateDto.Login, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _accountRepositoryMock
-                .Setup(repo => repo.ExistsByFieldAsync(a => a.Email, updateDto.Email, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _userProfileRepositoryMock
-                .Setup(repo => repo.ExistsByNicknameAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _mapperMock
@@ -119,9 +119,9 @@ namespace Tests.Services
 
             // Assert
             _accountRepositoryMock.Verify(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()), Times.Once);
-            _accountRepositoryMock.Verify(repo => repo.ExistsByFieldAsync(a => a.Login, updateDto.Login, It.IsAny<CancellationToken>()), Times.Once);
-            _accountRepositoryMock.Verify(repo => repo.ExistsByFieldAsync(a => a.Email, updateDto.Email, It.IsAny<CancellationToken>()), Times.Once);
-            _userProfileRepositoryMock.Verify(repo => repo.ExistsByNicknameAsync(updateDto.Nickname, It.IsAny<CancellationToken>()), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()), Times.Once);
+            _accountRepositoryMock.Verify(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()), Times.Once);
+            _userProfileRepositoryMock.Verify(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()), Times.Once);
 
             _mapperMock.Verify(m => m.Map(updateDto, account), Times.Once);
 
@@ -143,7 +143,7 @@ namespace Tests.Services
                 .ReturnsAsync(account);
 
             _accountRepositoryMock
-                .Setup(repo => repo.ExistsByFieldAsync(a => a.Login, updateDto.Login, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -169,7 +169,7 @@ namespace Tests.Services
                 .ReturnsAsync(account);
 
             _accountRepositoryMock
-                .Setup(repo => repo.ExistsByFieldAsync(a => a.Email, updateDto.Email, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -195,7 +195,7 @@ namespace Tests.Services
                 .ReturnsAsync(account);
 
             _userProfileRepositoryMock
-                .Setup(repo => repo.ExistsByNicknameAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
+                .Setup(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act

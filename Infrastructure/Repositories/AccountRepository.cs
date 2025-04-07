@@ -21,5 +21,15 @@ namespace Infrastructure.Repositories
             return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false)
                 ?? null;
         }
+
+        public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclue, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclue && a.Login == login, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Email == email, cancellationToken).ConfigureAwait(false);
+        }
     }
 }
