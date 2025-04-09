@@ -60,5 +60,19 @@ namespace Infrastructure.Repositories
                 .AnyAsync(ql => ql.Id == labelId && ql.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task DeleteQuestLabelsByAccountIdAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var questLabelsToDelete = await _context.QuestLabels
+                .Where(ql => ql.AccountId == accountId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (questLabelsToDelete.Count != 0)
+            {
+                _context.QuestLabels.RemoveRange(questLabelsToDelete);
+                await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 }

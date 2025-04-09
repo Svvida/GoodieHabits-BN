@@ -42,7 +42,7 @@ namespace Api.Controllers
         }
 
         [HttpPut("accounts/me")]
-        public async Task<IActionResult> PatchAccount(
+        public async Task<IActionResult> UpdateAccount(
             UpdateAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
@@ -50,14 +50,32 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            if (patchDto.Login is not null)
-                patchDto.Login = patchDto.Login.Trim();
-            if (patchDto.Email is not null)
-                patchDto.Email = patchDto.Email.Trim();
-            if (patchDto.Nickname is not null)
-                patchDto.Nickname = patchDto.Nickname.Trim();
-
             await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPut("accounts/me/password")]
+        public async Task<IActionResult> ChangePassword(
+            ChangePasswordDto changePasswordDto,
+            CancellationToken cancellationToken = default)
+        {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            await _accountService.ChangePasswordAsync(accountId, changePasswordDto, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpDelete("accounts/me")]
+        public async Task<IActionResult> DeleteAccount(
+            DeleteAccountDto deleteAccountDto,
+            CancellationToken cancellationToken = default)
+        {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, cancellationToken);
             return NoContent();
         }
     }

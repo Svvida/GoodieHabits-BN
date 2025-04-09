@@ -21,35 +21,42 @@ namespace Infrastructure.Repositories.Quests
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Quest>> GetActiveQuestsAsync(int accountId, SeasonEnum currentSeason, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetActiveQuestsAsync(
+            int accountId,
+            DateTime todayStart,
+            DateTime todayEnd,
+            SeasonEnum currentSeason,
+            CancellationToken cancellationToken = default)
         {
-            DateTime today = DateTime.UtcNow.Date;
-
             var baseQuery = _context.Quests
                 .Where(q => q.AccountId == accountId)
                 .Where(q =>
                     (q.QuestType == QuestTypeEnum.OneTime &&
-                        (q.StartDate ?? DateTime.MinValue) <= today &&
-                        (q.EndDate ?? DateTime.MaxValue) >= today &&
+                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         (q.StartDate.HasValue || q.EndDate.HasValue))
 
                     || (q.QuestType == QuestTypeEnum.Daily &&
-                        (q.StartDate ?? DateTime.MinValue) <= today &&
-                        (q.EndDate ?? DateTime.MaxValue) >= today)
+                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart)
 
                     || (q.QuestType == QuestTypeEnum.Weekly &&
-                        (q.StartDate ?? DateTime.MinValue) <= today &&
-                        (q.EndDate ?? DateTime.MaxValue) >= today &&
-                        (q.WeeklyQuest_Days.Any(wd => wd.Weekday == (WeekdayEnum)today.DayOfWeek)))
+                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        q.WeeklyQuest_Days.Any(wd =>
+                            wd.Weekday == (WeekdayEnum)todayStart.DayOfWeek ||
+                            wd.Weekday == (WeekdayEnum)todayEnd.DayOfWeek))
 
                     || (q.QuestType == QuestTypeEnum.Monthly &&
-                        (q.StartDate ?? DateTime.MinValue) <= today &&
-                        (q.EndDate ?? DateTime.MaxValue) >= today &&
-                        (q.MonthlyQuest_Days!.StartDay <= today.Day && q.MonthlyQuest_Days.EndDay >= today.Day))
+                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        ((q.MonthlyQuest_Days!.StartDay <= todayStart.Day && q.MonthlyQuest_Days.EndDay >= todayStart.Day)
+                        ||
+                        (q.MonthlyQuest_Days.StartDay <= todayEnd.Day && q.MonthlyQuest_Days.EndDay >= todayEnd.Day)))
 
                     || (q.QuestType == QuestTypeEnum.Seasonal &&
-                        (q.StartDate ?? DateTime.MinValue) <= today &&
-                        (q.EndDate ?? DateTime.MaxValue) >= today &&
+                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         (q.SeasonalQuest_Season!.Season == currentSeason))
                 )
                 .Include(q => q.Quest_QuestLabels)
@@ -187,7 +194,28 @@ namespace Infrastructure.Repositories.Quests
                     Email = q.Account.Email,
                     TimeZone = q.Account.TimeZone,
                     CreatedAt = q.Account.CreatedAt,
-                    UpdatedAt = q.Account.UpdatedAt
+                    UpdatedAt = q.Account.UpdatedAt,
+                    Profile = new UserProfile
+                    {
+                        Id = q.Account.Profile.Id,
+                        AccountId = q.AccountId,
+                        TotalQuests = q.Account.Profile.TotalQuests,
+                        CompletedQuests = q.Account.Profile.CompletedQuests,
+                        TotalXp = q.Account.Profile.TotalXp,
+                        CreatedAt = q.Account.Profile.CreatedAt,
+                        UpdatedAt = q.Account.Profile.UpdatedAt,
+                        UserProfile_Badges = q.Account.Profile.UserProfile_Badges.Select(upb => new UserProfile_Badge
+                        {
+                            BadgeId = upb.BadgeId,
+                            UserProfileId = upb.UserProfileId,
+                            EarnedAt = upb.EarnedAt,
+                            Badge = new Badge
+                            {
+                                Id = upb.Badge.Id,
+                                Text = upb.Badge.Text
+                            }
+                        }).ToList()
+                    }
                 },
                 QuestType = q.QuestType,
                 Title = q.Title,

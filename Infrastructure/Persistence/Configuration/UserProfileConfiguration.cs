@@ -11,22 +11,19 @@ namespace Infrastructure.Persistence.Configuration
             builder.ToTable("UserProfiles");
 
             builder.HasKey(p => p.Id);
+            builder.HasIndex(p => p.AccountId).IsUnique();
+            builder.HasIndex(p => p.Nickname).IsUnique();
 
             builder.Property(p => p.Nickname)
-                .IsRequired(false);
+                .IsRequired(false)
+                .HasMaxLength(16)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
             builder.Property(p => p.Avatar)
-                .IsRequired(false);
+                .IsRequired(false)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
-            builder.Property(p => p.UserLevel)
-                .IsRequired()
-                .HasDefaultValue(1);
-
-            builder.Property(p => p.TotalExperience)
-                .IsRequired()
-                .HasDefaultValue(0);
-
-            builder.Property(p => p.CurrentExperience)
+            builder.Property(p => p.TotalXp)
                 .IsRequired()
                 .HasDefaultValue(0);
 
@@ -40,7 +37,8 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(p => p.Bio)
                 .IsRequired(false)
-                .HasMaxLength(150);
+                .HasMaxLength(150)
+                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
             builder.Property(p => p.CreatedAt)
                 .IsRequired();

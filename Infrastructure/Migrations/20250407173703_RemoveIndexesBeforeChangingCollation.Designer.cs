@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250407173703_RemoveIndexesBeforeChangingCollation")]
+    partial class RemoveIndexesBeforeChangingCollation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,13 +66,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("Login")
-                        .IsUnique()
-                        .HasFilter("[Login] IS NOT NULL");
-
                     b.ToTable("Accounts", (string)null);
                 });
 
@@ -96,9 +92,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Type")
-                        .IsUnique();
 
                     b.ToTable("Badges", (string)null);
                 });
@@ -171,7 +164,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("QuestType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasColumnType("nvarchar(max)")
                         .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
 
                     b.Property<DateTime?>("StartDate")
@@ -189,10 +182,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("QuestType");
-
-                    b.HasIndex("AccountId", "QuestType");
 
                     b.ToTable("Quests", (string)null);
                 });
@@ -235,8 +224,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("Value");
 
                     b.ToTable("Quest_Labels", (string)null);
                 });
@@ -328,10 +315,6 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("AccountId")
                         .IsUnique();
-
-                    b.HasIndex("Nickname")
-                        .IsUnique()
-                        .HasFilter("[Nickname] IS NOT NULL");
 
                     b.ToTable("UserProfiles", (string)null);
                 });
