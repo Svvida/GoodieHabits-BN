@@ -8,7 +8,7 @@ using Application.Dtos.Quests.WeeklyQuest;
 
 namespace Application.Dtos.Quests
 {
-    [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "_dtoType")]
     [JsonDerivedType(typeof(GetOneTimeQuestDto), "GetOneTimeQuestDto")]
     [JsonDerivedType(typeof(GetDailyQuestDto), "GetDailyQuestDto")]
     [JsonDerivedType(typeof(GetWeeklyQuestDto), "GetWeeklyQuestDto")]

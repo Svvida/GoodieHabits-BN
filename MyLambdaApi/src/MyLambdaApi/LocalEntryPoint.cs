@@ -10,6 +10,7 @@ public class LocalEntryPoint
     public static void Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
             .AddEnvironmentVariables()
             .Build();

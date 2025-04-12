@@ -10,12 +10,13 @@
       "Properties": {
         "Handler": "MyLambdaApi::MyLambdaApi.LambdaEntryPoint::FunctionHandlerAsync",
         "Runtime": "dotnet8",
-        "CodeUri": "",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
-        "Role": null,
+        "Role": "arn:aws:iam::043443519281:role/goodie-habbi-execution-role",
         "Policies": [
-          "AWSLambda_FullAccess"
+          "AWSLambda_FullAccess",
+          "GoodieHabbi-Lambda-execution-policy"
         ],
         "Events": {
           "ProxyResource": {

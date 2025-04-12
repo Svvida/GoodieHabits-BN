@@ -30,6 +30,7 @@ public class LambdaEntryPoint :
     protected override void Init(IWebHostBuilder builder)
     {
         var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
             .AddEnvironmentVariables()
             .Build();

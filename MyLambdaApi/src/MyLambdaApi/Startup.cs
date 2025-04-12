@@ -49,14 +49,13 @@ public class Startup
     {
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowWithCredentials",
+            options.AddPolicy("SwaggerCors",
                 builder =>
                 {
                     builder
-                        .SetIsOriginAllowed(origin => true)
+                        .AllowAnyOrigin()
                         .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
+                        .AllowAnyMethod();
                 });
         });
 
@@ -66,6 +65,7 @@ public class Startup
             {
                 options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
+                //options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping; // Might be useful if Lambda unproperly serialize emoji
             });
 
         // Add Swagger for API Documentation
@@ -227,24 +227,27 @@ public class Startup
         //});
 
         // CORS must be after Routing and before Auth/Endpoints
-        //app.UseCors("AllowWithCredentials"); // CORS are unnecessary for mobile clients, frontend needs to make changes
+        //app.UseCors("SwaggerCors"); // CORS are unnecessary for mobile clients, frontend needs to make changes
 
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
+        if (env.IsDevelopment())
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
-            options.RoutePrefix = string.Empty; // Set to empty to make Swagger at root
-        });
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
+                options.RoutePrefix = string.Empty; // Set to empty to make Swagger at root
+            });
+        }
 
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
             endpoints.MapGet("/", async context =>
             {
-                await context.Response.WriteAsync("Welcome to running ASP.NET Core on AWS Lambda");
+                await context.Response.WriteAsync("GoodieHabbi API is running!");
             });
         });
     }
