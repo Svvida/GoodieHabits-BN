@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{E471DBCB-6144-4151-8474-3B30E7A9149C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyLambdaApi", "MyLambdaApi\src\MyLambdaApi\MyLambdaApi.csproj", "{7AE1338C-6F27-B9A4-3ACA-C3F9E21494A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestResetLambda", "QuestResetLambda\QuestResetLambda.csproj", "{730105CB-FC61-D2AF-963A-33E482FBE136}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E471DBCB-6144-4151-8474-3B30E7A9149C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AE1338C-6F27-B9A4-3ACA-C3F9E21494A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AE1338C-6F27-B9A4-3ACA-C3F9E21494A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AE1338C-6F27-B9A4-3ACA-C3F9E21494A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AE1338C-6F27-B9A4-3ACA-C3F9E21494A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{730105CB-FC61-D2AF-963A-33E482FBE136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{730105CB-FC61-D2AF-963A-33E482FBE136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{730105CB-FC61-D2AF-963A-33E482FBE136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{730105CB-FC61-D2AF-963A-33E482FBE136}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

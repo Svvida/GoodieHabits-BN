@@ -18,21 +18,18 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(q => q.QuestType)
                 .IsRequired()
-                .HasConversion<string>()
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasConversion<string>();
 
             builder.Property(q => q.AccountId)
                 .IsRequired();
 
             builder.Property(q => q.Title)
                 .IsRequired()
-                .HasMaxLength(100)
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasMaxLength(100);
 
             builder.Property(dq => dq.Description)
                 .IsRequired(false)
-                .HasMaxLength(10000)
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasMaxLength(10000);
 
             builder.Property(q => q.Priority)
                 .IsRequired(false);
@@ -50,8 +47,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(q => q.Emoji)
                 .IsRequired(false)
                 .HasMaxLength(10)
-                .HasColumnType("NVARCHAR")
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasColumnType("NVARCHAR");
 
             builder.Property(q => q.LastCompletedAt)
                 .IsRequired(false);
@@ -60,7 +56,8 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired(false);
 
             builder.Property(q => q.CreatedAt)
-                .IsRequired();
+                .IsRequired()
+                .HasDefaultValueSql("GETDATE()");
 
             builder.Property(dq => dq.UpdatedAt)
                 .IsRequired(false);

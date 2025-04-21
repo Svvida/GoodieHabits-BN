@@ -284,12 +284,12 @@ namespace Api
                 app.UseRouting();
 
                 // Enable Swagger in all environments
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
-                    options.RoutePrefix = string.Empty; // Root path
-                });
+                //app.UseSwagger();
+                //app.UseSwaggerUI(options =>
+                //{
+                //    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
+                //    options.RoutePrefix = string.Empty; // Root path
+                //});
 
                 // Enable HTTPS Redirection
                 app.UseHttpsRedirection();
@@ -301,7 +301,7 @@ namespace Api
                 app.UseAuthorization();
 
                 // Map Controllers
-                app.MapControllers();
+                //app.MapControllers();
                 Log.Information("Middleware configured successfully.");
             }
             catch (Exception ex)

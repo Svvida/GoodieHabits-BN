@@ -64,7 +64,7 @@ namespace Infrastructure.Repositories.Quests
                 .AsQueryable();
 
             var result = await ApplyQuestProjection(baseQuery).ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Fetched {@result} quests from repository.", result);
+            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -93,7 +93,7 @@ namespace Infrastructure.Repositories.Quests
             }
 
             var result = await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Fetched {@result} quests from repository.", result);
+            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -119,7 +119,7 @@ namespace Infrastructure.Repositories.Quests
             }
 
             var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Fetched {@result} quests from repository.", result);
+            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
             return result;
         }
 
