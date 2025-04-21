@@ -175,7 +175,7 @@ public class Startup
         services.Configure<LevelingOptions>(Configuration.GetSection(LevelingOptions.SectionName));
 
         // Configure Authentication
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Default is not necessary since we use only one scheme
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -208,26 +208,6 @@ public class Startup
         app.UseHttpsRedirection();
 
         app.UseRouting();
-
-        // Handle OPTIONS requests for CORS Preflight
-        // For now delete to check if it works without it
-        //app.Use(async (context, next) =>
-        //{
-        //    if (context.Request.Method == "OPTIONS")
-        //    {
-        //        var origin = context.Request.Headers.Origin.ToString();
-        //        context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
-        //        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-        //        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        //        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-        //        context.Response.StatusCode = 204; // No Content
-        //        return;
-        //    }
-        //    await next();
-        //});
-
-        // CORS must be after Routing and before Auth/Endpoints
-        //app.UseCors("SwaggerCors"); // CORS are unnecessary for mobile clients, frontend needs to make changes
 
         app.UseAuthentication();
         app.UseAuthorization();

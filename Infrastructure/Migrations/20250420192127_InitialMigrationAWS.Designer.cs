@@ -12,15 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250407173404_AddIndexOnNickname")]
-    partial class AddIndexOnNickname
+    [Migration("20250420192127_InitialMigrationAWS")]
+    partial class InitialMigrationAWS
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -34,32 +34,30 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("HashPassword")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Login")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TimeZone")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)")
-                        .HasDefaultValue("Etc/UTC")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasDefaultValue("Etc/UTC");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -89,8 +87,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -143,17 +140,17 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
                         .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Emoji")
                         .HasMaxLength(10)
-                        .HasColumnType("NVARCHAR")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("NVARCHAR");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
@@ -174,8 +171,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("QuestType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
@@ -183,8 +179,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -214,8 +209,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("BackgroundColor")
                         .IsRequired()
                         .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -223,8 +217,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("TextColor")
                         .IsRequired()
                         .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -232,8 +225,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(25)");
 
                     b.HasKey("Id");
 
@@ -293,13 +285,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<int>("CompletedQuests")
                         .ValueGeneratedOnAdd()
@@ -307,12 +297,13 @@ namespace Infrastructure.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Nickname")
                         .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)")
-                        .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("TotalQuests")
                         .ValueGeneratedOnAdd()
