@@ -41,8 +41,11 @@ namespace Application.Helpers
 
             var existingLabels = quest.Quest_QuestLabels.ToList();
 
-            HashSet<int> newLabelsHashSet = [.. updateDto.Labels];
             HashSet<int> existingLabelsHashSet = [.. quest.Quest_QuestLabels.Select(x => x.QuestLabelId)];
+            HashSet<int> newLabelsHashSet = [.. updateDto.Labels];
+
+            //_logger.LogInformation("Existing labels: {@existingLabels}", existingLabels);
+            //_logger.LogInformation("New labels: {@newLabels}", newLabelsHashSet);
 
             var labelsToAdd = updateDto.Labels
                 .Where(labelId => !existingLabelsHashSet.Contains(labelId))
@@ -54,17 +57,21 @@ namespace Application.Helpers
 
             var labelsToRemove = existingLabels
                 .Where(existingLabel => !newLabelsHashSet.Contains(existingLabel.QuestLabelId))
-                .Select(existingLabel => new Quest_QuestLabel
-                {
-                    QuestId = existingLabel.QuestId,
-                    QuestLabelId = existingLabel.QuestLabelId
-                })
                 .ToList();
 
+            //_logger.LogInformation("Labels to add: {@labelsToAdd}", labelsToAdd);
+            //_logger.LogInformation("Labels to remove: {@labelsToRemove}", labelsToRemove);
+
             if (labelsToRemove.Count != 0)
+            {
+                _logger.LogInformation("Removing labels: {@labelsToRemove} from quest with id: {@quest.id}", labelsToRemove, quest.Id);
                 _questRepository.RemoveQuestLabels(labelsToRemove);
+            }
             if (labelsToAdd.Count != 0)
+            {
+                _logger.LogInformation("Adding labels: {@labelsToAdd} to quest with id: {@quest.id}", labelsToAdd, quest.Id);
                 _questRepository.AddQuestLabels(labelsToAdd);
+            }
 
             return quest;
         }

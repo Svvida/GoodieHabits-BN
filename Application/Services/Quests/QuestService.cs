@@ -98,14 +98,14 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(BaseUpdateQuestDto updateDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Type of updateDto from controller: {@updateDto}", updateDto);
+            //_logger.LogInformation("Type of updateDto from controller: {@updateDto}", updateDto);
             var existingQuest = await _questRepository.GetQuestByIdAsync(updateDto.Id, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {updateDto.Id} not found");
 
             existingQuest.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             existingQuest = _mapper.Map(updateDto, existingQuest);
-            _logger.LogInformation("Quest updated after mapping: {@quest}", existingQuest);
+            //_logger.LogInformation("Quest updated after mapping: {@quest}", existingQuest);
 
             existingQuest = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
 
@@ -119,6 +119,7 @@ namespace Application.Services.Quests
             if (questType == QuestTypeEnum.Monthly)
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
 
+            //_logger.LogInformation("Updated quest: {@existingQuest}", existingQuest);
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
 
@@ -166,7 +167,7 @@ namespace Application.Services.Quests
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
 
-            _logger.LogInformation("Completed quest after mapping: {@existingQuest}", existingQuest);
+            //_logger.LogInformation("Completed quest after mapping: {@existingQuest}", existingQuest);
 
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
 
@@ -198,9 +199,9 @@ namespace Application.Services.Quests
 
             DateTime todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
             DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
-            _logger.LogInformation("Today start: {TodayStart}, Today end: {TodayEnd}",
-                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
+            //_logger.LogInformation("Today start: {TodayStart}, Today end: {TodayEnd}",
+            //    todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+            //    todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
 
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
@@ -208,11 +209,11 @@ namespace Application.Services.Quests
             var quests = await _questRepository.GetActiveQuestsAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
                 .ConfigureAwait(false);
 
-            _logger.LogInformation("Quests before mapping: {@quests}", quests);
+            //_logger.LogInformation("Quests before mapping: {@quests}", quests);
 
             var mappedQuests = quests.Select(MapToDto);
 
-            _logger.LogInformation("Quests after mapping: {@mappedQuests}", mappedQuests);
+            //_logger.LogInformation("Quests after mapping: {@mappedQuests}", mappedQuests);
 
             return mappedQuests;
         }

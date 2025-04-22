@@ -102,7 +102,8 @@ namespace Application.Services
 
             return new RefreshResponseDto
             {
-                AccessToken = GenerateJwtToken(account)
+                AccessToken = GenerateJwtToken(account),
+                AccountId = account.Id
             };
         }
 

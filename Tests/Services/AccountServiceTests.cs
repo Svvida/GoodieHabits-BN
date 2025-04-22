@@ -7,6 +7,7 @@ using Domain.Interfaces;
 using Domain.Models;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tests.Factories;
 
@@ -20,6 +21,7 @@ namespace Tests.Services
         private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock = new();
         private readonly Mock<IQuestLabelRepository> _questLabelRepositoryMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
+        private readonly Mock<ILogger<AccountService>> _loggerMock = new();
 
         public AccountServiceTests()
         {
@@ -28,7 +30,8 @@ namespace Tests.Services
                 _mapperMock.Object,
                 _userProfileRepositoryMock.Object,
                 _passwordHasherMock.Object,
-                _questLabelRepositoryMock.Object);
+                _questLabelRepositoryMock.Object,
+                _loggerMock.Object);
         }
 
         [Fact]

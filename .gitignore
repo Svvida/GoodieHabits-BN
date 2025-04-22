@@ -13,6 +13,10 @@ appsettings.Development.json
 # Web config
 web.config
 
+# AWS specific files
+serverless.template
+
+
 # User-specific files
 *.rsuser
 *.suo

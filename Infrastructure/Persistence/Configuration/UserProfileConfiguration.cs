@@ -16,12 +16,10 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(p => p.Nickname)
                 .IsRequired(false)
-                .HasMaxLength(16)
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasMaxLength(16);
 
             builder.Property(p => p.Avatar)
-                .IsRequired(false)
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .IsRequired(false);
 
             builder.Property(p => p.TotalXp)
                 .IsRequired()
@@ -37,11 +35,11 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(p => p.Bio)
                 .IsRequired(false)
-                .HasMaxLength(150)
-                .UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+                .HasMaxLength(150);
 
             builder.Property(p => p.CreatedAt)
-                .IsRequired();
+                .IsRequired()
+                .HasDefaultValueSql("GETDATE()");
 
             builder.Property(p => p.UpdatedAt)
                 .IsRequired(false);

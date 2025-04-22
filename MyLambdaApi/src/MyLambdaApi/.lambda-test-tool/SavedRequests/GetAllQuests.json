@@ -1,0 +1,9 @@
+{
+  "httpMethod": "GET",
+  "path": "/api/all-quests",
+  "headers": {
+    "Content-Type": "application/json",
+"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiIxOSIsImVtYWlsIjoibWFjaWVqMUBlbWFpbC5jb20iLCJleHAiOjE3NDQzNzAzNDMsImlzcyI6Ikdvb2RpZUhhYml0c1NlcnZlciIsImF1ZCI6Ikdvb2RpZUhhYml0c0NsaWVudCJ9.4e4VC5oVogsicS10P2ts3lWTEwGelwyiOJpYQSNzaNk"
+  },
+  "body": ""
+}
