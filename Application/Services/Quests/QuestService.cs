@@ -119,6 +119,7 @@ namespace Application.Services.Quests
             if (questType == QuestTypeEnum.Monthly)
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
 
+            //_logger.LogInformation("Updated quest: {@existingQuest}", existingQuest);
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
 
