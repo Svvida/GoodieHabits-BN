@@ -5,6 +5,8 @@ using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using NodaTime;
 
 namespace Application.Services
 {
@@ -15,19 +17,22 @@ namespace Application.Services
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IQuestLabelRepository _questLabelRepository;
+        private readonly ILogger<AccountService> _logger;
 
         public AccountService(
             IAccountRepository accountRepository,
             IMapper mapper,
             IUserProfileRepository userProfileRepository,
             IPasswordHasher<Account> passwordHasher,
-            IQuestLabelRepository questLabelRepository)
+            IQuestLabelRepository questLabelRepository,
+            ILogger<AccountService> logger)
         {
             _accountRepository = accountRepository;
             _mapper = mapper;
             _userProfileRepository = userProfileRepository;
             _passwordHasher = passwordHasher;
             _questLabelRepository = questLabelRepository;
+            _logger = logger;
         }
 
         public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
@@ -91,6 +96,31 @@ namespace Application.Services
 
             await _questLabelRepository.DeleteQuestLabelsByAccountIdAsync(accountId, cancellationToken).ConfigureAwait(false);
             await _accountRepository.DeleteAsync(account, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task UpdateTimeZoneIfChangedAsync(int accountId, string? timeZone, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(timeZone))
+                return;
+
+            var normalizedTimeZone = timeZone.Trim();
+
+            if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(normalizedTimeZone) is null)
+            {
+                _logger.LogWarning($"Invalid time zone received: {normalizedTimeZone} for user with ID: {accountId}. Not saving time zone to database.");
+                return;
+            }
+
+            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false);
+            if (account is null)
+                return;
+
+            if (!string.Equals(account.TimeZone, normalizedTimeZone, StringComparison.Ordinal))
+            {
+                account.TimeZone = normalizedTimeZone;
+                await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("Updated timezone for user {UserId} to {TimeZone}.", accountId, normalizedTimeZone);
+            }
         }
     }
 }
