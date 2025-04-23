@@ -11,7 +11,6 @@ using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Application.Services
@@ -22,7 +21,6 @@ namespace Application.Services
         private readonly IAccountRepository _accountRepository;
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IMapper _mapper;
-        private readonly ILogger<AuthService> _logger;
         private readonly ITokenGenerator _tokenGenerator;
         private readonly ITokenValidator _tokenValidator;
 
@@ -31,7 +29,6 @@ namespace Application.Services
             IAccountRepository accountRepository,
             IPasswordHasher<Account> passwordHasher,
             IMapper mapper,
-            ILogger<AuthService> logger,
             ITokenGenerator tokenGenerator,
             ITokenValidator tokenValidator)
         {
@@ -39,7 +36,6 @@ namespace Application.Services
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
             _mapper = mapper;
-            _logger = logger;
             _tokenGenerator = tokenGenerator;
             _tokenValidator = tokenValidator;
         }

@@ -64,7 +64,7 @@ namespace Infrastructure.Repositories.Quests
                 .AsQueryable();
 
             var result = await ApplyQuestProjection(baseQuery).ToListAsync(cancellationToken).ConfigureAwait(false);
-            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
+            _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -93,7 +93,7 @@ namespace Infrastructure.Repositories.Quests
             }
 
             var result = await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
-            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
+            _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -119,7 +119,7 @@ namespace Infrastructure.Repositories.Quests
             }
 
             var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            //_logger.LogInformation("Fetched {@result} quests from repository.", result);
+            _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -132,7 +132,7 @@ namespace Infrastructure.Repositories.Quests
             if (result == 0)
             {
                 // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
-                _logger.LogWarning("Quest with id {questId} not found.", questId);
+                _logger.LogError("Quest with id {questId} not found.", questId);
                 throw new InvalidArgumentException($"Failed to delete quest with ID {questId}.  Possible authorization failure or data inconsistency.");
             }
         }
