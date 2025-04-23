@@ -3,19 +3,16 @@ using Application.Interfaces;
 using Domain.Enum;
 using Domain.Interfaces.Quests;
 using Domain.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Application.Helpers
 {
     public class QuestWeekdaysHandler : IQuestWeekdaysHandler
     {
         private readonly IQuestRepository _questRepository;
-        private readonly ILogger<QuestWeekdaysHandler> _logger;
 
-        public QuestWeekdaysHandler(IQuestRepository questRepository, ILogger<QuestWeekdaysHandler> logger)
+        public QuestWeekdaysHandler(IQuestRepository questRepository)
         {
             _questRepository = questRepository;
-            _logger = logger;
         }
 
         public Quest HandleUpdateWeekdays(Quest quest, UpdateWeeklyQuestDto updateDto)
