@@ -19,6 +19,7 @@ namespace Infrastructure.Persistence
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Badge> Badges { get; set; }
         public DbSet<UserProfile_Badge> UserProfile_Badges { get; set; }
+        public DbSet<UserGoal> UserGoals { get; set; }
 
         public override int SaveChanges()
         {

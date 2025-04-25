@@ -15,7 +15,7 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(upb => upb.EarnedAt)
                 .IsRequired()
-                .HasDefaultValueSql("GETDATE()");
+                .HasDefaultValueSql("GETUTCDATE()");
 
             builder.HasOne(upb => upb.UserProfile)
                 .WithMany(up => up.UserProfile_Badges)

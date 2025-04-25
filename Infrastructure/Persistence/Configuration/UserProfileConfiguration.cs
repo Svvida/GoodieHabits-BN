@@ -39,7 +39,7 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(p => p.CreatedAt)
                 .IsRequired()
-                .HasDefaultValueSql("GETDATE()");
+                .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(p => p.UpdatedAt)
                 .IsRequired(false);
