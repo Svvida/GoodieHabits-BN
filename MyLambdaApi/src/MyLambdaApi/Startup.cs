@@ -13,6 +13,7 @@ using Application.Validators.Accounts;
 using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
+using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Interfaces.Quests;
@@ -128,6 +129,7 @@ public class Startup
         services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
         services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddScoped<IUserGoalRepository, UserGoalRepository>();
 
         // Register Services
         services.AddScoped<IAccountService, AccountService>();
@@ -140,6 +142,7 @@ public class Startup
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenValidator, TokenValidator>();
         services.AddSingleton<ILevelingService, LevelingService>();
+        services.AddScoped<IUserGoalService, UserGoalService>();
 
         // Register Validators
         services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -152,6 +155,7 @@ public class Startup
         services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
         services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
         services.AddValidatorsFromAssemblyContaining<DeleteAccountValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
 

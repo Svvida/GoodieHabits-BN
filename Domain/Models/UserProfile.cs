@@ -10,8 +10,13 @@ namespace Domain.Models
         public string? Avatar { get; set; }
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;
+        // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int TotalQuests { get; set; } = 0;
+        // Stats for goals
+        public int CompletedGoals { get; set; } = 0;
+        public int ExpiredGoals { get; set; } = 0;
+        public int AbandonedGoals { get; set; } = 0;
 
         public Account Account { get; set; } = null!;
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];

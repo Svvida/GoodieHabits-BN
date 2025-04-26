@@ -41,8 +41,8 @@ namespace Infrastructure.Persistence.Configuration
                 .HasDefaultValue(5);
 
             builder.HasOne(ug => ug.Quest)
-                .WithOne(q => q.UserGoal)
-                .HasForeignKey<UserGoal>(ug => ug.QuestId)
+                .WithMany(q => q.UserGoal)
+                .HasForeignKey(ug => ug.QuestId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(ug => ug.Account)
