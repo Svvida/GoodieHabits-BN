@@ -33,13 +33,25 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(p => p.CompletedGoals)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.ExpiredGoals)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.AbandonedGoals)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(p => p.Bio)
                 .IsRequired(false)
                 .HasMaxLength(150);
 
             builder.Property(p => p.CreatedAt)
                 .IsRequired()
-                .HasDefaultValueSql("GETDATE()");
+                .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(p => p.UpdatedAt)
                 .IsRequired(false);

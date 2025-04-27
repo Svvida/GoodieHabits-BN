@@ -9,9 +9,12 @@ public class LocalEntryPoint
 {
     public static void Main(string[] args)
     {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();
 
@@ -19,9 +22,11 @@ public class LocalEntryPoint
             .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
+        Log.Information($"Environment: {environment}");
         try
         {
             Log.Information("Starting web host (Local Kestrel)");
+
             CreateHostBuilder(args).Build().Run();
         }
         catch (Exception ex)

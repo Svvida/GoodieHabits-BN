@@ -12,6 +12,7 @@ namespace Domain.Models
         public ICollection<Quest> Quests { get; set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public UserProfile Profile { get; set; } = null!;
+        public ICollection<UserGoal> UserGoals { get; set; } = [];
 
         public Account() { }
 

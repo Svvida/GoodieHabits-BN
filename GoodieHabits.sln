@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyLambdaApi", "MyLambdaApi\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestResetLambda", "QuestResetLambda\QuestResetLambda.csproj", "{730105CB-FC61-D2AF-963A-33E482FBE136}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpireGoalsLambda", "ExpireGoals\ExpireGoalsLambda.csproj", "{7C92B6C0-683C-DF3A-3961-E4FF471A83A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{730105CB-FC61-D2AF-963A-33E482FBE136}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{730105CB-FC61-D2AF-963A-33E482FBE136}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{730105CB-FC61-D2AF-963A-33E482FBE136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C92B6C0-683C-DF3A-3961-E4FF471A83A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C92B6C0-683C-DF3A-3961-E4FF471A83A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C92B6C0-683C-DF3A-3961-E4FF471A83A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C92B6C0-683C-DF3A-3961-E4FF471A83A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

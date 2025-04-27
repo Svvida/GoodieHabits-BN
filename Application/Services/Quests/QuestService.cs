@@ -29,6 +29,7 @@ namespace Application.Services.Quests
         private readonly IQuestResetService _questResetService;
         private readonly IAccountRepository _accountRepository;
         private readonly IUserProfileRepository _userProfileRepository;
+        private readonly IUserGoalRepository _userGoalRepository;
 
         public QuestService(
             IQuestRepository repository,
@@ -39,7 +40,8 @@ namespace Application.Services.Quests
             IQuestLabelRepository questLabelRepository,
             IQuestResetService questResetService,
             IAccountRepository accountRepository,
-            IUserProfileRepository userProfileRepository)
+            IUserProfileRepository userProfileRepository,
+            IUserGoalRepository userGoalRepository)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -50,6 +52,7 @@ namespace Application.Services.Quests
             _questResetService = questResetService;
             _accountRepository = accountRepository;
             _userProfileRepository = userProfileRepository;
+            _userGoalRepository = userGoalRepository;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -174,11 +177,25 @@ namespace Application.Services.Quests
             if (shouldIncrementCount)
             {
                 int xpGained = 10;
+
                 var userProfile = await _userProfileRepository.GetByAccountIdAsync(existingQuest.AccountId, cancellationToken).ConfigureAwait(false)
                     ?? throw new NotFoundException($"User profile with account ID: {existingQuest.AccountId} not found");
 
                 userProfile.CompletedQuests++;
                 userProfile.TotalXp += xpGained;
+
+                // Check if this quest is a goal
+                var userGoal = await _userGoalRepository.GetActiveGoalByQuestIdAsync(existingQuest.Id, cancellationToken).ConfigureAwait(false);
+                if (userGoal is not null)
+                {
+                    userGoal.IsAchieved = true;
+                    userGoal.AchievedAt = nowUtc.ToDateTimeUtc();
+                    userProfile.CompletedGoals++;
+                    await _userGoalRepository.UpdateAsync(userGoal, cancellationToken).ConfigureAwait(false);
+
+                    xpGained += userGoal.XpBonus;
+                    _logger.LogInformation($"User achieved goal ID {userGoal.Id} and earned bonus {userGoal.XpBonus} XP");
+                }
 
                 await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
                 _logger.LogDebug("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}", xpGained, existingQuest.AccountId);

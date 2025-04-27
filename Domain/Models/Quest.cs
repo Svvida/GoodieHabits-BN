@@ -24,6 +24,7 @@ namespace Domain.Models
         public MonthlyQuest_Days? MonthlyQuest_Days { get; set; } = null;
         public ICollection<WeeklyQuest_Day> WeeklyQuest_Days { get; set; } = [];
         public SeasonalQuest_Season? SeasonalQuest_Season { get; set; } = null;
+        public ICollection<UserGoal> UserGoal { get; set; } = [];
 
         public Quest() { }
         public Quest(int id, int accountId, QuestTypeEnum questType, string title)
