@@ -15,14 +15,11 @@ namespace MyLambdaApi.Controllers
     public class DailyQuestController : ControllerBase
     {
         private readonly IQuestService _questService;
-        private readonly ILogger<DailyQuestController> _logger;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Daily;
 
         public DailyQuestController(
-            ILogger<DailyQuestController> logger,
             IQuestService questService)
         {
-            _logger = logger;
             _questService = questService;
         }
 

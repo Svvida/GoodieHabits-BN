@@ -10,6 +10,9 @@
 appsettings.Production.json
 appsettings.Development.json
 
+# Aws lambda settings
+aws-lambda-tools-defaults.json
+
 # Web config
 web.config
 

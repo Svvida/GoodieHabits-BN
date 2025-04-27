@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250425173842_AddUserGoalTable")]
+    partial class AddUserGoalTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,7 +312,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.HasIndex("QuestId");
+                    b.HasIndex("QuestId")
+                        .IsUnique();
 
                     b.ToTable("UserGoals");
                 });
@@ -322,11 +326,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AbandonedGoals")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.Property<int>("AccountId")
                         .HasColumnType("int");
 
@@ -337,11 +336,6 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("CompletedGoals")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.Property<int>("CompletedQuests")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -351,11 +345,6 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("ExpiredGoals")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
 
                     b.Property<string>("Nickname")
                         .HasMaxLength(16)
@@ -502,8 +491,8 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Models.Quest", "Quest")
-                        .WithMany("UserGoal")
-                        .HasForeignKey("QuestId")
+                        .WithOne("UserGoal")
+                        .HasForeignKey("Domain.Models.UserGoal", "QuestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

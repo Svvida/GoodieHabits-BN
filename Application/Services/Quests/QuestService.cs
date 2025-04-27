@@ -29,6 +29,7 @@ namespace Application.Services.Quests
         private readonly IQuestResetService _questResetService;
         private readonly IAccountRepository _accountRepository;
         private readonly IUserProfileRepository _userProfileRepository;
+        private readonly IUserGoalRepository _userGoalRepository;
 
         public QuestService(
             IQuestRepository repository,
@@ -39,7 +40,8 @@ namespace Application.Services.Quests
             IQuestLabelRepository questLabelRepository,
             IQuestResetService questResetService,
             IAccountRepository accountRepository,
-            IUserProfileRepository userProfileRepository)
+            IUserProfileRepository userProfileRepository,
+            IUserGoalRepository userGoalRepository)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -50,6 +52,7 @@ namespace Application.Services.Quests
             _questResetService = questResetService;
             _accountRepository = accountRepository;
             _userProfileRepository = userProfileRepository;
+            _userGoalRepository = userGoalRepository;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -80,7 +83,7 @@ namespace Application.Services.Quests
             }
 
             var quest = _mapper.Map<Quest>(createDto);
-            _logger.LogInformation("Quest created after mapping: {@quest}", quest);
+            _logger.LogDebug("Quest created after mapping: {@quest}", quest);
 
             await _questRepository.AddQuestAsync(quest, cancellationToken);
 
@@ -98,14 +101,14 @@ namespace Application.Services.Quests
 
         public async Task UpdateUserQuestAsync(BaseUpdateQuestDto updateDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            //_logger.LogInformation("Type of updateDto from controller: {@updateDto}", updateDto);
+            _logger.LogDebug("Type of updateDto from controller: {@updateDto}", updateDto);
             var existingQuest = await _questRepository.GetQuestByIdAsync(updateDto.Id, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {updateDto.Id} not found");
 
             existingQuest.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             existingQuest = _mapper.Map(updateDto, existingQuest);
-            //_logger.LogInformation("Quest updated after mapping: {@quest}", existingQuest);
+            _logger.LogDebug("Quest updated after mapping: {@quest}", existingQuest);
 
             existingQuest = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
 
@@ -119,7 +122,7 @@ namespace Application.Services.Quests
             if (questType == QuestTypeEnum.Monthly)
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
 
-            //_logger.LogInformation("Updated quest: {@existingQuest}", existingQuest);
+            _logger.LogDebug("Updated quest: {@existingQuest}", existingQuest);
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
         }
 
@@ -167,21 +170,35 @@ namespace Application.Services.Quests
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
 
-            //_logger.LogInformation("Completed quest after mapping: {@existingQuest}", existingQuest);
+            _logger.LogDebug("Completed quest after mapping: {@existingQuest}", existingQuest);
 
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
 
             if (shouldIncrementCount)
             {
                 int xpGained = 10;
+
                 var userProfile = await _userProfileRepository.GetByAccountIdAsync(existingQuest.AccountId, cancellationToken).ConfigureAwait(false)
                     ?? throw new NotFoundException($"User profile with account ID: {existingQuest.AccountId} not found");
 
                 userProfile.CompletedQuests++;
                 userProfile.TotalXp += xpGained;
 
+                // Check if this quest is a goal
+                var userGoal = await _userGoalRepository.GetActiveGoalByQuestIdAsync(existingQuest.Id, cancellationToken).ConfigureAwait(false);
+                if (userGoal is not null)
+                {
+                    userGoal.IsAchieved = true;
+                    userGoal.AchievedAt = nowUtc.ToDateTimeUtc();
+                    userProfile.CompletedGoals++;
+                    await _userGoalRepository.UpdateAsync(userGoal, cancellationToken).ConfigureAwait(false);
+
+                    xpGained += userGoal.XpBonus;
+                    _logger.LogInformation($"User achieved goal ID {userGoal.Id} and earned bonus {userGoal.XpBonus} XP");
+                }
+
                 await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
-                _logger.LogInformation("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}", xpGained, existingQuest.AccountId);
+                _logger.LogDebug("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}", xpGained, existingQuest.AccountId);
             }
         }
 
@@ -199,9 +216,9 @@ namespace Application.Services.Quests
 
             DateTime todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
             DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
-            //_logger.LogInformation("Today start: {TodayStart}, Today end: {TodayEnd}",
-            //    todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-            //    todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
+            _logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
+                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
 
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
@@ -209,11 +226,11 @@ namespace Application.Services.Quests
             var quests = await _questRepository.GetActiveQuestsAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
                 .ConfigureAwait(false);
 
-            //_logger.LogInformation("Quests before mapping: {@quests}", quests);
+            _logger.LogDebug("Quests before mapping: {@quests}", quests);
 
             var mappedQuests = quests.Select(MapToDto);
 
-            //_logger.LogInformation("Quests after mapping: {@mappedQuests}", mappedQuests);
+            _logger.LogDebug("Quests after mapping: {@mappedQuests}", mappedQuests);
 
             return mappedQuests;
         }

@@ -13,14 +13,15 @@ namespace Infrastructure.Repositories.Quests
             _context = context;
         }
 
-        public async Task ResetQuestsAsync(CancellationToken cancellationToken = default)
+        public async Task<int> ResetQuestsAsync(CancellationToken cancellationToken = default)
         {
-            await _context.Quests
+            var resetedQuests = await _context.Quests
                 .Where(q => q.IsCompleted == true && q.NextResetAt <= DateTime.UtcNow)
                 .ExecuteUpdateAsync(setter => setter
                     .SetProperty(p => p.IsCompleted, false)
-                    .SetProperty(p => p.NextResetAt, (DateTime?)null))
+                    .SetProperty(p => p.NextResetAt, (DateTime?)null), cancellationToken)
                 .ConfigureAwait(false);
+            return resetedQuests;
         }
     }
 }

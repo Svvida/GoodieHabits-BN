@@ -8,6 +8,9 @@
         public string? Avatar { get; set; }
         public int CompletedQuests { get; set; }
         public int TotalQuests { get; set; }
+        public int CompletedGoals { get; set; }
+        public int ExpiredGoals { get; set; }
+        public int AbandonedGoals { get; set; }
         public int Level { get; set; } // Current user Level
         public int UserXp { get; set; } // User's total accumulated XP
         public int NextLevelTotalXpRequired { get; set; } // XP required to reach next level

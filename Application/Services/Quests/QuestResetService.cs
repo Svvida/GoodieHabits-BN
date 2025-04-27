@@ -18,10 +18,10 @@ namespace Application.Services.Quests
 
         public DateTime? GetNextResetTimeUtc(Quest quest)
         {
-            _logger.LogInformation("Calculating NextResetAt for Quest ID: {QuestId}, Type: {QuestType}", quest.Id, quest.QuestType);
+            _logger.LogDebug("Calculating NextResetAt for Quest ID: {QuestId}, Type: {QuestType}", quest.Id, quest.QuestType);
             if (quest.LastCompletedAt is null)
             {
-                _logger.LogWarning("Quest ID: {QuestId} has no LastCompletedAt. Returning null.", quest.Id);
+                _logger.LogDebug("Quest ID: {QuestId} has no LastCompletedAt. Returning null.", quest.Id);
                 return null;
             }
 
@@ -30,7 +30,7 @@ namespace Application.Services.Quests
 
             ZonedDateTime completionTimeLocal = completionTimeInstant.InZone(userTimeZone);
 
-            _logger.LogInformation("Quest ID: {QuestId} - LastCompletedAt (UTC): {LastCompletedAt}, LocalTime ({TimeZone}): {LocalTime}",
+            _logger.LogDebug("Quest ID: {QuestId} - LastCompletedAt (UTC): {LastCompletedAt}, LocalTime ({TimeZone}): {LocalTime}",
                 quest.Id, completionTimeInstant, quest.Account.TimeZone, completionTimeLocal);
 
             if (quest.QuestType == QuestTypeEnum.Daily)
@@ -46,7 +46,7 @@ namespace Application.Services.Quests
             {
                 // Select all available days for the quest and order them by day of the week
                 var availableDays = quest.WeeklyQuest_Days.Select(wqd => (DayOfWeek)wqd.Weekday).OrderBy(wd => wd).ToList();
-                _logger.LogInformation("Available days: {@availableDays}", availableDays);
+                _logger.LogDebug("Available days: {@availableDays}", availableDays);
 
                 // Should never happen because the quest should have at least one day
                 if (availableDays.Count == 0)
@@ -62,11 +62,11 @@ namespace Application.Services.Quests
                 if (!availableDays.Any(wd => wd > currentDay))
                     nextResetDay = availableDays.First();
 
-                _logger.LogInformation("Current day: {currentDay}, Next reset day: {nextResetDay}", currentDay, nextResetDay);
+                _logger.LogDebug("Current day: {currentDay}, Next reset day: {nextResetDay}", currentDay, nextResetDay);
 
                 // Calculate the number of days until the next reset day and make sure it is not negative number
                 int daysUntilNextReset = ((int)nextResetDay - (int)currentDay + 7) % 7;
-                _logger.LogInformation("Days until next Reset: {daysUntilNextReset}", daysUntilNextReset);
+                _logger.LogDebug("Days until next Reset: {daysUntilNextReset}", daysUntilNextReset);
                 // If the next reset day is the same as the current day, the quest will reset in 7 days
                 if (daysUntilNextReset == 0)
                     daysUntilNextReset = 7;
@@ -74,7 +74,7 @@ namespace Application.Services.Quests
                 LocalDateTime nextResetLocal = completionTimeLocal.Date.PlusDays(daysUntilNextReset).AtMidnight();
                 DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
 
-                _logger.LogInformation("Quest ID: {QuestId} - Next reset day: {NextResetDay}, UTC Time: {NextResetUtc}",
+                _logger.LogDebug("Quest ID: {QuestId} - Next reset day: {NextResetDay}, UTC Time: {NextResetUtc}",
                     quest.Id, nextResetDay, nextResetUtc);
 
                 if (quest.EndDate.HasValue && nextResetUtc >= quest.EndDate)

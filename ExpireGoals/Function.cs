@@ -1,7 +1,7 @@
 using Amazon.Lambda.Core;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Quests;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace QuestResetLambda;
+namespace ExpireGoalsLambda;
 
 public class Function
 {
@@ -40,7 +40,7 @@ public class Function
             options.UseSqlServer(connectionString);
         });
 
-        services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
+        services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
 
         _serviceProvider = services.BuildServiceProvider();
 
@@ -54,17 +54,17 @@ public class Function
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var resetRepo = scope.ServiceProvider.GetRequiredService<IResetQuestsRepository>();
+            var resetRepo = scope.ServiceProvider.GetRequiredService<IGoalExpirationRepository>();
 
-            _logger.LogInformation("Attempting to reset quests...");
+            _logger.LogInformation("Attempting to expire goals...");
 
-            var resetedQuests = await resetRepo.ResetQuestsAsync(CancellationToken.None);
+            var expiredGoals = await resetRepo.ExpireGoalsAsync(CancellationToken.None);
 
-            _logger.LogInformation($"{resetedQuests} quests reset successfully.");
+            _logger.LogInformation($"{expiredGoals} goals expired successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred during quest reset. Request ID: {AwsRequestId}", context.AwsRequestId);
+            _logger.LogError(ex, "An error occurred during expiring goals. Request ID: {AwsRequestId}", context.AwsRequestId);
             throw;
         }
     }

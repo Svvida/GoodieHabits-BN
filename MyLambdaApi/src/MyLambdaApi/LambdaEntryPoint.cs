@@ -29,14 +29,17 @@ public class LambdaEntryPoint :
     /// <param name="builder">The IWebHostBuilder to configure.</param>
     protected override void Init(IWebHostBuilder builder)
     {
-        var config = new ConfigurationBuilder()
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
+        var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();
 
         Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(config)
+            .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
         builder.ConfigureLogging(logging =>
