@@ -18,7 +18,7 @@ namespace Api.Filters
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            _logger.LogInformation("QuestAuthorizationFilter.OnAuthorizationAsync is being invoked!");
+            _logger.LogDebug("QuestAuthorizationFilter.OnAuthorizationAsync is being invoked!");
             int? accountId = GetAccountIdFromContext(context);
             int? questId = GetQuestIdFromContext(context);
 
@@ -56,16 +56,14 @@ namespace Api.Filters
 
             if (user.Identity?.IsAuthenticated != true)
             {
-                _logger.LogWarning("Unauthenticated user attempted to access a quest");
+                _logger.LogInformation("Unauthenticated user attempted to access a quest");
                 return null;
             }
 
             if (int.TryParse(user.FindFirst(JwtClaimTypes.AccountId)?.Value, out int accountId))
-            {
                 return accountId;
-            }
 
-            _logger.LogWarning("Invalida account ID in user claims");
+            _logger.LogError("Invalida account ID in user claims");
             return null;
         }
     }

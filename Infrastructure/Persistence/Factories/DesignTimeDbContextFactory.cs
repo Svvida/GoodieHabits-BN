@@ -14,7 +14,7 @@ namespace Infrastructure.Persistence.Factories
                 : Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
             // Assume the configuration is in the Api project
-            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "MyLambdaApi", "src", "MyLambdaApi");
+            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Api");
 
             Console.WriteLine($"Using environment: {environment}");
             Console.WriteLine($"Using basePath: {basePath}");

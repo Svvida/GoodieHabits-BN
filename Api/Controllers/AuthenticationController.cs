@@ -1,5 +1,4 @@
-﻿using Api.Filters;
-using Application.Dtos.Accounts;
+﻿using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +11,12 @@ namespace Api.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IAccountService _accountService;
 
-        public AuthenticationController(IAuthService authService)
+        public AuthenticationController(IAuthService authService, IAccountService accountService)
         {
             _authService = authService;
+            _accountService = accountService;
         }
 
         [HttpPost]
@@ -50,12 +51,15 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RefreshResponseDto))]  // Returns JWT Token
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
-        [ServiceFilter(typeof(TimeZoneUpdateFilter))]
         public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
             [FromBody] RefreshRequestDto refreshRequestDto,
             CancellationToken cancellationToken = default)
         {
             var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken, cancellationToken);
+
+            var timeZone = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
+            await _accountService.UpdateTimeZoneIfChangedAsync(refreshResponse.AccountId, timeZone, cancellationToken);
+
             return Ok(refreshResponse);
         }
     }
