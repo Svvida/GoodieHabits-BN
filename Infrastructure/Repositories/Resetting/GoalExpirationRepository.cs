@@ -1,8 +1,8 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Interfaces.Resetting;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Repositories.Resetting
 {
     public class GoalExpirationRepository : IGoalExpirationRepository
     {

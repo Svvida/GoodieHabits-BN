@@ -1,8 +1,8 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Interfaces.Resetting;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Quests
+namespace Infrastructure.Repositories.Resetting
 {
     public class ResetQuestsRepository : IResetQuestsRepository
     {

@@ -20,6 +20,7 @@ using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Interfaces.Quests;
+using Domain.Interfaces.Resetting;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -27,6 +28,7 @@ using Infrastructure.Authentication;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Quests;
+using Infrastructure.Repositories.Resetting;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -71,6 +73,9 @@ namespace Api
 
             // Reset daily questes on startup
             await ResetQuests(app);
+
+            // Expire goals on startup
+            await ExpireGoals(app);
 
             Log.Information("Application started");
             await app.RunAsync();
@@ -250,7 +255,17 @@ namespace Api
             using var scope = app.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
             var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
-            await questsResetService.ResetQuestsAsync();
+            int resetedQuests = await questsResetService.ResetQuestsAsync();
+            Log.Information("{Count} quests reset.", resetedQuests);
+        }
+
+        private async static Task ExpireGoals(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var expireGoalsService = serviceProvider.GetRequiredService<IGoalExpirationRepository>();
+            var expiredGoals = await expireGoalsService.ExpireGoalsAsync();
+            Log.Information("{Count} goals expired.", expiredGoals);
         }
 
         private static void ConfigureMiddleware(WebApplication app)
