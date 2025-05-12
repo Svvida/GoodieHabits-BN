@@ -22,7 +22,6 @@ namespace Application.MappingProfiles
                     Id = ql.QuestLabelId,
                     Value = ql.QuestLabel.Value,
                     BackgroundColor = ql.QuestLabel.BackgroundColor,
-                    TextColor = ql.QuestLabel.TextColor
                 }).ToList()));
 
             // Create DTO -> Entity (Convert String -> Enum)

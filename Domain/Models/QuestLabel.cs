@@ -8,19 +8,17 @@ namespace Domain.Models
         public int AccountId { get; set; }
         public required string Value { get; set; }
         public required string BackgroundColor { get; set; }
-        public required string TextColor { get; set; }
 
         public Account Account { get; set; } = null!;
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = null!;
 
         public QuestLabel() { }
-        public QuestLabel(int id, int accountId, string value, string backgroundColor, string textColor)
+        public QuestLabel(int id, int accountId, string value, string backgroundColor)
         {
             Id = id;
             AccountId = accountId;
             Value = value;
             BackgroundColor = backgroundColor;
-            TextColor = textColor;
         }
     }
 }

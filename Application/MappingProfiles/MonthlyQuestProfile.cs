@@ -21,7 +21,6 @@ namespace Application.MappingProfiles
                         Id = ql.QuestLabel.Id,
                         Value = ql.QuestLabel.Value,
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        TextColor = ql.QuestLabel.TextColor
                     }).ToList()))
                 .ForMember(dest => dest.StartDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.StartDay))
                 .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.EndDay));
