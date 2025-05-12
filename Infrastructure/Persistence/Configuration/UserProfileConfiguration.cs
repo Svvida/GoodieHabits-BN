@@ -41,7 +41,7 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
-            builder.Property(p => p.AbandonedGoals)
+            builder.Property(p => p.TotalGoals)
                 .IsRequired()
                 .HasDefaultValue(0);
 

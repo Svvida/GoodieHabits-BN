@@ -71,13 +71,46 @@ namespace Api
             // Configure Middleware
             ConfigureMiddleware(app);
 
-            // Reset daily questes on startup
-            await ResetQuests(app);
+            // Reset daily questes on startup (Run in background)
+            Task resetQuestsTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await ResetQuests(app);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error resetting quests in background.");
+                }
+            });
 
-            // Expire goals on startup
-            await ExpireGoals(app);
+            // Expire goals on startup (Run in background)
+            Task expireGoalsTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await ExpireGoals(app);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error expiring goals in background.");
+                }
+            });
 
             Log.Information("Application started");
+
+            // Wait for tasks to complete (with a timeout) during shutdown
+            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // Timeout after 30 seconds
+
+            try
+            {
+                await Task.WhenAll(resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Warning("Background tasks did not complete within the timeout.");
+            }
+
             await app.RunAsync();
         }
 
@@ -180,6 +213,7 @@ namespace Api
             builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
             builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
             builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
+            builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();

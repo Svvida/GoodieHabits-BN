@@ -8,6 +8,5 @@ namespace Application.Interfaces
     {
         Task CreateUserGoalAsync(CreateUserGoalDto createUserGoalDto, CancellationToken cancellationToken = default);
         Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default);
-        Task AbandonUserGoalAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default);
     }
 }

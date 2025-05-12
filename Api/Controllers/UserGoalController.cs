@@ -39,14 +39,14 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Route("active/{goalType}")]
+        [Route("active/{goaltype}")]
         public async Task<ActionResult<BaseGetQuestDto>> GetActiveGoal(
-            string goalType,
+            [FromRoute] string goaltype,
             CancellationToken cancellationToken = default)
         {
-            if (!Enum.TryParse<GoalTypeEnum>(goalType, true, out var goalTypeEnum))
+            if (!Enum.TryParse<GoalTypeEnum>(goaltype, true, out var goalTypeEnum))
             {
-                return BadRequest($"Invalid goal type: {goalType}. Valid values are Daily, Weekly, Monthly, Yearly.");
+                return BadRequest($"Invalid goal type: {goaltype}. Valid values are Daily, Weekly, Monthly, Yearly.");
             }
 
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
@@ -64,30 +64,10 @@ namespace Api.Controllers
                 {
                     Status = StatusCodes.Status404NotFound,
                     Title = "Goal not found",
-                    Detail = $"Goal of type {goalType} was not found for the user."
+                    Detail = $"Goal of type {goaltype} was not found for the user."
                 });
             }
             return Ok(result);
-        }
-
-        [HttpPatch]
-        [Route("active/{goalType}")]
-        public async Task<IActionResult> AbandonActiveGoal(
-            string goalType,
-            CancellationToken cancellationToken = default)
-        {
-            if (!Enum.TryParse<GoalTypeEnum>(goalType, true, out var goalTypeEnum))
-            {
-                return BadRequest($"Invalid goal type: {goalType}. Valid values are Daily, Weekly, Monthly, Yearly.");
-            }
-
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _userGoalService.AbandonUserGoalAsync(accountId, goalTypeEnum, cancellationToken);
-
-            return NoContent();
         }
     }
 }
