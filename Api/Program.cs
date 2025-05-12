@@ -16,9 +16,11 @@ using Application.Validators.Accounts;
 using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
+using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Interfaces.Quests;
+using Domain.Interfaces.Resetting;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -26,6 +28,7 @@ using Infrastructure.Authentication;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Quests;
+using Infrastructure.Repositories.Resetting;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -68,10 +71,46 @@ namespace Api
             // Configure Middleware
             ConfigureMiddleware(app);
 
-            // Reset daily questes on startup
-            await ResetQuests(app);
+            // Reset daily questes on startup (Run in background)
+            Task resetQuestsTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await ResetQuests(app);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error resetting quests in background.");
+                }
+            });
+
+            // Expire goals on startup (Run in background)
+            Task expireGoalsTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await ExpireGoals(app);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error expiring goals in background.");
+                }
+            });
 
             Log.Information("Application started");
+
+            // Wait for tasks to complete (with a timeout) during shutdown
+            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // Timeout after 30 seconds
+
+            try
+            {
+                await Task.WhenAll(resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Warning("Background tasks did not complete within the timeout.");
+            }
+
             await app.RunAsync();
         }
 
@@ -93,18 +132,17 @@ namespace Api
 
         private static void ConfigureServices(WebApplicationBuilder builder)
         {
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowWithCredentials",
-                    builder =>
-                    {
-                        builder
-                            .SetIsOriginAllowed(origin => true)
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials();
-                    });
-            });
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("SwaggerCors",
+            //        builder =>
+            //        {
+            //            builder
+            //                .AllowAnyOrigin()
+            //                .AllowAnyHeader()
+            //                .AllowAnyMethod();
+            //        });
+            //});
 
             //Add Controllers
             builder.Services.AddControllers()
@@ -174,6 +212,8 @@ namespace Api
             builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
             builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
             builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+            builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
+            builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -186,6 +226,7 @@ namespace Api
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
+            builder.Services.AddScoped<IUserGoalService, UserGoalService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -198,6 +239,7 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<DeleteAccountValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
@@ -206,10 +248,7 @@ namespace Api
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-                .EnableSensitiveDataLogging()
-                .LogTo(Console.WriteLine, LogLevel.Information));
-
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             // Register Password Hasher
             builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
             builder.Services.Configure<PasswordHasherOptions>(options =>
@@ -243,9 +282,6 @@ namespace Api
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
-
-            // Register filters
-            builder.Services.AddScoped<TimeZoneUpdateFilter>();
         }
 
         private async static Task ResetQuests(WebApplication app)
@@ -253,61 +289,38 @@ namespace Api
             using var scope = app.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
             var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
-            await questsResetService.ResetQuestsAsync();
+            int resetedQuests = await questsResetService.ResetQuestsAsync();
+            Log.Information("{Count} quests reset.", resetedQuests);
+        }
+
+        private async static Task ExpireGoals(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var expireGoalsService = serviceProvider.GetRequiredService<IGoalExpirationRepository>();
+            var expiredGoals = await expireGoalsService.ExpireGoalsAsync();
+            Log.Information("{Count} goals expired.", expiredGoals);
         }
 
         private static void ConfigureMiddleware(WebApplication app)
         {
-            try
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+            app.UseHttpsRedirection();
+            //app.UseCors("SwaggerCors");
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
             {
-                app.UseHttpsRedirection();
-
-                // Handle OPTIONS requests explicitly for Preflight
-                app.Use(async (context, next) =>
-                {
-                    if (context.Request.Method == "OPTIONS")
-                    {
-                        var origin = context.Request.Headers.Origin.ToString();
-                        context.Response.Headers.Append("Access-Control-Allow-Origin", origin); // Reflect the request origin dynamically
-                        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-                        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-                        context.Response.StatusCode = 204; // No Content
-                        return;
-                    }
-                    await next();
-                });
-
-                app.UseCors("AllowWithCredentials"); // CORS must be applied before Routing
-
-                app.UseMiddleware<ExceptionHandlingMiddleware>();
-                app.UseRouting();
-
-                // Enable Swagger in all environments
-                //app.UseSwagger();
-                //app.UseSwaggerUI(options =>
-                //{
-                //    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
-                //    options.RoutePrefix = string.Empty; // Root path
-                //});
-
-                // Enable HTTPS Redirection
-                app.UseHttpsRedirection();
-
-                //Enable Authentication
-                app.UseAuthentication();
-
-                // Enable Authorization
-                app.UseAuthorization();
-
-                // Map Controllers
-                //app.MapControllers();
-                Log.Information("Middleware configured successfully.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "An error occurred while configuring the middleware.");
-            }
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "GoodieHabits API V1");
+                options.RoutePrefix = string.Empty; // Set to empty to make Swagger at root
+            });
         }
     }
 }

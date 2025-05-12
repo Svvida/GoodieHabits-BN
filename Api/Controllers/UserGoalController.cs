@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests;
+﻿using Api.Filters;
+using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
 using Domain;
@@ -6,9 +7,8 @@ using Domain.Enum;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyLambdaApi.Filters;
 
-namespace MyLambdaApi.Controllers
+namespace Api.Controllers
 {
     [ApiController]
     [Route("api/goals")]
@@ -41,12 +41,12 @@ namespace MyLambdaApi.Controllers
         [HttpGet]
         [Route("active/{goaltype}")]
         public async Task<ActionResult<BaseGetQuestDto>> GetActiveGoal(
-            string goalType,
+            [FromRoute] string goaltype,
             CancellationToken cancellationToken = default)
         {
-            if (!Enum.TryParse<GoalTypeEnum>(goalType, true, out var goalTypeEnum))
+            if (!Enum.TryParse<GoalTypeEnum>(goaltype, true, out var goalTypeEnum))
             {
-                return BadRequest($"Invalid goal type: {goalType}. Valid values are Daily, Weekly, Monthly, Yearly.");
+                return BadRequest($"Invalid goal type: {goaltype}. Valid values are Daily, Weekly, Monthly, Yearly.");
             }
 
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
@@ -64,7 +64,7 @@ namespace MyLambdaApi.Controllers
                 {
                     Status = StatusCodes.Status404NotFound,
                     Title = "Goal not found",
-                    Detail = $"Goal of type {goalType} was not found for the user."
+                    Detail = $"Goal of type {goaltype} was not found for the user."
                 });
             }
             return Ok(result);

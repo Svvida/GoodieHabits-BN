@@ -13,14 +13,11 @@ namespace Api.Controllers
     public class QuestsController : ControllerBase
     {
         private readonly IQuestService _questService;
-        private readonly ILogger<QuestsController> _logger;
 
         public QuestsController(
-            IQuestService questService,
-            ILogger<QuestsController> logger)
+            IQuestService questService)
         {
             _questService = questService;
-            _logger = logger;
         }
 
         [HttpGet]

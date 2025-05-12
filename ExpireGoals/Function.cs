@@ -1,7 +1,7 @@
 using Amazon.Lambda.Core;
-using Domain.Interfaces;
+using Domain.Interfaces.Resetting;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories;
+using Infrastructure.Repositories.Resetting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -24,7 +24,7 @@ namespace Api.Middlewares
             }
             catch (AppException ex) // Catch known exceptions
             {
-                _logger.LogWarning("Caught AppException: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
+                _logger.LogError("Caught AppException: {ExceptionType} - {Message}", ex.GetType().Name, ex.Message);
                 context.Response.StatusCode = ex.StatusCode;
                 await HandleExceptionAsync(context, ex);
             }
