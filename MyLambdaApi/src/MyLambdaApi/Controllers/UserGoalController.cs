@@ -39,7 +39,7 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet]
-        [Route("active/{goalType}")]
+        [Route("active/{goaltype}")]
         public async Task<ActionResult<BaseGetQuestDto>> GetActiveGoal(
             string goalType,
             CancellationToken cancellationToken = default)
@@ -68,26 +68,6 @@ namespace MyLambdaApi.Controllers
                 });
             }
             return Ok(result);
-        }
-
-        [HttpPatch]
-        [Route("active/{goalType}")]
-        public async Task<IActionResult> AbandonActiveGoal(
-            string goalType,
-            CancellationToken cancellationToken = default)
-        {
-            if (!Enum.TryParse<GoalTypeEnum>(goalType, true, out var goalTypeEnum))
-            {
-                return BadRequest($"Invalid goal type: {goalType}. Valid values are Daily, Weekly, Monthly, Yearly.");
-            }
-
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            await _userGoalService.AbandonUserGoalAsync(accountId, goalTypeEnum, cancellationToken);
-
-            return NoContent();
         }
     }
 }

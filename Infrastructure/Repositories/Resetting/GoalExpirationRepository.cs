@@ -15,13 +15,47 @@ namespace Infrastructure.Repositories.Resetting
 
         public async Task<int> ExpireGoalsAsync(CancellationToken cancellationToken = default)
         {
-            var updatedGoals = await _context.UserGoals
+            // Get expired goals
+            var expiredGoals = await _context.UserGoals
                 .Where(ug => !ug.IsExpired && ug.EndsAt <= DateTime.UtcNow)
-                .ExecuteUpdateAsync(setter => setter
-                    .SetProperty(p => p.IsExpired, true), cancellationToken)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return updatedGoals;
+            // Expire goals
+            foreach (var goal in expiredGoals)
+            {
+                goal.IsExpired = true;
+            }
+
+            // Aggregate expired goals by accountId
+            var accountGoalCounts = new Dictionary<int, int>();
+
+            foreach (var goal in expiredGoals)
+            {
+                if (accountGoalCounts.TryGetValue(goal.AccountId, out int value))
+                    accountGoalCounts[goal.AccountId] = value + 1;
+                else
+                    accountGoalCounts[goal.AccountId] = 1;
+            }
+
+            // Fetch UserProfiles in Bulk
+            var accountIds = accountGoalCounts.Keys.ToList();
+            var userProfiles = await _context.UserProfiles
+                .Where(up => accountIds.Contains(up.AccountId))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            // Update UserProfiles
+            foreach (var profile in userProfiles)
+            {
+                if (accountGoalCounts.TryGetValue(profile.AccountId, out int value))
+                    profile.ExpiredGoals += value;
+            }
+
+            // Save changes
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return expiredGoals.Count;
         }
     }
 }

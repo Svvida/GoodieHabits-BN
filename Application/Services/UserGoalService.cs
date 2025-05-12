@@ -41,8 +41,8 @@ namespace Application.Services
 
         public async Task CreateUserGoalAsync(CreateUserGoalDto goalDto, CancellationToken cancellationToken = default)
         {
-            QuestTypeEnum questType = (QuestTypeEnum)Enum.Parse(typeof(QuestTypeEnum), goalDto.QuestType);
-            GoalTypeEnum goalType = (GoalTypeEnum)Enum.Parse(typeof(GoalTypeEnum), goalDto.GoalType);
+            QuestTypeEnum questType = (QuestTypeEnum)Enum.Parse(typeof(QuestTypeEnum), goalDto.QuestType, true);
+            GoalTypeEnum goalType = (GoalTypeEnum)Enum.Parse(typeof(GoalTypeEnum), goalDto.GoalType, true);
 
             var quest = await _questRepository.GetQuestByIdAsync(goalDto.QuestId, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID {goalDto.QuestId} of type {questType} not found.");
@@ -88,6 +88,14 @@ namespace Application.Services
             };
 
             await _userGoalRepository.CreateAsync(userGoal, cancellationToken).ConfigureAwait(false);
+
+            var userProfile = await _userProfileRepository.GetByAccountIdAsync(quest.AccountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"User profile for account ID {quest.AccountId} not found.");
+
+            userProfile.TotalGoals++;
+
+            await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation($"User profile for account ID {quest.AccountId} updated. Total goals: {userProfile.TotalGoals}.");
         }
 
         public async Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
@@ -106,27 +114,6 @@ namespace Application.Services
                 QuestTypeEnum.Seasonal => _mapper.Map<GetSeasonalQuestDto>(quest),
                 _ => throw new InvalidArgumentException("Invalid quest type")
             };
-        }
-
-        public async Task AbandonUserGoalAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
-        {
-            var userGoal = await _userGoalRepository.GetUserActiveGoalByTypeAsync(accountId, goalType, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Active goal of type {goalType} not found for this user.");
-
-            userGoal.IsExpired = true;
-            userGoal.IsAchieved = false;
-
-            var userProfile = await _userProfileRepository.GetByAccountIdAsync(accountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"User profile not found for account ID {accountId}.");
-
-            userProfile.TotalXp -= userGoal.XpBonus;
-            if (userProfile.TotalXp < 0)
-                userProfile.TotalXp = 0;
-            userProfile.AbandonedGoals++;
-
-            _logger.LogInformation($"User: {userProfile.AccountId} is abandoning his {userGoal.GoalType} goal with quest {userGoal.QuestId}.");
-            await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
-            await _userGoalRepository.UpdateAsync(userGoal, cancellationToken).ConfigureAwait(false);
         }
 
         private static DateTime CalculateGoalEndTime(GoalTypeEnum goalType, DateTimeZone userTimeZone)

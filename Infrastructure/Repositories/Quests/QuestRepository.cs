@@ -203,7 +203,7 @@ namespace Infrastructure.Repositories.Quests
                         CompletedQuests = q.Account.Profile.CompletedQuests,
                         CompletedGoals = q.Account.Profile.CompletedGoals,
                         ExpiredGoals = q.Account.Profile.ExpiredGoals,
-                        AbandonedGoals = q.Account.Profile.AbandonedGoals,
+                        TotalGoals = q.Account.Profile.TotalGoals,
                         TotalXp = q.Account.Profile.TotalXp,
                         CreatedAt = q.Account.Profile.CreatedAt,
                         UpdatedAt = q.Account.Profile.UpdatedAt,
