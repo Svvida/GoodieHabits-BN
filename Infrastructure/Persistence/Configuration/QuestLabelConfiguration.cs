@@ -21,10 +21,6 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasMaxLength(7);
 
-            builder.Property(ql => ql.TextColor)
-                .IsRequired()
-                .HasMaxLength(7);
-
             builder.HasOne(ql => ql.Account)
                 .WithMany(a => a.Labels)
                 .HasForeignKey(ql => ql.AccountId)

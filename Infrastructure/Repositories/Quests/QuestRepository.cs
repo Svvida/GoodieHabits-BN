@@ -243,7 +243,6 @@ namespace Infrastructure.Repositories.Quests
                         AccountId = q.AccountId,
                         Value = ql.QuestLabel.Value,
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        TextColor = ql.QuestLabel.TextColor,
                         UpdatedAt = ql.QuestLabel.UpdatedAt,
                         CreatedAt = ql.QuestLabel.CreatedAt
                     }
