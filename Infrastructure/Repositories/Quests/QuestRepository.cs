@@ -123,6 +123,17 @@ namespace Infrastructure.Repositories.Quests
             return result;
         }
 
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Quests
+                .Include(q => q.Account)
+                .Include(q => q.WeeklyQuest_Days)
+                .Include(q => q.MonthlyQuest_Days)
+                .Where(q => q.IsRepeatable())
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public async Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
         {
             var result = await _context.Quests.Where(q => q.Id == questId)

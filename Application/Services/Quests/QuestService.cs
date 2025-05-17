@@ -30,6 +30,7 @@ namespace Application.Services.Quests
         private readonly IAccountRepository _accountRepository;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IUserGoalRepository _userGoalRepository;
+        private readonly IQuestOccurenceRepository _questOccurenceRepository;
 
         public QuestService(
             IQuestRepository repository,
@@ -41,7 +42,8 @@ namespace Application.Services.Quests
             IQuestResetService questResetService,
             IAccountRepository accountRepository,
             IUserProfileRepository userProfileRepository,
-            IUserGoalRepository userGoalRepository)
+            IUserGoalRepository userGoalRepository,
+            IQuestOccurenceRepository questOccurenceRepository)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -53,6 +55,7 @@ namespace Application.Services.Quests
             _accountRepository = accountRepository;
             _userProfileRepository = userProfileRepository;
             _userGoalRepository = userGoalRepository;
+            _questOccurenceRepository = questOccurenceRepository;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -141,6 +144,8 @@ namespace Application.Services.Quests
             bool shouldIncrementCount = false;
             Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
 
+            var occurence = await _questOccurenceRepository.GetCurrentOccurenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
+
             if (justCompleted)
             {
                 DateTimeZone? userTimeZone = DateTimeZoneProviders.Tzdb[existingQuest.Account.TimeZone]
@@ -164,8 +169,23 @@ namespace Application.Services.Quests
 
                 }
 
+                if (occurence is not null)
+                {
+                    occurence.WasCompleted = true;
+                    occurence.CompletedAt = nowUtc.ToDateTimeUtc();
+                    await _questOccurenceRepository.UpdateOccurence(occurence, cancellationToken).ConfigureAwait(false);
+                }
+
                 existingQuest.LastCompletedAt = nowUtc.ToDateTimeUtc();
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
+            }
+            else
+            {
+                if (occurence is not null)
+                {
+                    occurence.WasCompleted = false;
+                    await _questOccurenceRepository.UpdateOccurence(occurence, cancellationToken).ConfigureAwait(false);
+                }
             }
 
             existingQuest = _mapper.Map(patchDto, existingQuest);

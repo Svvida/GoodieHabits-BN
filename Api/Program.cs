@@ -214,6 +214,7 @@ namespace Api
             builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
             builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
             builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
+            builder.Services.AddScoped<IQuestOccurenceRepository, QuestOccurenceRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -227,6 +228,7 @@ namespace Api
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
             builder.Services.AddScoped<IUserGoalService, UserGoalService>();
+            builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

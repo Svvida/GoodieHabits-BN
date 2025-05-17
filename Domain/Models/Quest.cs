@@ -25,6 +25,8 @@ namespace Domain.Models
         public ICollection<WeeklyQuest_Day> WeeklyQuest_Days { get; set; } = [];
         public SeasonalQuest_Season? SeasonalQuest_Season { get; set; } = null;
         public ICollection<UserGoal> UserGoal { get; set; } = [];
+        public QuestStatistics? Statistics { get; set; } = null;
+        public ICollection<QuestOccurrence> QuestOccurrences { get; set; } = [];
 
         public Quest() { }
         public Quest(int id, int accountId, QuestTypeEnum questType, string title)
@@ -50,6 +52,17 @@ namespace Domain.Models
 
             StartDate = newStartDate ?? StartDate;
             EndDate = newEndDate ?? EndDate;
+        }
+
+        public bool IsRepeatable()
+        {
+            return QuestType switch
+            {
+                QuestTypeEnum.Daily => true,
+                QuestTypeEnum.Weekly => true,
+                QuestTypeEnum.Monthly => true,
+                _ => false
+            };
         }
     }
 }
