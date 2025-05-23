@@ -23,7 +23,7 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
-            builder.Property(qs => qs.OccurenceCount)
+            builder.Property(qs => qs.OccurrenceCount)
                 .IsRequired()
                 .HasDefaultValue(0);
 

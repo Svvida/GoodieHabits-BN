@@ -129,7 +129,9 @@ namespace Infrastructure.Repositories.Quests
                 .Include(q => q.Account)
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
-                .Where(q => q.IsRepeatable())
+                .Where(q => q.QuestType == QuestTypeEnum.Daily ||
+                q.QuestType == QuestTypeEnum.Weekly ||
+                q.QuestType == QuestTypeEnum.Monthly)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

@@ -12,14 +12,18 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.HasKey(qo => qo.Id);
             builder.HasIndex(qo => qo.QuestId);
+            builder.HasIndex(qo => qo.OccurrenceStart);
+            builder.HasIndex(qo => qo.CompletedAt);
+            builder.HasIndex(qo => new { qo.QuestId, qo.OccurrenceStart, qo.OccurrenceEnd })
+                .IsUnique();
 
             builder.Property(qo => qo.QuestId)
                 .IsRequired();
 
-            builder.Property(qo => qo.OccurenceStart)
+            builder.Property(qo => qo.OccurrenceStart)
                 .IsRequired();
 
-            builder.Property(qo => qo.OccurenceEnd)
+            builder.Property(qo => qo.OccurrenceEnd)
                 .IsRequired();
 
             builder.Property(qo => qo.WasCompleted)

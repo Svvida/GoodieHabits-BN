@@ -5,45 +5,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class QuestOccurenceRepository : IQuestOccurenceRepository
+    public class QuestOccurrenceRepository : IQuestOccurrenceRepository
     {
         private readonly AppDbContext _context;
 
-        public QuestOccurenceRepository(AppDbContext context)
+        public QuestOccurrenceRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        public async Task SaveOccurencesAsync(List<QuestOccurrence> occurences, CancellationToken cancellationToken = default)
+        public async Task SaveOccurrencesAsync(List<QuestOccurrence> occurences, CancellationToken cancellationToken = default)
         {
             _context.QuestOccurrences.AddRange(occurences);
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateOccurence(QuestOccurrence occurence, CancellationToken cancellationToken = default)
+        public async Task UpdateOccurrence(QuestOccurrence occurence, CancellationToken cancellationToken = default)
         {
             _context.QuestOccurrences.Update(occurence);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> IsQuestOccurenceExistsAsync(int questId, DateTime occurenceStart, DateTime occurenceEnd, CancellationToken cancellationToken = default)
+        public async Task<bool> IsQuestOccurrenceExistsAsync(int questId, DateTime occurenceStart, DateTime occurenceEnd, CancellationToken cancellationToken = default)
         {
             return await _context.QuestOccurrences
                 .AnyAsync(q =>
                     q.QuestId == questId &&
-                    q.OccurenceStart == occurenceStart &&
-                    q.OccurenceEnd == occurenceEnd,
+                    q.OccurrenceStart == occurenceStart &&
+                    q.OccurrenceEnd == occurenceEnd,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<QuestOccurrence?> GetCurrentOccurenceForQuestAsync(int questId, DateTime now, CancellationToken cancellationToken = default)
+        public async Task<QuestOccurrence?> GetCurrentOccurrenceForQuestAsync(int questId, DateTime now, CancellationToken cancellationToken = default)
         {
             return await _context.QuestOccurrences
                 .FirstOrDefaultAsync(q =>
                     q.QuestId == questId &&
-                    q.OccurenceStart <= now &&
-                    q.OccurenceEnd >= now,
+                    q.OccurrenceStart <= now &&
+                    q.OccurrenceEnd >= now,
                     cancellationToken)
                 .ConfigureAwait(false);
         }

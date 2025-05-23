@@ -30,7 +30,8 @@ namespace Application.Services.Quests
         private readonly IAccountRepository _accountRepository;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IUserGoalRepository _userGoalRepository;
-        private readonly IQuestOccurenceRepository _questOccurenceRepository;
+        private readonly IQuestOccurrenceRepository _questOccurrenceRepository;
+        private readonly IQuestStatisticsService _questStatisticsService;
 
         public QuestService(
             IQuestRepository repository,
@@ -43,7 +44,8 @@ namespace Application.Services.Quests
             IAccountRepository accountRepository,
             IUserProfileRepository userProfileRepository,
             IUserGoalRepository userGoalRepository,
-            IQuestOccurenceRepository questOccurenceRepository)
+            IQuestOccurrenceRepository questOccurrenceRepository,
+            IQuestStatisticsService questStatisticsService)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -55,7 +57,8 @@ namespace Application.Services.Quests
             _accountRepository = accountRepository;
             _userProfileRepository = userProfileRepository;
             _userGoalRepository = userGoalRepository;
-            _questOccurenceRepository = questOccurenceRepository;
+            _questOccurrenceRepository = questOccurrenceRepository;
+            _questStatisticsService = questStatisticsService;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -88,7 +91,20 @@ namespace Application.Services.Quests
             var quest = _mapper.Map<Quest>(createDto);
             _logger.LogDebug("Quest created after mapping: {@quest}", quest);
 
+            if (quest.IsRepeatable())
+                quest.NextResetAt = _questResetService.GetNextResetTimeUtc(quest);
+
             await _questRepository.AddQuestAsync(quest, cancellationToken);
+
+            var createdQuest = await _questRepository.GetQuestByIdAsync(quest.Id, questType, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest not found after creation.");
+
+            if (createdQuest.IsRepeatable())
+            {
+                var occurrences = await _questStatisticsService.ProcessOccurrencesForQuestAsync(createdQuest, cancellationToken).ConfigureAwait(false);
+
+                _logger.LogDebug("Initial occurrences created: {@occurrences}", occurrences);
+            }
 
             // For now keeping fetch-update logic to increment the total quests count and keep tracking by EF Core
             // Later we can consider using a more efficient approach like ExecuteUpdate
@@ -115,15 +131,22 @@ namespace Application.Services.Quests
 
             existingQuest = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
 
+            var now = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
+            if (existingQuest.IsRepeatable())
+            {
+                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
+                if (await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, now, cancellationToken).ConfigureAwait(false) is null)
+                {
+                    var occurrences = await _questStatisticsService.ProcessOccurrencesForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
+                    _logger.LogDebug("New occurrences created: {@occurrences}", occurrences);
+                }
+            }
+
             if (questType == QuestTypeEnum.Weekly)
             {
                 var weeklyUpdateDto = (UpdateWeeklyQuestDto)updateDto;
                 existingQuest = _questWeekdaysHandler.HandleUpdateWeekdays(existingQuest, weeklyUpdateDto);
-                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
             }
-
-            if (questType == QuestTypeEnum.Monthly)
-                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
 
             _logger.LogDebug("Updated quest: {@existingQuest}", existingQuest);
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
@@ -144,7 +167,7 @@ namespace Application.Services.Quests
             bool shouldIncrementCount = false;
             Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
 
-            var occurence = await _questOccurenceRepository.GetCurrentOccurenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
+            var occurence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
 
             if (justCompleted)
             {
@@ -173,7 +196,7 @@ namespace Application.Services.Quests
                 {
                     occurence.WasCompleted = true;
                     occurence.CompletedAt = nowUtc.ToDateTimeUtc();
-                    await _questOccurenceRepository.UpdateOccurence(occurence, cancellationToken).ConfigureAwait(false);
+                    await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
                 }
 
                 existingQuest.LastCompletedAt = nowUtc.ToDateTimeUtc();
@@ -184,7 +207,7 @@ namespace Application.Services.Quests
                 if (occurence is not null)
                 {
                     occurence.WasCompleted = false;
-                    await _questOccurenceRepository.UpdateOccurence(occurence, cancellationToken).ConfigureAwait(false);
+                    await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
                 }
             }
 

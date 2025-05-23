@@ -35,6 +35,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NodaTime;
 using Serilog;
 
 namespace Api
@@ -71,6 +72,19 @@ namespace Api
             // Configure Middleware
             ConfigureMiddleware(app);
 
+            // Process occurences
+            Task processOccurrencesTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await ProcessOccurrences(app);
+                }
+                catch (Exception ex)
+                {
+                    Log.Fatal(ex, "Error processing occurrences in background.");
+                }
+            });
+
             // Reset daily questes on startup (Run in background)
             Task resetQuestsTask = Task.Run(async () =>
             {
@@ -80,7 +94,7 @@ namespace Api
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error resetting quests in background.");
+                    Log.Fatal(ex, "Error resetting quests in background.");
                 }
             });
 
@@ -93,7 +107,7 @@ namespace Api
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error expiring goals in background.");
+                    Log.Fatal(ex, "Error expiring goals in background.");
                 }
             });
 
@@ -104,11 +118,11 @@ namespace Api
 
             try
             {
-                await Task.WhenAll(resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
+                await Task.WhenAll(processOccurrencesTask, resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
             }
             catch (OperationCanceledException)
             {
-                Log.Warning("Background tasks did not complete within the timeout.");
+                Log.Fatal("Background tasks did not complete within the timeout.");
             }
 
             await app.RunAsync();
@@ -214,7 +228,7 @@ namespace Api
             builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
             builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
             builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
-            builder.Services.AddScoped<IQuestOccurenceRepository, QuestOccurenceRepository>();
+            builder.Services.AddScoped<IQuestOccurrenceRepository, QuestOccurrenceRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -229,6 +243,7 @@ namespace Api
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
             builder.Services.AddScoped<IUserGoalService, UserGoalService>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
+            builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -302,6 +317,16 @@ namespace Api
             var expireGoalsService = serviceProvider.GetRequiredService<IGoalExpirationRepository>();
             var expiredGoals = await expireGoalsService.ExpireGoalsAsync();
             Log.Information("{Count} goals expired.", expiredGoals);
+        }
+
+        private async static Task ProcessOccurrences(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var questStatisticsService = serviceProvider.GetRequiredService<IQuestStatisticsService>();
+            Log.Information("Start processing occurrences.");
+            await questStatisticsService.ProcessOccurrencesAsync();
+            Log.Information("Occurrences processed.");
         }
 
         private static void ConfigureMiddleware(WebApplication app)
