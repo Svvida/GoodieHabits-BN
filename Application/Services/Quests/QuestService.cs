@@ -168,6 +168,14 @@ namespace Application.Services.Quests
             Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
 
             var occurence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug("Occurrence for quest: {@occurence}", occurence);
+            if (existingQuest.IsRepeatable() && occurence is null)
+            {
+                _logger.LogDebug($"Missing occurence for quest, creating new one.");
+                await _questStatisticsService.ProcessOccurrencesForQuestAsync(existingQuest, cancellationToken);
+                occurence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
+                _logger.LogDebug("Saved occurrence: {@occurence}", occurence);
+            }
 
             if (justCompleted)
             {
@@ -194,6 +202,7 @@ namespace Application.Services.Quests
 
                 if (occurence is not null)
                 {
+                    _logger.LogDebug("Occurrence for quest is not null, setting to true");
                     occurence.WasCompleted = true;
                     occurence.CompletedAt = nowUtc.ToDateTimeUtc();
                     await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
@@ -206,6 +215,7 @@ namespace Application.Services.Quests
             {
                 if (occurence is not null)
                 {
+                    _logger.LogDebug("Occurrence for quest is not null, setting to false");
                     occurence.WasCompleted = false;
                     await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
                 }
@@ -216,6 +226,8 @@ namespace Application.Services.Quests
             _logger.LogDebug("Completed quest after mapping: {@existingQuest}", existingQuest);
 
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
+
+            await _questStatisticsService.ProcessStatisticsForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
 
             if (shouldIncrementCount)
             {
@@ -262,7 +274,6 @@ namespace Application.Services.Quests
             _logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
                 todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
                 todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
-
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
@@ -71,59 +72,6 @@ namespace Api
 
             // Configure Middleware
             ConfigureMiddleware(app);
-
-            // Process occurences
-            Task processOccurrencesTask = Task.Run(async () =>
-            {
-                try
-                {
-                    await ProcessOccurrences(app);
-                }
-                catch (Exception ex)
-                {
-                    Log.Fatal(ex, "Error processing occurrences in background.");
-                }
-            });
-
-            // Reset daily questes on startup (Run in background)
-            Task resetQuestsTask = Task.Run(async () =>
-            {
-                try
-                {
-                    await ResetQuests(app);
-                }
-                catch (Exception ex)
-                {
-                    Log.Fatal(ex, "Error resetting quests in background.");
-                }
-            });
-
-            // Expire goals on startup (Run in background)
-            Task expireGoalsTask = Task.Run(async () =>
-            {
-                try
-                {
-                    await ExpireGoals(app);
-                }
-                catch (Exception ex)
-                {
-                    Log.Fatal(ex, "Error expiring goals in background.");
-                }
-            });
-
-            Log.Information("Application started");
-
-            // Wait for tasks to complete (with a timeout) during shutdown
-            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // Timeout after 30 seconds
-
-            try
-            {
-                await Task.WhenAll(processOccurrencesTask, resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                Log.Fatal("Background tasks did not complete within the timeout.");
-            }
 
             await app.RunAsync();
         }
@@ -265,7 +213,10 @@ namespace Api
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment()); // Enable sensitive data logging only in development
+            });
             // Register Password Hasher
             builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
             builder.Services.Configure<PasswordHasherOptions>(options =>
@@ -299,34 +250,12 @@ namespace Api
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
-        }
 
-        private async static Task ResetQuests(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
-            int resetedQuests = await questsResetService.ResetQuestsAsync();
-            Log.Information("{Count} quests reset.", resetedQuests);
-        }
-
-        private async static Task ExpireGoals(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var expireGoalsService = serviceProvider.GetRequiredService<IGoalExpirationRepository>();
-            var expiredGoals = await expireGoalsService.ExpireGoalsAsync();
-            Log.Information("{Count} goals expired.", expiredGoals);
-        }
-
-        private async static Task ProcessOccurrences(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var questStatisticsService = serviceProvider.GetRequiredService<IQuestStatisticsService>();
-            Log.Information("Start processing occurrences.");
-            await questStatisticsService.ProcessOccurrencesAsync();
-            Log.Information("Occurrences processed.");
+            // Register Startup Tasks
+            builder.Services.AddHostedService<ResetQuestsTask>();
+            builder.Services.AddHostedService<ExpireGoalsTask>();
+            builder.Services.AddHostedService<ProcessOccurrencesTask>();
+            builder.Services.AddHostedService<ProcessStatisticsForRepeatableQuestsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

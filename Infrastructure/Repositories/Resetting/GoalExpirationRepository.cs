@@ -18,6 +18,7 @@ namespace Infrastructure.Repositories.Resetting
             // Get expired goals
             var expiredGoals = await _context.UserGoals
                 .Where(ug => !ug.IsExpired && ug.EndsAt <= DateTime.UtcNow)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -42,6 +43,7 @@ namespace Infrastructure.Repositories.Resetting
             var accountIds = accountGoalCounts.Keys.ToList();
             var userProfiles = await _context.UserProfiles
                 .Where(up => accountIds.Contains(up.AccountId))
+                .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 

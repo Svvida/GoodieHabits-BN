@@ -47,5 +47,13 @@ namespace Infrastructure.Repositories.Quests
                     cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<List<QuestOccurrence>> GetAllOccurrencesForQuestAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuestOccurrences
+                .Where(q => q.QuestId == questId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

@@ -120,6 +120,48 @@ namespace Application.Services.Quests
             return stats;
         }
 
+        public async Task ProcessStatisticsForQuestsAsync(IEnumerable<Quest> quests, CancellationToken cancellationToken = default)
+        {
+            foreach (var quest in quests)
+            {
+                var occurrences = await _questOccurrenceRepository.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken).ConfigureAwait(false);
+                var stats = CalculateStatistics(occurrences);
+                if (quest.Statistics == null)
+                {
+                    quest.Statistics = stats;
+                }
+                else
+                {
+                    UpdateStatisticsValues(quest.Statistics, stats);
+                }
+
+                // Detach navigation properties that may cause tracking conflicts
+                quest.Account = null;
+
+                await _questRepository.UpdateQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        public async Task ProcessStatisticsForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
+        {
+            var occurrences = await _questOccurrenceRepository.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken).ConfigureAwait(false);
+            var stats = CalculateStatistics(occurrences);
+            if (quest.Statistics == null)
+            {
+                quest.Statistics = stats;
+            }
+            else
+            {
+                UpdateStatisticsValues(quest.Statistics, stats);
+            }
+
+            // Detach navigation properties that may cause tracking conflicts
+            quest.Account = null;
+            quest.QuestOccurrences = null;
+            await _questRepository.UpdateQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+
+        }
+
         private static List<(DateTime, DateTime)> GenerateExpectedWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
         {
             var windows = new List<(DateTime, DateTime)>();
@@ -172,6 +214,16 @@ namespace Application.Services.Quests
             }
 
             return windows;
+        }
+
+        private static void UpdateStatisticsValues(QuestStatistics target, QuestStatistics source)
+        {
+            target.CompletionCount = source.CompletionCount;
+            target.FailureCount = source.FailureCount;
+            target.OccurrenceCount = source.OccurrenceCount;
+            target.CurrentStreak = source.CurrentStreak;
+            target.LongestStreak = source.LongestStreak;
+            target.LastCompletedAt = source.LastCompletedAt;
         }
     }
 }
