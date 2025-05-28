@@ -22,7 +22,8 @@ namespace Application.MappingProfiles
                     Id = ql.QuestLabelId,
                     Value = ql.QuestLabel.Value,
                     BackgroundColor = ql.QuestLabel.BackgroundColor,
-                }).ToList()));
+                }).ToList()))
+                .ForMember(dest => dest.Statistics, opt => opt.MapFrom(src => src.Statistics));
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateWeeklyQuestDto, Quest>()

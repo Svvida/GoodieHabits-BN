@@ -369,10 +369,7 @@ namespace Infrastructure.Repositories.Quests
                     : new List<WeeklyQuest_Day>()
             }).AsNoTracking();
 
-            var result = await projectedQuests.ToListAsync(cancellationToken).ConfigureAwait(false);
-
-            _logger.LogDebug("Fetched {@result} repeatable quests from repository.", result);
-            return result;
+            return await projectedQuests.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default)

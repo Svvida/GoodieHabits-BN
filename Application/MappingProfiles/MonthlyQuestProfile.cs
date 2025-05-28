@@ -23,7 +23,8 @@ namespace Application.MappingProfiles
                         BackgroundColor = ql.QuestLabel.BackgroundColor,
                     }).ToList()))
                 .ForMember(dest => dest.StartDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.StartDay))
-                .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.EndDay));
+                .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.EndDay))
+                .ForMember(dest => dest.Statistics, opt => opt.MapFrom(src => src.Statistics));
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateMonthlyQuestDto, Quest>()

@@ -84,7 +84,6 @@ namespace Application.Services.Quests
                     // Only break streak for missed opportunities (past occurrences that weren't completed)
                     break;
                 }
-                // Skip incomplete future occurrences - they don't break the streak
             }
 
             return currentStreak;
