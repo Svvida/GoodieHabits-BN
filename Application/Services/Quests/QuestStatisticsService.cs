@@ -1,8 +1,7 @@
 ﻿using Application.Interfaces.Quests;
-using Domain.Enum;
 using Domain.Interfaces.Quests;
 using Domain.Models;
-using NodaTime;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
@@ -10,220 +9,102 @@ namespace Application.Services.Quests
     {
         private readonly IQuestRepository _questRepository;
         private readonly IQuestOccurrenceRepository _questOccurrenceRepository;
-        private readonly IClock _clock;
+        private readonly IQuestOccurrenceGenerator _occurrenceGenerator;
+        private readonly ILogger<QuestStatisticsService> _logger;
+        private readonly IQuestStatisticsCalculator _questStatisticsCalculator;
 
         public QuestStatisticsService(
             IQuestRepository questRepository,
             IQuestOccurrenceRepository questOccurrenceRepository,
-            IClock clock)
+            IQuestOccurrenceGenerator occurrenceGenerator,
+            ILogger<QuestStatisticsService> logger,
+            IQuestStatisticsCalculator questStatisticsCalculator)
         {
             _questRepository = questRepository;
             _questOccurrenceRepository = questOccurrenceRepository;
-            _clock = clock;
+            _occurrenceGenerator = occurrenceGenerator;
+            _logger = logger;
+            _questStatisticsCalculator = questStatisticsCalculator;
         }
 
         public async Task ProcessOccurrencesAsync(CancellationToken cancellationToken = default)
         {
-            var now = _clock.GetCurrentInstant().ToDateTimeUtc();
-            var repeatableQuests = await _questRepository.GetRepeatableQuestsAsync(cancellationToken).ConfigureAwait(false);
-            var occurences = new List<QuestOccurrence>();
+            var repeatableQuests = await _questRepository.GetRepeatableQuestsAsync(cancellationToken);
+            var allNewOccurrences = new List<QuestOccurrence>();
 
             foreach (var quest in repeatableQuests)
             {
-                var userZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
-                var lastDate = quest.LastCompletedAt ?? quest.StartDate ?? now;
-
-                List<(DateTime, DateTime)> windows = GenerateExpectedWindows(quest, lastDate, now, userZone);
-
-                foreach (var (startUtc, endUtc) in windows)
-                {
-                    if (!await _questOccurrenceRepository.IsQuestOccurrenceExistsAsync(quest.Id, startUtc, endUtc, cancellationToken).ConfigureAwait(false))
-                    {
-                        var occurrence = new QuestOccurrence
-                        {
-                            QuestId = quest.Id,
-                            OccurrenceStart = startUtc,
-                            OccurrenceEnd = endUtc,
-                            WasCompleted = false,
-                        };
-                        occurences.Add(occurrence);
-                    }
-                }
+                var newOccurrences = await _occurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
+                allNewOccurrences.AddRange(newOccurrences);
+                _logger.LogDebug("Processed {Count} new occurrences for quest {QuestId}", newOccurrences.Count, quest.Id);
             }
-            await _questOccurrenceRepository.SaveOccurrencesAsync(occurences, cancellationToken).ConfigureAwait(false);
+
+            if (allNewOccurrences.Count > 0)
+            {
+                await _questOccurrenceRepository.SaveOccurrencesAsync(allNewOccurrences, cancellationToken);
+            }
         }
 
         public async Task<List<QuestOccurrence>> ProcessOccurrencesForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
         {
-            var now = _clock.GetCurrentInstant().ToDateTimeUtc();
-            var userZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
-            var lastDate = quest.LastCompletedAt ?? now;
-
-            var windows = GenerateExpectedWindows(quest, lastDate, now, userZone);
-            var newOccurrences = new List<QuestOccurrence>();
-
-            foreach (var (startUtc, endUtc) in windows)
-            {
-                bool exists = await _questOccurrenceRepository
-                    .IsQuestOccurrenceExistsAsync(quest.Id, startUtc, endUtc, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (!exists)
-                {
-                    newOccurrences.Add(new QuestOccurrence
-                    {
-                        QuestId = quest.Id,
-                        OccurrenceStart = startUtc,
-                        OccurrenceEnd = endUtc,
-                        WasCompleted = false,
-                    });
-                }
-            }
-
-            if (newOccurrences.Count > 0)
-            {
-                await _questOccurrenceRepository
-                    .SaveOccurrencesAsync(newOccurrences, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
-            return newOccurrences;
+            return await _occurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
         }
 
         public QuestStatistics CalculateStatistics(IEnumerable<QuestOccurrence> occurrences)
         {
-            var stats = new QuestStatistics();
-            var ordered = occurrences.OrderBy(o => o.OccurrenceStart).ToList();
-
-            foreach (var occurence in ordered)
+            var calculatesStats = _questStatisticsCalculator.Calculate(occurrences);
+            if (calculatesStats == null)
             {
-                stats.OccurrenceCount++;
-
-                if (occurence.WasCompleted)
-                {
-                    stats.CompletionCount++;
-                    stats.LastCompletedAt = occurence.CompletedAt;
-                    stats.CurrentStreak++;
-
-                    if (stats.CurrentStreak > stats.LongestStreak)
-                    {
-                        stats.LongestStreak = stats.CurrentStreak;
-                    }
-                }
-                else
-                {
-                    stats.FailureCount++;
-                    stats.CurrentStreak = 0;
-                }
+                _logger.LogWarning("No statistics could be calculated from the provided occurrences.");
+                return new QuestStatistics();
             }
-
-            return stats;
+            _logger.LogDebug("Calculated statistics: {@calculatesStats}", calculatesStats);
+            return calculatesStats;
         }
 
         public async Task ProcessStatisticsForQuestsAsync(IEnumerable<Quest> quests, CancellationToken cancellationToken = default)
         {
             foreach (var quest in quests)
             {
-                var occurrences = await _questOccurrenceRepository.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken).ConfigureAwait(false);
-                var stats = CalculateStatistics(occurrences);
-                if (quest.Statistics == null)
-                {
-                    quest.Statistics = stats;
-                }
-                else
-                {
-                    UpdateStatisticsValues(quest.Statistics, stats);
-                }
-
-                // Detach navigation properties that may cause tracking conflicts
-                quest.Account = null;
-
-                await _questRepository.UpdateQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+                await ProcessStatisticsForQuestAsync(quest, cancellationToken);
             }
         }
 
         public async Task ProcessStatisticsForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
         {
-            var occurrences = await _questOccurrenceRepository.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken).ConfigureAwait(false);
-            var stats = CalculateStatistics(occurrences);
+            var occurrences = await _questOccurrenceRepository.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken);
+            var newStats = _questStatisticsCalculator.Calculate(occurrences);
+
+            _logger.LogDebug("Processing statistics for quest {QuestId}: {@NewStats}", quest.Id, newStats);
+
+            UpdateQuestStatistics(quest, newStats);
+
+            _logger.LogDebug("Updated quest statistics for quest {QuestId}: {@QuestStatsData}", quest.Id, new
+            {
+                // Select only the properties you need from quest.Statistics
+                quest.Statistics!.Id,
+                quest.Statistics.QuestId, // This is just an ID, not the full object
+                quest.Statistics.CompletionCount,
+                quest.Statistics.FailureCount,
+                quest.Statistics.OccurrenceCount,
+                quest.Statistics.CurrentStreak,
+                quest.Statistics.LongestStreak,
+                quest.Statistics.LastCompletedAt
+            });
+
+            await _questRepository.UpdateQuestAsync(quest, cancellationToken);
+        }
+
+        private static void UpdateQuestStatistics(Quest quest, QuestStatistics newStats)
+        {
             if (quest.Statistics == null)
             {
-                quest.Statistics = stats;
+                quest.Statistics = newStats;
             }
             else
             {
-                UpdateStatisticsValues(quest.Statistics, stats);
+                quest.Statistics.UpdateFrom(newStats);
             }
-
-            // Detach navigation properties that may cause tracking conflicts
-            quest.Account = null;
-            quest.QuestOccurrences = null;
-            await _questRepository.UpdateQuestAsync(quest, cancellationToken).ConfigureAwait(false);
-
-        }
-
-        private static List<(DateTime, DateTime)> GenerateExpectedWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
-        {
-            var windows = new List<(DateTime, DateTime)>();
-            var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-            var toLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(toUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-
-            if (quest.QuestType == QuestTypeEnum.Daily)
-            {
-                for (var date = fromLocal; date <= toLocal; date = date.PlusDays(1))
-                {
-                    var startUtc = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    var endUtc = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    windows.Add((startUtc, endUtc));
-                }
-            }
-            else if (quest.QuestType == QuestTypeEnum.Weekly)
-            {
-                var scheduledWeekdays = quest.WeeklyQuest_Days.Select(d => (DayOfWeek)d.Weekday).ToHashSet();
-
-                for (var date = fromLocal; date <= toLocal; date = date.PlusDays(1))
-                {
-                    if (scheduledWeekdays.Contains((DayOfWeek)date.DayOfWeek))
-                    {
-                        var startUtc = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                        var endUtc = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                        windows.Add((startUtc, endUtc));
-                    }
-                }
-            }
-            else if (quest.QuestType == QuestTypeEnum.Monthly)
-            {
-                var startDay = quest.MonthlyQuest_Days!.StartDay;
-                var endDay = quest.MonthlyQuest_Days!.EndDay;
-
-                var startMonth = new YearMonth(fromLocal.Year, fromLocal.Month);
-                var endMonth = new YearMonth(toLocal.Year, toLocal.Month);
-
-                for (var ym = startMonth; ym <= endMonth; ym = ym.PlusMonths(1))
-                {
-                    var daysInMonth = ym.ToDateInterval().End.Day;
-                    var sDay = Math.Min(startDay, daysInMonth);
-                    var eDay = Math.Min(endDay, daysInMonth);
-
-                    var startUtc = ym.OnDayOfMonth(sDay).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    var endUtc = ym.OnDayOfMonth(eDay).PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-
-                    if (endUtc > startUtc)
-                        windows.Add((startUtc, endUtc));
-                }
-            }
-
-            return windows;
-        }
-
-        private static void UpdateStatisticsValues(QuestStatistics target, QuestStatistics source)
-        {
-            target.CompletionCount = source.CompletionCount;
-            target.FailureCount = source.FailureCount;
-            target.OccurrenceCount = source.OccurrenceCount;
-            target.CurrentStreak = source.CurrentStreak;
-            target.LongestStreak = source.LongestStreak;
-            target.LastCompletedAt = source.LastCompletedAt;
         }
     }
 }

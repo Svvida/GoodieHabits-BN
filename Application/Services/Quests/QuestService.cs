@@ -7,6 +7,7 @@ using Application.Dtos.Quests.WeeklyQuest;
 using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
+using Application.Models;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -32,6 +33,7 @@ namespace Application.Services.Quests
         private readonly IUserGoalRepository _userGoalRepository;
         private readonly IQuestOccurrenceRepository _questOccurrenceRepository;
         private readonly IQuestStatisticsService _questStatisticsService;
+        private readonly IQuestRewardCalculator _questRewardCalculator;
 
         public QuestService(
             IQuestRepository repository,
@@ -45,7 +47,8 @@ namespace Application.Services.Quests
             IUserProfileRepository userProfileRepository,
             IUserGoalRepository userGoalRepository,
             IQuestOccurrenceRepository questOccurrenceRepository,
-            IQuestStatisticsService questStatisticsService)
+            IQuestStatisticsService questStatisticsService,
+            IQuestRewardCalculator questRewardCalculator)
         {
             _questRepository = repository;
             _questLabelsHandler = questLabelsHandler;
@@ -59,6 +62,7 @@ namespace Application.Services.Quests
             _userGoalRepository = userGoalRepository;
             _questOccurrenceRepository = questOccurrenceRepository;
             _questStatisticsService = questStatisticsService;
+            _questRewardCalculator = questRewardCalculator;
         }
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -154,106 +158,21 @@ namespace Application.Services.Quests
 
         public async Task UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            var existingQuest = await _questRepository.GetQuestByIdAsync(patchDto.Id, questType, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with ID: {patchDto.Id} not found");
+            var existingQuest = await GetAndValidateQuestAsync(patchDto.Id, questType, cancellationToken);
+            var nowUtc = SystemClock.Instance.GetCurrentInstant();
 
-            if (existingQuest.Account is null || string.IsNullOrWhiteSpace(existingQuest.Account.TimeZone))
-            {
-                _logger.LogError("Account {AccountId} data or TimeZone is missing for Quest {QuestId}. Cannot accurately perform daily completion check.", existingQuest.AccountId, existingQuest.Id);
-                throw new InvalidArgumentException($"TimeZone information is missing for the account associated with Quest {existingQuest.Id}.");
-            }
+            var completionContext = await BuildCompletionContextAsync(existingQuest, patchDto, nowUtc, cancellationToken);
 
-            bool justCompleted = !existingQuest.IsCompleted && patchDto.IsCompleted;
-            bool shouldIncrementCount = false;
-            Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
-
-            var occurence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Occurrence for quest: {@occurence}", occurence);
-            if (existingQuest.IsRepeatable() && occurence is null)
-            {
-                _logger.LogDebug($"Missing occurence for quest, creating new one.");
-                await _questStatisticsService.ProcessOccurrencesForQuestAsync(existingQuest, cancellationToken);
-                occurence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
-                _logger.LogDebug("Saved occurrence: {@occurence}", occurence);
-            }
-
-            if (justCompleted)
-            {
-                DateTimeZone? userTimeZone = DateTimeZoneProviders.Tzdb[existingQuest.Account.TimeZone]
-                    ?? throw new NotFoundException($"Timezone with ID: {existingQuest.Account.TimeZone} not found");
-
-                LocalDateTime nowUserLocal = nowUtc.InZone(userTimeZone).LocalDateTime;
-
-                if (!existingQuest.LastCompletedAt.HasValue)
-                {
-                    shouldIncrementCount = true;
-                }
-                else
-                {
-                    Instant lastCompletedAtUtc = Instant.FromDateTimeUtc(DateTime.SpecifyKind(existingQuest.LastCompletedAt.Value, DateTimeKind.Utc));
-                    LocalDateTime lastCompletedAtUserLocal = lastCompletedAtUtc.InZone(userTimeZone).LocalDateTime;
-
-                    if (lastCompletedAtUserLocal.Date < nowUserLocal.Date)
-                        shouldIncrementCount = true;
-                    else
-                        _logger.LogInformation($"Quest {existingQuest.Id} already completed today: {nowUserLocal} in user's timezone {existingQuest.Account.TimeZone}. Last Completion: {lastCompletedAtUserLocal}");
-
-                }
-
-                if (occurence is not null)
-                {
-                    _logger.LogDebug("Occurrence for quest is not null, setting to true");
-                    occurence.WasCompleted = true;
-                    occurence.CompletedAt = nowUtc.ToDateTimeUtc();
-                    await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
-                }
-
-                existingQuest.LastCompletedAt = nowUtc.ToDateTimeUtc();
-                existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
-            }
-            else
-            {
-                if (occurence is not null)
-                {
-                    _logger.LogDebug("Occurrence for quest is not null, setting to false");
-                    occurence.WasCompleted = false;
-                    await _questOccurrenceRepository.UpdateOccurrence(occurence, cancellationToken).ConfigureAwait(false);
-                }
-            }
+            await ProcessQuestCompletionAsync(existingQuest, completionContext, cancellationToken);
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
 
-            _logger.LogDebug("Completed quest after mapping: {@existingQuest}", existingQuest);
-
             await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
+            await _questStatisticsService.ProcessStatisticsForQuestAsync(existingQuest, cancellationToken);
 
-            await _questStatisticsService.ProcessStatisticsForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
-
-            if (shouldIncrementCount)
+            if (completionContext.ShouldIncrementCount)
             {
-                int xpGained = 10;
-
-                var userProfile = await _userProfileRepository.GetByAccountIdAsync(existingQuest.AccountId, cancellationToken).ConfigureAwait(false)
-                    ?? throw new NotFoundException($"User profile with account ID: {existingQuest.AccountId} not found");
-
-                userProfile.CompletedQuests++;
-                userProfile.TotalXp += xpGained;
-
-                // Check if this quest is a goal
-                var userGoal = await _userGoalRepository.GetActiveGoalByQuestIdAsync(existingQuest.Id, cancellationToken).ConfigureAwait(false);
-                if (userGoal is not null)
-                {
-                    userGoal.IsAchieved = true;
-                    userGoal.AchievedAt = nowUtc.ToDateTimeUtc();
-                    userProfile.CompletedGoals++;
-                    await _userGoalRepository.UpdateAsync(userGoal, cancellationToken).ConfigureAwait(false);
-
-                    xpGained += userGoal.XpBonus;
-                    _logger.LogInformation($"User achieved goal ID {userGoal.Id} and earned bonus {userGoal.XpBonus} XP");
-                }
-
-                await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
-                _logger.LogDebug("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}", xpGained, existingQuest.AccountId);
+                await ProcessUserRewardsAsync(existingQuest, completionContext.NowUtc, cancellationToken);
             }
         }
 
@@ -306,6 +225,140 @@ namespace Application.Services.Quests
                 _ => throw new InvalidArgumentException("Invalid quest type")
             };
         }
+
+        private async Task<Quest> GetAndValidateQuestAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken)
+        {
+            var quest = await _questRepository.GetQuestByIdAsync(questId, questType, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with ID: {questId} not found");
+
+            if (quest.Account is null || string.IsNullOrWhiteSpace(quest.Account.TimeZone))
+            {
+                _logger.LogError("Account {AccountId} data or TimeZone is missing for Quest {QuestId}. Cannot accurately perform daily completion check.",
+                    quest.AccountId, quest.Id);
+                throw new InvalidArgumentException($"TimeZone information is missing for the account associated with Quest {quest.Id}.");
+            }
+
+            return quest;
+        }
+
+        private async Task<QuestCompletionContext> BuildCompletionContextAsync(
+            Quest quest,
+            BaseQuestCompletionPatchDto patchDto,
+            Instant nowUtc,
+            CancellationToken cancellationToken)
+        {
+            var context = new QuestCompletionContext
+            {
+                NowUtc = nowUtc,
+                JustCompleted = !quest.IsCompleted && patchDto.IsCompleted,
+                UserTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone]
+                    ?? throw new NotFoundException($"Timezone with ID: {quest.Account.TimeZone} not found"),
+            };
+
+            context.Occurrence = await GetOrCreateOccurrenceAsync(quest, nowUtc, cancellationToken).ConfigureAwait(false);
+
+            if (context.JustCompleted)
+            {
+                context.ShouldIncrementCount = ShouldIncrementCompletionCountAsync(quest, context);
+            }
+
+            return context;
+        }
+
+        // Occurrence management
+        private async Task<QuestOccurrence?> GetOrCreateOccurrenceAsync(Quest quest, Instant nowUtc, CancellationToken cancellationToken)
+        {
+            var occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
+
+            _logger.LogDebug("Occurrence for quest: {@occurrence}", occurrence);
+
+            if (quest.IsRepeatable() && occurrence is null)
+            {
+                _logger.LogDebug("Missing occurrence for quest, creating new one.");
+                await _questStatisticsService.ProcessOccurrencesForQuestAsync(quest, cancellationToken);
+                occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
+                _logger.LogDebug("Saved occurrence: {@occurrence}", occurrence);
+            }
+
+            return occurrence;
+        }
+
+        // Daily completion validation
+        private bool ShouldIncrementCompletionCountAsync(Quest quest, QuestCompletionContext context)
+        {
+            if (!quest.LastCompletedAt.HasValue)
+                return true;
+
+            var lastCompletedAtUtc = Instant.FromDateTimeUtc(DateTime.SpecifyKind(quest.LastCompletedAt.Value, DateTimeKind.Utc));
+            var lastCompletedAtUserLocal = lastCompletedAtUtc.InZone(context.UserTimeZone).LocalDateTime;
+            var nowUserLocal = context.NowUtc.InZone(context.UserTimeZone).LocalDateTime;
+
+            if (lastCompletedAtUserLocal.Date < nowUserLocal.Date)
+                return true;
+
+            _logger.LogInformation("Quest {QuestId} already completed today: {CurrentTime} in user's timezone {TimeZone}. Last Completion: {LastCompletion}",
+                quest.Id, nowUserLocal, quest.Account.TimeZone, lastCompletedAtUserLocal);
+
+            return false;
+        }
+
+        // Quest completion processing
+        private async Task ProcessQuestCompletionAsync(Quest quest, QuestCompletionContext context, CancellationToken cancellationToken)
+        {
+            if (context.JustCompleted)
+            {
+                await HandleQuestCompletionAsync(quest, context, cancellationToken);
+            }
+            else
+            {
+                await HandleQuestUncompletionAsync(context.Occurrence, cancellationToken);
+            }
+        }
+
+        private async Task HandleQuestCompletionAsync(Quest quest, QuestCompletionContext context, CancellationToken cancellationToken)
+        {
+            if (context.Occurrence is not null)
+            {
+                _logger.LogDebug("Occurrence for quest is not null, setting to true");
+                context.Occurrence.WasCompleted = true;
+                context.Occurrence.CompletedAt = context.NowUtc.ToDateTimeUtc();
+                await _questOccurrenceRepository.UpdateOccurrence(context.Occurrence, cancellationToken);
+            }
+
+            quest.LastCompletedAt = context.NowUtc.ToDateTimeUtc();
+            quest.NextResetAt = _questResetService.GetNextResetTimeUtc(quest);
+        }
+
+        private async Task HandleQuestUncompletionAsync(QuestOccurrence? occurrence, CancellationToken cancellationToken)
+        {
+            if (occurrence is not null)
+            {
+                _logger.LogDebug("Occurrence for quest is not null, setting to false");
+                occurrence.WasCompleted = false;
+                await _questOccurrenceRepository.UpdateOccurrence(occurrence, cancellationToken);
+            }
+        }
+
+        private async Task ProcessUserRewardsAsync(Quest quest, Instant completionTime, CancellationToken cancellationToken)
+        {
+            var userProfile = await _userProfileRepository.GetByAccountIdAsync(quest.AccountId, cancellationToken)
+                ?? throw new NotFoundException($"User profile with account ID: {quest.AccountId} not found");
+
+            var rewards = await _questRewardCalculator.CalculateRewardsAsync(quest, completionTime, cancellationToken);
+
+            userProfile.CompletedQuests++;
+            userProfile.TotalXp += rewards.TotalXp;
+
+            if (rewards.GoalAchieved)
+            {
+                userProfile.CompletedGoals++;
+                await _userGoalRepository.UpdateAsync(rewards.UserGoal!, cancellationToken);
+            }
+
+            await _userProfileRepository.UpdateAsync(userProfile, cancellationToken);
+
+            _logger.LogDebug("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}",
+                rewards.TotalXp, quest.AccountId);
+        }
     }
 }
-

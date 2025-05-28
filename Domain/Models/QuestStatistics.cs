@@ -20,5 +20,15 @@
         {
             QuestId = questId;
         }
+
+        public void UpdateFrom(QuestStatistics source)
+        {
+            CompletionCount = source.CompletionCount;
+            FailureCount = source.FailureCount;
+            OccurrenceCount = source.OccurrenceCount;
+            CurrentStreak = source.CurrentStreak;
+            LongestStreak = source.LongestStreak;
+            LastCompletedAt = source.LastCompletedAt;
+        }
     }
 }

@@ -17,6 +17,10 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(qo => new { qo.QuestId, qo.OccurrenceStart, qo.OccurrenceEnd })
                 .IsUnique();
 
+            builder.Property(qo => qo.Id)
+                .ValueGeneratedOnAdd()
+                .IsRequired();
+
             builder.Property(qo => qo.QuestId)
                 .IsRequired();
 
