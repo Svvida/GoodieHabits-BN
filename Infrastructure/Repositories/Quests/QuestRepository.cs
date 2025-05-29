@@ -91,6 +91,20 @@ namespace Infrastructure.Repositories.Quests
                 UpdatedAt = q.UpdatedAt,
                 CreatedAt = q.CreatedAt,
 
+                Statistics = q.Statistics != null
+                    ? new QuestStatistics
+                    {
+                        Id = q.Statistics.Id,
+                        QuestId = q.Id,
+                        OccurrenceCount = q.Statistics.OccurrenceCount,
+                        CompletionCount = q.Statistics.CompletionCount,
+                        FailureCount = q.Statistics.FailureCount,
+                        CurrentStreak = q.Statistics.CurrentStreak,
+                        LongestStreak = q.Statistics.LongestStreak,
+                        LastCompletedAt = q.Statistics.LastCompletedAt
+                    }
+                    : null,
+
                 Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
                 {
                     QuestId = q.Id,
@@ -142,44 +156,6 @@ namespace Infrastructure.Repositories.Quests
             var result = await projectedQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
-        }
-
-        public IQueryable<Quest> GetActiveQuestsQuery(int accountId,
-            DateTime todayStart,
-            DateTime todayEnd,
-            SeasonEnum currentSeason)
-        {
-            return _context.Quests
-                .Where(q => q.AccountId == accountId)
-                .Where(q =>
-                    (q.QuestType == QuestTypeEnum.OneTime &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        (q.StartDate.HasValue || q.EndDate.HasValue))
-                    || (q.QuestType == QuestTypeEnum.Daily &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart)
-                    || (q.QuestType == QuestTypeEnum.Weekly &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        q.WeeklyQuest_Days.Any(wd =>
-                            wd.Weekday == (WeekdayEnum)todayStart.DayOfWeek ||
-                            wd.Weekday == (WeekdayEnum)todayEnd.DayOfWeek))
-                    || (q.QuestType == QuestTypeEnum.Monthly &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        ((q.MonthlyQuest_Days!.StartDay <= todayStart.Day && q.MonthlyQuest_Days.EndDay >= todayStart.Day)
-                        ||
-                        (q.MonthlyQuest_Days.StartDay <= todayEnd.Day && q.MonthlyQuest_Days.EndDay >= todayEnd.Day)))
-                    || (q.QuestType == QuestTypeEnum.Seasonal &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        (q.SeasonalQuest_Season!.Season == currentSeason))
-                )
-                .AsNoTracking()
-                .Include(q => q.Quest_QuestLabels)
-                .AsNoTracking()
-                .AsQueryable();
         }
 
         public async Task<IEnumerable<Quest>> GetQuestsByTypeAsync(
@@ -242,44 +218,6 @@ namespace Infrastructure.Repositories.Quests
             var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
-        }
-
-        public async Task<Quest?> GetQuestWithOccurrencesById(int questId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Quests.Where(q => q.Id == questId)
-                .Include(q => q.QuestOccurrences)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public IQueryable<Quest> GetQuestByIdQuery(int questId, QuestTypeEnum questType)
-        {
-            var quest = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType)
-                .AsNoTracking()
-                .Include(q => q.Account)
-                .AsNoTracking()
-                .Include(q => q.Quest_QuestLabels)
-                .ThenInclude(ql => ql.QuestLabel)
-                .AsNoTracking()
-                .Include(q => q.Statistics)
-                .AsNoTracking();
-
-            if (questType == QuestTypeEnum.Monthly)
-            {
-                quest = quest.Include(q => q.MonthlyQuest_Days).AsNoTracking();
-            }
-            if (questType == QuestTypeEnum.Weekly)
-            {
-                quest = quest.Include(q => q.WeeklyQuest_Days).AsNoTracking();
-            }
-            if (questType == QuestTypeEnum.Seasonal)
-            {
-                quest = quest.Include(q => q.SeasonalQuest_Season).AsNoTracking();
-            }
-
-            return quest;
         }
 
         public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default)

@@ -50,6 +50,7 @@ namespace Application.Services.Quests
         {
             return new QuestOccurrence
             {
+                Id = 0, // New occurrences should have ID 0 before saving
                 QuestId = questId,
                 OccurrenceStart = window.Start,
                 OccurrenceEnd = window.End,

@@ -53,7 +53,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> Create(
+        public async Task<ActionResult<GetWeeklyQuestDto>> Create(
             [FromBody] CreateWeeklyQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
@@ -62,33 +62,34 @@ namespace Api.Controllers
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
             createDto.AccountId = accountId;
-            var createdId = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
-            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
+
+            var createdQuest = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
+            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdQuest.Id }, createdQuest);
         }
 
         [HttpPatch("{id}/completion")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> PatchQuestCompletion(
+        public async Task<ActionResult<GetWeeklyQuestDto>> PatchQuestCompletion(
             int id,
             [FromBody] WeeklyQuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
 
         }
 
         [HttpPut("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> Update(
+        public async Task<ActionResult<GetWeeklyQuestDto>> Update(
             int id,
             [FromBody] UpdateWeeklyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
             updateDto.Id = id;
-            await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
         }
 
         [HttpDelete("{id}")]

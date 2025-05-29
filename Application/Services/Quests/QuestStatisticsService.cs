@@ -30,36 +30,12 @@ namespace Application.Services.Quests
         public async Task ProcessOccurrencesAsync(CancellationToken cancellationToken = default)
         {
             var repeatableQuests = await _questRepository.GetRepeatableQuestsAsync(cancellationToken);
-            var allNewOccurrences = new List<QuestOccurrence>();
 
             foreach (var quest in repeatableQuests)
             {
                 var newOccurrences = await _occurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
-                allNewOccurrences.AddRange(newOccurrences);
                 _logger.LogDebug("Processed {Count} new occurrences for quest {QuestId}", newOccurrences.Count, quest.Id);
             }
-
-            if (allNewOccurrences.Count > 0)
-            {
-                await _questOccurrenceRepository.SaveOccurrencesAsync(allNewOccurrences, cancellationToken);
-            }
-        }
-
-        public async Task<List<QuestOccurrence>> ProcessOccurrencesForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
-        {
-            return await _occurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
-        }
-
-        public QuestStatistics CalculateStatistics(IEnumerable<QuestOccurrence> occurrences)
-        {
-            var calculatesStats = _questStatisticsCalculator.Calculate(occurrences);
-            if (calculatesStats == null)
-            {
-                _logger.LogWarning("No statistics could be calculated from the provided occurrences.");
-                return new QuestStatistics();
-            }
-            _logger.LogDebug("Calculated statistics: {@calculatesStats}", calculatesStats);
-            return calculatesStats;
         }
 
         public async Task ProcessStatisticsForQuestsAsync(IEnumerable<Quest> quests, CancellationToken cancellationToken = default)

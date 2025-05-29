@@ -1,5 +1,4 @@
-﻿using Application.Dtos.Labels;
-using Application.Dtos.Quests.MonthlyQuest;
+﻿using Application.Dtos.Quests.MonthlyQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
@@ -15,13 +14,7 @@ namespace Application.MappingProfiles
             CreateMap<Quest, GetMonthlyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
-                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src =>
-                    src.Quest_QuestLabels.Select(ql => new GetQuestLabelDto
-                    {
-                        Id = ql.QuestLabel.Id,
-                        Value = ql.QuestLabel.Value,
-                        BackgroundColor = ql.QuestLabel.BackgroundColor,
-                    }).ToList()))
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels))
                 .ForMember(dest => dest.StartDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.StartDay))
                 .ForMember(dest => dest.EndDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.EndDay))
                 .ForMember(dest => dest.Statistics, opt => opt.MapFrom(src => src.Statistics));

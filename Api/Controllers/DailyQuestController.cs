@@ -54,7 +54,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> Create(
+        public async Task<ActionResult<GetDailyQuestDto>> Create(
             [FromBody] CreateDailyQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
@@ -64,32 +64,32 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
-            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
+            var createdQuest = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
+            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdQuest.Id }, createdQuest);
         }
 
         [HttpPatch("{id}/completion")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> PatchQuestCompletion(
+        public async Task<ActionResult<GetDailyQuestDto>> PatchQuestCompletion(
             int id,
             [FromBody] DailyQuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
         }
 
         [HttpPut("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> Update(
+        public async Task<ActionResult<GetDailyQuestDto>> Update(
             int id,
             [FromBody] UpdateDailyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
             updateDto.Id = id;
-            await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
         }
 
         [HttpDelete("{id}")]
