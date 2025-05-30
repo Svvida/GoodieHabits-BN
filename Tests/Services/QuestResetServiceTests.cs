@@ -1,5 +1,4 @@
-﻿using Application.Interfaces.Quests;
-using Application.Services.Quests;
+﻿using Application.Services.Quests;
 using Domain.Enum;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -9,19 +8,22 @@ namespace Tests.Services
 {
     public class QuestResetServiceTests
     {
-        private readonly IQuestResetService _questResetService;
+        private readonly QuestResetService _questResetService;
         private readonly Mock<ILogger<QuestResetService>> _loggerMock;
+        private readonly Mock<NodaTime.IClock> _clockMock;
 
         public QuestResetServiceTests()
         {
             _loggerMock = new Mock<ILogger<QuestResetService>>();
-            _questResetService = new QuestResetService(_loggerMock.Object);
+            _clockMock = new Mock<NodaTime.IClock>();
+            _questResetService = new QuestResetService(_loggerMock.Object, _clockMock.Object);
         }
 
         [Fact]
         public void GetNextResetTimeUtc_ShouldReturnNextMonday_WhenTodayIsMonday()
         {
             // Arrange
+            SetCurrentUtcTime(new DateTime(2025, 5, 12));
             var quest = QuestFactory.CreateWeeklyQuest(accountId: 1, resetDay: WeekdayEnum.Monday);
 
             // Act
@@ -29,8 +31,7 @@ namespace Tests.Services
 
             //Assert
             Assert.NotNull(nextResetTime);
-            Assert.Equal(DayOfWeek.Monday, nextResetTime.Value.DayOfWeek);
-            Assert.True(nextResetTime.Value > DateTime.UtcNow.Date);
+            Assert.Equal(new DateTime(2025, 5, 19), nextResetTime.Value.Date);
         }
 
         [Fact]
@@ -69,25 +70,12 @@ namespace Tests.Services
         }
 
         [Fact]
-        public void GetNextResetTimeUtc_ShouldReturnNull_WhenLastCompletedAtIsNull()
-        {
-            // Arrange
-            var quest = QuestFactory.CreateWeeklyQuest(accountId: 1, resetDay: WeekdayEnum.Monday);
-            quest.LastCompletedAt = null;
-
-            // Act
-            DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
-
-            // Assert
-            Assert.Null(nextResetTime);
-        }
-
-        [Fact]
         public void GetNextResetTimeUtc_ShouldReturnNull_WhenNextResetIsAfterEndDate()
         {
             // Arrange
             var quest = QuestFactory.CreateWeeklyQuest(accountId: 1, resetDay: WeekdayEnum.Monday);
-            quest.EndDate = DateTime.UtcNow.AddDays(-1);
+            SetCurrentUtcTime(new DateTime(2025, 5, 12));
+            quest.EndDate = new DateTime(2025, 5, 14);
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
             // Assert
@@ -99,11 +87,12 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateDailyQuest(accountId: 1, timeZone: "Etc/UTC");
+            SetCurrentUtcTime(new DateTime(2025, 3, 15));
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
             // Assert
             Assert.NotNull(nextResetTime);
-            Assert.Equal(DateTime.UtcNow.Date.AddDays(1), nextResetTime.Value.Date);
+            Assert.Equal(new DateTime(2025, 3, 16), nextResetTime.Value.Date);
         }
 
         [Fact]
@@ -111,6 +100,7 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateDailyQuest(accountId: 1, timeZone: "Europe/Warsaw");
+            SetCurrentUtcTime(DateTime.UtcNow.Date);
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
             // Assert
@@ -123,7 +113,8 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateDailyQuest(accountId: 1, timeZone: "Etc/UTC");
-            quest.EndDate = DateTime.UtcNow.Date;
+            SetCurrentUtcTime(new DateTime(2025, 3, 15));
+            quest.EndDate = new DateTime(2025, 3, 15);
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
             // Assert
@@ -135,7 +126,8 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateDailyQuest(accountId: 1, timeZone: "Europe/Warsaw");
-            quest.EndDate = DateTime.UtcNow.Date;
+            SetCurrentUtcTime(new DateTime(2025, 3, 15));
+            quest.EndDate = new DateTime(2025, 3, 15);
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
             // Assert
@@ -147,7 +139,7 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateMonthlyQuest(accountId: 1, startDay: 10, endDay: 20, timeZone: "Etc/UTC");
-            quest.LastCompletedAt = new DateTime(2025, 3, 15);
+            SetCurrentUtcTime(new DateTime(2025, 3, 15));
 
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
@@ -162,7 +154,7 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateMonthlyQuest(accountId: 1, startDay: 10, endDay: 20, timeZone: "Europe/Warsaw");
-            quest.LastCompletedAt = new DateTime(2025, 3, 15);
+            SetCurrentUtcTime(new DateTime(2025, 3, 10));
 
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
@@ -178,7 +170,7 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateMonthlyQuest(accountId: 1, startDay: 10, endDay: 20, timeZone: "Etc/UTC");
-            quest.LastCompletedAt = new DateTime(2025, 3, 15);
+            SetCurrentUtcTime(new DateTime(2025, 3, 15));
             quest.EndDate = new DateTime(2025, 3, 10);
 
             // Act
@@ -193,7 +185,7 @@ namespace Tests.Services
         {
             // Arrange
             var quest = QuestFactory.CreateMonthlyQuest(accountId: 1, startDay: 31, endDay: 31, timeZone: "Etc/UTC");
-            quest.LastCompletedAt = new DateTime(2025, 1, 31);
+            SetCurrentUtcTime(new DateTime(2025, 1, 31));
 
             // Act
             DateTime? nextResetTime = _questResetService.GetNextResetTimeUtc(quest);
@@ -202,6 +194,12 @@ namespace Tests.Services
             Assert.NotNull(nextResetTime);
             Assert.Equal(new DateTime(2025, 2, 28), nextResetTime.Value.Date);
 
+        }
+
+        private void SetCurrentUtcTime(DateTime utcNow)
+        {
+            var instant = NodaTime.Instant.FromDateTimeUtc(DateTime.SpecifyKind(utcNow, DateTimeKind.Utc));
+            _clockMock.Setup(c => c.GetCurrentInstant()).Returns(instant);
         }
     }
 }

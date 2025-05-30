@@ -10,32 +10,31 @@ namespace Application.Services.Quests
     public class QuestResetService : IQuestResetService
     {
         private readonly ILogger<QuestResetService> _logger;
+        private readonly IClock _clock;
 
-        public QuestResetService(ILogger<QuestResetService> logger)
+        public QuestResetService(
+            ILogger<QuestResetService> logger,
+            IClock clock)
         {
             _logger = logger;
+            _clock = clock;
         }
 
         public DateTime? GetNextResetTimeUtc(Quest quest)
         {
             _logger.LogDebug("Calculating NextResetAt for Quest ID: {QuestId}, Type: {QuestType}", quest.Id, quest.QuestType);
-            if (quest.LastCompletedAt is null)
-            {
-                _logger.LogDebug("Quest ID: {QuestId} has no LastCompletedAt. Returning null.", quest.Id);
-                return null;
-            }
 
-            Instant completionTimeInstant = Instant.FromDateTimeUtc(DateTime.SpecifyKind(quest.LastCompletedAt.Value, DateTimeKind.Utc));
+            Instant nowUtc = _clock.GetCurrentInstant();
             DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
 
-            ZonedDateTime completionTimeLocal = completionTimeInstant.InZone(userTimeZone);
+            ZonedDateTime nowLocal = nowUtc.InZone(userTimeZone);
 
             _logger.LogDebug("Quest ID: {QuestId} - LastCompletedAt (UTC): {LastCompletedAt}, LocalTime ({TimeZone}): {LocalTime}",
-                quest.Id, completionTimeInstant, quest.Account.TimeZone, completionTimeLocal);
+                quest.Id, nowUtc, quest.Account.TimeZone, nowLocal);
 
             if (quest.QuestType == QuestTypeEnum.Daily)
             {
-                LocalDateTime nextResetLocal = completionTimeLocal.Date.PlusDays(1).AtMidnight();
+                LocalDateTime nextResetLocal = nowLocal.Date.PlusDays(1).AtMidnight();
                 DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
                 if (quest.EndDate.HasValue && nextResetUtc >= quest.EndDate)
                     return null;
@@ -55,7 +54,7 @@ namespace Application.Services.Quests
                     return null;
                 }
 
-                DayOfWeek currentDay = completionTimeLocal.DayOfWeek.ToDayOfWeek();
+                DayOfWeek currentDay = nowLocal.DayOfWeek.ToDayOfWeek();
                 DayOfWeek? nextResetDay = availableDays.FirstOrDefault(wd => wd > currentDay);
 
                 // If there is no future day, wrap around to the first available day
@@ -71,7 +70,7 @@ namespace Application.Services.Quests
                 if (daysUntilNextReset == 0)
                     daysUntilNextReset = 7;
 
-                LocalDateTime nextResetLocal = completionTimeLocal.Date.PlusDays(daysUntilNextReset).AtMidnight();
+                LocalDateTime nextResetLocal = nowLocal.Date.PlusDays(daysUntilNextReset).AtMidnight();
                 DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
 
                 _logger.LogDebug("Quest ID: {QuestId} - Next reset day: {NextResetDay}, UTC Time: {NextResetUtc}",
@@ -85,7 +84,7 @@ namespace Application.Services.Quests
 
             if (quest.QuestType == QuestTypeEnum.Monthly)
             {
-                YearMonth nextResetMonth = completionTimeLocal.Date.PlusMonths(1).ToYearMonth();
+                YearMonth nextResetMonth = nowLocal.Date.PlusMonths(1).ToYearMonth();
 
                 int startDay = quest.MonthlyQuest_Days!.StartDay;
                 int lastDayOfMonth = nextResetMonth.ToDateInterval().End.Day;

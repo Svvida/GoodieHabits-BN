@@ -8,6 +8,7 @@ namespace Domain.Interfaces.Quests
         Task<IEnumerable<Quest>> GetActiveQuestsAsync(int accountId, DateTime todayStart, DateTime todayEnd, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetQuestsByTypeAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default);
         Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
         void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd);
         void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove);

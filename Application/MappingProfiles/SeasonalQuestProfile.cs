@@ -1,5 +1,4 @@
-﻿using Application.Dtos.Labels;
-using Application.Dtos.Quests.SeasonalQuest;
+﻿using Application.Dtos.Quests.SeasonalQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
@@ -16,12 +15,7 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
                 .ForMember(dest => dest.Season, opt => opt.MapFrom(src => src.SeasonalQuest_Season!.Season.ToString()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
-                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels.Select(ql => new GetQuestLabelDto
-                {
-                    Id = ql.QuestLabel.Id,
-                    Value = ql.QuestLabel.Value,
-                    BackgroundColor = ql.QuestLabel.BackgroundColor,
-                }).ToList()));
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels));
 
             // Create DTO -> Entity (Convert String -> Enum)
             CreateMap<CreateSeasonalQuestDto, Quest>()
