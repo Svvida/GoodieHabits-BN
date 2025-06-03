@@ -95,7 +95,11 @@ namespace MyLambdaApi.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await _questService.DeleteQuestAsync(id, cancellationToken);
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                return Unauthorized("Invalid access token: missing account identifier.");
+
+            await _questService.DeleteQuestAsync(id, QuestType, accountId, cancellationToken);
             return NoContent();
         }
     }

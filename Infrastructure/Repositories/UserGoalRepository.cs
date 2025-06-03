@@ -55,7 +55,7 @@ namespace Infrastructure.Repositories
         public async Task<bool> IsQuestActiveGoalAsync(int questId, CancellationToken cancellationToken = default)
         {
             return await _context.UserGoals
-                .AnyAsync(ug => ug.QuestId == questId && !ug.IsAchieved && !ug.IsExpired, cancellationToken)
+                .AnyAsync(ug => ug.QuestId == questId && !ug.IsExpired, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

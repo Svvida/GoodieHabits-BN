@@ -193,6 +193,7 @@ namespace Infrastructure.Repositories.Quests
                 .Where(q => q.Id == questId && q.QuestType == questType)
                 .AsNoTracking()
                 .Include(q => q.Account)
+                    .ThenInclude(a => a.Profile)
                 .AsNoTracking()
                 .Include(q => q.Statistics)
                 .AsNoTracking()
@@ -324,6 +325,18 @@ namespace Infrastructure.Repositories.Quests
             }
         }
 
+        public async Task DeleteQuestAsync(Quest quest, CancellationToken cancellationToken = default)
+        {
+            _context.Quests.Remove(quest);
+            var result = await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            if (result == 0)
+            {
+                // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
+                _logger.LogError("Quest with id {questId} not found.", quest.Id);
+                throw new InvalidArgumentException($"Failed to delete quest with ID {quest.Id}.  Possible authorization failure or data inconsistency.");
+            }
+        }
+
         public void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd)
         {
             _context.Quest_QuestLabels.AddRange(labelsToAdd);
@@ -356,8 +369,6 @@ namespace Infrastructure.Repositories.Quests
         {
 
             var existingQuestInDb = await _context.Quests
-                    .Include(q => q.QuestOccurrences)
-                    .Include(q => q.Statistics)
                     .FirstOrDefaultAsync(q => q.Id == questChanges.Id, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {questChanges.Id} not found.");
 
@@ -365,19 +376,19 @@ namespace Infrastructure.Repositories.Quests
             // Apply changes from questFromService to existingQuestInDb's scalar properties
             _context.Entry(existingQuestInDb).CurrentValues.SetValues(questChanges);
 
-            if (questChanges.Statistics != null && existingQuestInDb.IsRepeatable()) // If the incoming data has statistics and quest is repeatable
-            {
-                if (existingQuestInDb.Statistics == null)
-                {
-                    existingQuestInDb.Statistics = new QuestStatistics { QuestId = existingQuestInDb.Id };
+            //if (questChanges.Statistics != null && existingQuestInDb.IsRepeatable()) // If the incoming data has statistics and quest is repeatable
+            //{
+            //    if (existingQuestInDb.Statistics == null)
+            //    {
+            //        existingQuestInDb.Statistics = new QuestStatistics { QuestId = existingQuestInDb.Id };
 
-                    _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-                }
-                else
-                {
-                    _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-                }
-            }
+            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
+            //    }
+            //    else
+            //    {
+            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
+            //    }
+            //}
 
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -412,9 +423,12 @@ namespace Infrastructure.Repositories.Quests
                         AccountId = q.AccountId,
                         TotalQuests = q.Account.Profile.TotalQuests,
                         CompletedQuests = q.Account.Profile.CompletedQuests,
+                        ExistingQuests = q.Account.Profile.ExistingQuests,
+                        CompletedExistingQuests = q.Account.Profile.CompletedExistingQuests,
                         CompletedGoals = q.Account.Profile.CompletedGoals,
                         ExpiredGoals = q.Account.Profile.ExpiredGoals,
                         TotalGoals = q.Account.Profile.TotalGoals,
+                        ActiveGoals = q.Account.Profile.ActiveGoals,
                         TotalXp = q.Account.Profile.TotalXp,
                         CreatedAt = q.Account.Profile.CreatedAt,
                         UpdatedAt = q.Account.Profile.UpdatedAt,

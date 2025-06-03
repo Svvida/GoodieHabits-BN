@@ -1,6 +1,4 @@
-﻿using Application.Dtos.RepeatableQuestsStatistics;
-
-namespace Application.Dtos.Quests.MonthlyQuest
+﻿namespace Application.Dtos.Quests.MonthlyQuest
 {
     public class GetMonthlyQuestDto : BaseGetQuestDto
     {

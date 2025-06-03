@@ -121,6 +121,7 @@ namespace Application.Services.Quests
                 ?? throw new NotFoundException($"User profile with account ID: {createDto.AccountId} not found");
 
             userProfile.TotalQuests++;
+            userProfile.ExistingQuests++;
 
             await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
 
@@ -169,6 +170,13 @@ namespace Application.Services.Quests
         public async Task<BaseGetQuestDto> UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var existingQuest = await GetAndValidateQuestAsync(patchDto.Id, questType, cancellationToken);
+
+            if (existingQuest.IsCompleted == patchDto.IsCompleted)
+            {
+                _logger.LogInformation("Quest {QuestId} completion status is unchanged. No update required.", existingQuest.Id);
+                return MapToDto(existingQuest);
+            }
+
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
 
             var completionContext = await BuildCompletionContextAsync(existingQuest, patchDto, nowUtc, cancellationToken);
@@ -184,6 +192,9 @@ namespace Application.Services.Quests
             {
                 await ProcessUserRewardsAsync(existingQuest, completionContext.NowUtc, cancellationToken);
             }
+
+            _logger.LogDebug("User profile after quest completion updated: {@existingQuest}", existingQuest.Account.Profile);
+            await _userProfileRepository.UpdateAsync(existingQuest.Account.Profile, cancellationToken).ConfigureAwait(false);
 
             var updatedQuest = await _questRepository.GetQuestByIdAsync(existingQuest.Id, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {existingQuest.Id} not found after completion update.");
@@ -222,9 +233,26 @@ namespace Application.Services.Quests
             return mappedQuests;
         }
 
-        public async Task DeleteQuestAsync(int questId, CancellationToken cancellationToken = default)
+        public async Task DeleteQuestAsync(int questId, QuestTypeEnum questType, int accountId, CancellationToken cancellationToken = default)
         {
-            await _questRepository.DeleteQuestByIdAsync(questId, cancellationToken).ConfigureAwait(false);
+            var questToDelete = await _questRepository.GetQuestByIdAsync(questId, questType, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Quest with ID: {questId} not found");
+
+            if (questToDelete.IsCompleted)
+            {
+                questToDelete.Account.Profile.CompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.CompletedExistingQuests - 1);
+            }
+            if (await _userGoalRepository.IsQuestActiveGoalAsync(questId, cancellationToken).ConfigureAwait(false))
+            {
+                _logger.LogInformation("Deleting quest with ID: {questId} that is active goal", questId);
+                questToDelete.Account.Profile.ActiveGoals = Math.Max(0, questToDelete.Account.Profile.ActiveGoals - 1);
+            }
+
+            await _questRepository.DeleteQuestAsync(questToDelete, cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("Deleted quest with ID: {QuestId}", questId);
+
+            questToDelete.Account.Profile.ExistingQuests = Math.Max(0, questToDelete.Account.Profile.ExistingQuests - 1);
+            await _userProfileRepository.UpdateAsync(questToDelete.Account.Profile, cancellationToken).ConfigureAwait(false);
         }
 
         private BaseGetQuestDto MapToDto(Quest quest)
@@ -326,7 +354,7 @@ namespace Application.Services.Quests
             }
             else
             {
-                await HandleQuestUncompletionAsync(context.Occurrence, cancellationToken);
+                await HandleQuestUncompletionAsync(quest, context.Occurrence, cancellationToken);
             }
         }
 
@@ -342,9 +370,10 @@ namespace Application.Services.Quests
 
             quest.LastCompletedAt = context.NowUtc.ToDateTimeUtc();
             quest.NextResetAt = _questResetService.GetNextResetTimeUtc(quest);
+            quest.Account.Profile.CompletedExistingQuests++;
         }
 
-        private async Task HandleQuestUncompletionAsync(QuestOccurrence? occurrence, CancellationToken cancellationToken)
+        private async Task HandleQuestUncompletionAsync(Quest quest, QuestOccurrence? occurrence, CancellationToken cancellationToken)
         {
             if (occurrence is not null)
             {
@@ -352,6 +381,8 @@ namespace Application.Services.Quests
                 occurrence.WasCompleted = false;
                 await _questOccurrenceRepository.UpdateOccurrence(occurrence, cancellationToken);
             }
+
+            quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
         }
 
         private async Task ProcessUserRewardsAsync(Quest quest, Instant completionTime, CancellationToken cancellationToken)
@@ -370,7 +401,7 @@ namespace Application.Services.Quests
                 await _userGoalRepository.UpdateAsync(rewards.UserGoal!, cancellationToken);
             }
 
-            await _userProfileRepository.UpdateAsync(userProfile, cancellationToken);
+            //await _userProfileRepository.UpdateAsync(userProfile, cancellationToken);
 
             _logger.LogDebug("Incremented CompletedQuests count and added {XpGained} XP for Account {AccountId}",
                 rewards.TotalXp, quest.AccountId);
