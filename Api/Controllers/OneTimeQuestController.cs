@@ -53,7 +53,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> Create(
+        public async Task<ActionResult<GetOneTimeQuestDto>> Create(
             [FromBody] CreateOneTimeQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
@@ -63,40 +63,44 @@ namespace Api.Controllers
 
             createDto.AccountId = accountId;
 
-            var createdId = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
-            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdId }, new { id = createdId });
+            var createdQuest = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
+            return CreatedAtAction(nameof(GetUserQuestById), new { id = createdQuest.Id }, createdQuest);
         }
 
         [HttpPatch("{id}/completion")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> PatchQuestCompletion(
+        public async Task<ActionResult<GetOneTimeQuestDto>> PatchQuestCompletion(
             int id,
             [FromBody] OneTimeQuestCompletionDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
 
         }
 
         [HttpPut("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> UpdateUserQuest(
+        public async Task<ActionResult<GetOneTimeQuestDto>> UpdateUserQuest(
             int id,
             [FromBody] UpdateOneTimeQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
             updateDto.Id = id;
-            await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
-            return NoContent();
+            var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
+            return Ok(updatedQuest);
         }
 
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            await _questService.DeleteQuestAsync(id, cancellationToken);
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                return Unauthorized("Invalid access token: missing account identifier.");
+
+            await _questService.DeleteQuestAsync(id, QuestType, accountId, cancellationToken);
             return NoContent();
         }
     }

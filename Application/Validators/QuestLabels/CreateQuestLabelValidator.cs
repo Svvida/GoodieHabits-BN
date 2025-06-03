@@ -14,10 +14,6 @@ namespace Application.Validators.QuestLabels
             RuleFor(x => x.BackgroundColor)
                 .NotEmpty().WithMessage("{PropertyName} is required")
                 .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
-
-            RuleFor(x => x.TextColor)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .MaximumLength(7).WithMessage("{PropertyName} must not exceed {MaxLength} characters");
         }
     }
 }

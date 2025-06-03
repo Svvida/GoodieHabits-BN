@@ -15,7 +15,6 @@ namespace Tests.Factories
                 AccountId = accountId,
                 Value = text,
                 BackgroundColor = "backgroundColor",
-                TextColor = "textColor"
             };
         }
     }

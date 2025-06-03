@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
@@ -35,6 +36,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NodaTime;
 using Serilog;
 
 namespace Api
@@ -70,46 +72,6 @@ namespace Api
 
             // Configure Middleware
             ConfigureMiddleware(app);
-
-            // Reset daily questes on startup (Run in background)
-            Task resetQuestsTask = Task.Run(async () =>
-            {
-                try
-                {
-                    await ResetQuests(app);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error resetting quests in background.");
-                }
-            });
-
-            // Expire goals on startup (Run in background)
-            Task expireGoalsTask = Task.Run(async () =>
-            {
-                try
-                {
-                    await ExpireGoals(app);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error expiring goals in background.");
-                }
-            });
-
-            Log.Information("Application started");
-
-            // Wait for tasks to complete (with a timeout) during shutdown
-            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // Timeout after 30 seconds
-
-            try
-            {
-                await Task.WhenAll(resetQuestsTask, expireGoalsTask).WaitAsync(cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                Log.Warning("Background tasks did not complete within the timeout.");
-            }
 
             await app.RunAsync();
         }
@@ -214,6 +176,8 @@ namespace Api
             builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
             builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
             builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
+            builder.Services.AddScoped<IQuestOccurrenceRepository, QuestOccurrenceRepository>();
+            builder.Services.AddScoped<IQuestStatisticsRepository, QuestStatisticsRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -227,6 +191,11 @@ namespace Api
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
             builder.Services.AddScoped<IUserGoalService, UserGoalService>();
+            builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
+            builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
+            builder.Services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
+            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrenceGenerator>();
+            builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
@@ -248,7 +217,10 @@ namespace Api
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment()); // Enable sensitive data logging only in development
+            });
             // Register Password Hasher
             builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
             builder.Services.Configure<PasswordHasherOptions>(options =>
@@ -282,24 +254,12 @@ namespace Api
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
-        }
 
-        private async static Task ResetQuests(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var questsResetService = serviceProvider.GetRequiredService<IResetQuestsRepository>();
-            int resetedQuests = await questsResetService.ResetQuestsAsync();
-            Log.Information("{Count} quests reset.", resetedQuests);
-        }
-
-        private async static Task ExpireGoals(WebApplication app)
-        {
-            using var scope = app.Services.CreateScope();
-            var serviceProvider = scope.ServiceProvider;
-            var expireGoalsService = serviceProvider.GetRequiredService<IGoalExpirationRepository>();
-            var expiredGoals = await expireGoalsService.ExpireGoalsAsync();
-            Log.Information("{Count} goals expired.", expiredGoals);
+            // Register Startup Tasks
+            builder.Services.AddHostedService<ResetQuestsTask>();
+            builder.Services.AddHostedService<ExpireGoalsTask>();
+            builder.Services.AddHostedService<ProcessOccurrencesTask>();
+            builder.Services.AddHostedService<ProcessStatisticsForRepeatableQuestsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

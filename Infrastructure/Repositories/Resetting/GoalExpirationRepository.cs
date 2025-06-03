@@ -21,6 +21,9 @@ namespace Infrastructure.Repositories.Resetting
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            if (expiredGoals.Count == 0)
+                return 0; // No goals to expire
+
             // Expire goals
             foreach (var goal in expiredGoals)
             {
@@ -49,7 +52,10 @@ namespace Infrastructure.Repositories.Resetting
             foreach (var profile in userProfiles)
             {
                 if (accountGoalCounts.TryGetValue(profile.AccountId, out int value))
+                {
                     profile.ExpiredGoals += value;
+                    profile.ActiveGoals = Math.Max(0, profile.ActiveGoals - value);
+                }
             }
 
             // Save changes

@@ -42,16 +42,7 @@ namespace Tests.Services
             var expectedDto = new GetAccountDto
             {
                 Login = account.Login,
-                Email = account.Email,
-                Nickname = account.Profile.Nickname,
-                Bio = account.Profile.Bio,
-                UserXp = account.Profile.TotalXp,
-                Level = 1, // Or whatever the expected level is for the test TotalXp
-                NextLevelTotalXpRequired = 100, // Or expected value
-                IsMaxLevel = false,
-                CompletedQuests = account.Profile.CompletedQuests,
-                TotalQuests = account.Profile.TotalQuests,
-                JoinDate = account.CreatedAt
+                Email = account.Email
             };
 
             _accountRepositoryMock

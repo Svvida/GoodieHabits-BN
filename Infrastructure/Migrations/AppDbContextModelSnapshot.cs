@@ -211,11 +211,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("TextColor")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -231,6 +226,92 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Value");
 
                     b.ToTable("Quest_Labels", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestOccurrence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("OccurrenceEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("OccurrenceStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuestId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("WasCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedAt");
+
+                    b.HasIndex("OccurrenceStart");
+
+                    b.HasIndex("QuestId");
+
+                    b.HasIndex("QuestId", "OccurrenceStart", "OccurrenceEnd")
+                        .IsUnique();
+
+                    b.ToTable("QuestOccurrences", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestStatistics", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompletionCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("CurrentStreak")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("FailureCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("LastCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LongestStreak")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("OccurrenceCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("QuestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestId")
+                        .IsUnique();
+
+                    b.ToTable("QuestStatistics", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.Quest_QuestLabel", b =>
@@ -285,7 +366,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<DateTime>("EndsAt")
                         .HasColumnType("datetime2");
@@ -294,24 +377,34 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsAchieved")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsExpired")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
 
                     b.Property<int>("XpBonus")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
+                    b.HasIndex("EndsAt");
+
                     b.HasIndex("QuestId");
 
-                    b.ToTable("UserGoals");
+                    b.HasIndex("AccountId", "IsAchieved", "IsExpired");
+
+                    b.ToTable("UserGoals", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
@@ -325,12 +418,22 @@ namespace Infrastructure.Migrations
                     b.Property<int>("AccountId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ActiveGoals")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("CompletedExistingQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("CompletedGoals")
                         .ValueGeneratedOnAdd()
@@ -346,6 +449,11 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("ExistingQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("ExpiredGoals")
                         .ValueGeneratedOnAdd()
@@ -463,6 +571,28 @@ namespace Infrastructure.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("Domain.Models.QuestOccurrence", b =>
+                {
+                    b.HasOne("Domain.Models.Quest", "Quest")
+                        .WithMany("QuestOccurrences")
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quest");
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestStatistics", b =>
+                {
+                    b.HasOne("Domain.Models.Quest", "Quest")
+                        .WithOne("Statistics")
+                        .HasForeignKey("Domain.Models.QuestStatistics", "QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quest");
+                });
+
             modelBuilder.Entity("Domain.Models.Quest_QuestLabel", b =>
                 {
                     b.HasOne("Domain.Models.Quest", "Quest")
@@ -498,7 +628,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Models.Account", "Account")
                         .WithMany("UserGoals")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Domain.Models.Quest", "Quest")
@@ -574,9 +704,13 @@ namespace Infrastructure.Migrations
                 {
                     b.Navigation("MonthlyQuest_Days");
 
+                    b.Navigation("QuestOccurrences");
+
                     b.Navigation("Quest_QuestLabels");
 
                     b.Navigation("SeasonalQuest_Season");
+
+                    b.Navigation("Statistics");
 
                     b.Navigation("UserGoal");
 

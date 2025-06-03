@@ -33,6 +33,14 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(p => p.ExistingQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedExistingQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(p => p.CompletedGoals)
                 .IsRequired()
                 .HasDefaultValue(0);
@@ -42,6 +50,10 @@ namespace Infrastructure.Persistence.Configuration
                 .HasDefaultValue(0);
 
             builder.Property(p => p.TotalGoals)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.ActiveGoals)
                 .IsRequired()
                 .HasDefaultValue(0);
 
