@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos.RepeatableQuestsStatistics
+﻿namespace Application.Dtos.Quests
 {
     public class RepeatableQuestStatisticsDto
     {

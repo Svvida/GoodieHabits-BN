@@ -1,5 +1,4 @@
 ﻿using Application.Dtos.Accounts;
-using Application.MappingActions;
 using AutoMapper;
 using Domain.Models;
 
@@ -11,20 +10,7 @@ namespace Application.MappingProfiles
         {
             // Entity -> DTO
             CreateMap<Account, GetAccountDto>()
-                .ForMember(dest => dest.JoinDate, opt => opt.MapFrom(src => src.CreatedAt))
-                // Map from the Profile entity
-                .ForMember(dest => dest.Nickname, opt => opt.MapFrom(src => src.Profile.Nickname))
-                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Profile.Avatar))
-                .ForMember(dest => dest.CompletedQuests, opt => opt.MapFrom(src => src.Profile.CompletedQuests))
-                .ForMember(dest => dest.TotalQuests, opt => opt.MapFrom(src => src.Profile.TotalQuests))
-                .ForMember(dest => dest.CompletedGoals, opt => opt.MapFrom(src => src.Profile.CompletedGoals))
-                .ForMember(dest => dest.ExpiredGoals, opt => opt.MapFrom(src => src.Profile.ExpiredGoals))
-                .ForMember(dest => dest.TotalGoals, opt => opt.MapFrom(src => src.Profile.TotalGoals))
-                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Profile.Bio))
-                .ForMember(dest => dest.UserXp, opt => opt.MapFrom(src => src.Profile.TotalXp))
-                .ForMember(dest => dest.Badges, opt => opt.MapFrom(src => src.Profile.UserProfile_Badges))
-                // Calculate and Map Leveling Info
-                .AfterMap<SetUserLevelAction>();
+                .ForMember(dest => dest.Profile, opt => opt.MapFrom(src => src.Profile));
 
             // Create DTO -> Entity
             CreateMap<CreateAccountDto, Account>()

@@ -1,4 +1,4 @@
-﻿using Application.Dtos.RepeatableQuestsStatistics;
+﻿using Application.Dtos.Quests;
 using AutoMapper;
 using Domain.Models;
 

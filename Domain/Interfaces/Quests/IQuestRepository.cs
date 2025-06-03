@@ -10,6 +10,7 @@ namespace Domain.Interfaces.Quests
         Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default);
         Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
+        Task DeleteQuestAsync(Quest quest, CancellationToken cancellationToken = default);
         void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd);
         void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove);
         Task<bool> IsQuestOwnedByUserAsync(int questId, int accountId, CancellationToken cancellationToken = default);

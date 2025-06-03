@@ -177,6 +177,7 @@ namespace Api
             builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
             builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
             builder.Services.AddScoped<IQuestOccurrenceRepository, QuestOccurrenceRepository>();
+            builder.Services.AddScoped<IQuestStatisticsRepository, QuestStatisticsRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();

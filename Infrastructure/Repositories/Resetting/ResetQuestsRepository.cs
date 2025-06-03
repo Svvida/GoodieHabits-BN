@@ -15,13 +15,25 @@ namespace Infrastructure.Repositories.Resetting
 
         public async Task<int> ResetQuestsAsync(CancellationToken cancellationToken = default)
         {
-            var resetedQuests = await _context.Quests
-                .Where(q => q.IsCompleted == true && q.NextResetAt <= DateTime.UtcNow)
-                .ExecuteUpdateAsync(setter => setter
-                    .SetProperty(p => p.IsCompleted, false)
-                    .SetProperty(p => p.NextResetAt, (DateTime?)null), cancellationToken)
+            var questsToReset = await _context.Quests
+                .Where(q => q.IsCompleted == true && (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow && q.NextResetAt <= DateTime.UtcNow)
+                .Include(q => q.Account)
+                    .ThenInclude(a => a.Profile)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-            return resetedQuests;
+
+            if (questsToReset.Count == 0)
+                return 0; // No quests to reset
+
+            foreach (var quest in questsToReset)
+            {
+                quest.IsCompleted = false;
+                quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return questsToReset.Count; // Return the number of quests reset
         }
     }
 }

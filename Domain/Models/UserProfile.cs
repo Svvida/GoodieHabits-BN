@@ -13,10 +13,13 @@ namespace Domain.Models
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int TotalQuests { get; set; } = 0;
+        public int ExistingQuests { get; set; } = 0;
+        public int CompletedExistingQuests { get; set; } = 0;
         // Stats for goals
         public int CompletedGoals { get; set; } = 0;
         public int ExpiredGoals { get; set; } = 0;
         public int TotalGoals { get; set; } = 0;
+        public int ActiveGoals { get; set; } = 0;
 
         public Account Account { get; set; } = null!;
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];

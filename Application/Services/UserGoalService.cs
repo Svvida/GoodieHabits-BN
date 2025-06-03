@@ -93,9 +93,10 @@ namespace Application.Services
                 ?? throw new NotFoundException($"User profile for account ID {quest.AccountId} not found.");
 
             userProfile.TotalGoals++;
+            userProfile.ActiveGoals++;
 
             await _userProfileRepository.UpdateAsync(userProfile, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation($"User profile for account ID {quest.AccountId} updated. Total goals: {userProfile.TotalGoals}.");
+            _logger.LogInformation("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, userProfile);
         }
 
         public async Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)

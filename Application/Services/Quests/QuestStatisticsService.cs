@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces.Quests;
+using Domain.Interfaces.Authentication;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -12,19 +13,22 @@ namespace Application.Services.Quests
         private readonly IQuestOccurrenceGenerator _occurrenceGenerator;
         private readonly ILogger<QuestStatisticsService> _logger;
         private readonly IQuestStatisticsCalculator _questStatisticsCalculator;
+        private readonly IQuestStatisticsRepository _questStatisticsRepository;
 
         public QuestStatisticsService(
             IQuestRepository questRepository,
             IQuestOccurrenceRepository questOccurrenceRepository,
             IQuestOccurrenceGenerator occurrenceGenerator,
             ILogger<QuestStatisticsService> logger,
-            IQuestStatisticsCalculator questStatisticsCalculator)
+            IQuestStatisticsCalculator questStatisticsCalculator,
+            IQuestStatisticsRepository questStatisticsRepository)
         {
             _questRepository = questRepository;
             _questOccurrenceRepository = questOccurrenceRepository;
             _occurrenceGenerator = occurrenceGenerator;
             _logger = logger;
             _questStatisticsCalculator = questStatisticsCalculator;
+            _questStatisticsRepository = questStatisticsRepository;
         }
 
         public async Task ProcessOccurrencesAsync(CancellationToken cancellationToken = default)
@@ -68,7 +72,7 @@ namespace Application.Services.Quests
                 quest.Statistics.LastCompletedAt
             });
 
-            await _questRepository.UpdateQuestAsync(quest, cancellationToken);
+            await _questStatisticsRepository.UpdateQuestStatisticsAsync(quest.Statistics, cancellationToken);
         }
 
         private static void UpdateQuestStatistics(Quest quest, QuestStatistics newStats)
