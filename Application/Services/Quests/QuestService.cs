@@ -98,6 +98,8 @@ namespace Application.Services.Quests
             var quest = _mapper.Map<Quest>(createDto);
             _logger.LogDebug("Quest created after mapping: {@quest}", quest);
 
+            if (quest.IsRepeatable())
+                quest.Statistics = new QuestStatistics();
 
             await _questRepository.AddQuestAsync(quest, cancellationToken);
 
@@ -107,7 +109,6 @@ namespace Application.Services.Quests
             // Handle NextResetAt after creation to get access to user's timezone. Value will be saved with occurrences
             if (createdQuest.IsRepeatable())
             {
-                createdQuest.Statistics = new QuestStatistics();
                 createdQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(createdQuest);
                 await _questRepository.UpdateQuestAsync(createdQuest, cancellationToken).ConfigureAwait(false);
                 var occurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(createdQuest, cancellationToken).ConfigureAwait(false);
