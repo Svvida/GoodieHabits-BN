@@ -30,5 +30,15 @@ namespace Api.Controllers
             var quests = await _questService.GetActiveQuestsAsync(accountId, cancellationToken);
             return Ok(quests);
         }
+
+        [HttpGet("eligible-for-goals")]
+        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetQuestsEligibleForGoalAsync(CancellationToken cancellationToken = default)
+        {
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var quests = await _questService.GetQuestEligibleForGoalAsync(accountId, cancellationToken);
+            return Ok(quests);
+        }
     }
 }

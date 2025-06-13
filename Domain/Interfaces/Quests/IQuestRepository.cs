@@ -18,5 +18,6 @@ namespace Domain.Interfaces.Quests
         Task UpdateQuestAsync(Quest quest, CancellationToken cancellationToken = default);
         void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd);
         void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove);
+        Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default);
     }
 }
