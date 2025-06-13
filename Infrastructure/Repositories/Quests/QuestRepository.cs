@@ -402,6 +402,28 @@ namespace Infrastructure.Repositories.Quests
             _context.WeeklyQuest_Days.RemoveRange(weekdaysToRemove);
         }
 
+        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default)
+        {
+            var activeUserGoalsIds = await _context.UserGoals
+                .Where(g => g.AccountId == accountId && !g.IsExpired)
+                .AsNoTracking()
+                .Select(g => g.QuestId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return await _context.Quests
+                .Where(q => q.AccountId == accountId &&
+                            !q.IsCompleted &&
+                            (q.EndDate ?? DateTime.MaxValue) > now &&
+                            !activeUserGoalsIds.Contains(q.Id))
+                .AsNoTracking()
+                .Include(q => q.WeeklyQuest_Days)
+                .Include(q => q.MonthlyQuest_Days)
+                .Include(q => q.SeasonalQuest_Season)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)
         {
             return query.Select(q => new Quest

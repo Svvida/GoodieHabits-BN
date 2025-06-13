@@ -12,5 +12,6 @@ namespace Application.Interfaces.Quests
         Task<BaseGetQuestDto> UpdateUserQuestAsync(BaseUpdateQuestDto updateDto, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<BaseGetQuestDto> UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task DeleteQuestAsync(int questId, QuestTypeEnum questType, int accountId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<BaseGetQuestDto>> GetQuestEligibleForGoalAsync(int accountId, CancellationToken cancellationToken = default);
     }
 }

@@ -256,6 +256,15 @@ namespace Application.Services.Quests
             await _userProfileRepository.UpdateAsync(questToDelete.Account.Profile, cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<IEnumerable<BaseGetQuestDto>> GetQuestEligibleForGoalAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
+
+            var quests = await _questRepository.GetQuestEligibleForGoalAsync(accountId, nowUtc, cancellationToken).ConfigureAwait(false);
+
+            return quests.Select(MapToDto);
+        }
+
         private BaseGetQuestDto MapToDto(Quest quest)
         {
             return quest.QuestType switch
