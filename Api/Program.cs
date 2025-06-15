@@ -196,6 +196,7 @@ namespace Api
             builder.Services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrenceGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
+            builder.Services.AddScoped<IStatsService, StatsService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

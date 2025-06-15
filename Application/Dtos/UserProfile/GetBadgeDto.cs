@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos.Profiles
+﻿namespace Application.Dtos.UserProfile
 {
     public class GetBadgeDto
     {

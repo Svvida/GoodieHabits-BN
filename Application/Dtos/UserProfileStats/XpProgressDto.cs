@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos.Profiles
+﻿namespace Application.Dtos.UserProfileStats
 {
     public class XpProgressDto
     {
