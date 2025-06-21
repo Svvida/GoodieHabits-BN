@@ -5,18 +5,18 @@ namespace Api.BackgroundTasks
 {
     public class ProcessStatisticsForRepeatableQuestsTask : StartupTask
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ProcessStatisticsForRepeatableQuestsTask> _logger;
 
-        public ProcessStatisticsForRepeatableQuestsTask(IServiceProvider serviceProvider, ILogger<ProcessStatisticsForRepeatableQuestsTask> logger)
+        public ProcessStatisticsForRepeatableQuestsTask(IServiceScopeFactory scopeFactory, ILogger<ProcessStatisticsForRepeatableQuestsTask> logger)
         {
-            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = _scopeFactory.CreateScope();
             var questRepository = scope.ServiceProvider.GetRequiredService<IQuestRepository>();
             var statisticsService = scope.ServiceProvider.GetRequiredService<IQuestStatisticsService>();
 

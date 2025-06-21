@@ -1,4 +1,5 @@
-﻿using Domain.Enum;
+﻿using AutoMapper;
+using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
@@ -12,13 +13,16 @@ namespace Infrastructure.Repositories.Quests
     {
         private readonly AppDbContext _context;
         private readonly ILogger<QuestRepository> _logger;
+        private readonly IMapper _mapper;
 
         public QuestRepository(
             AppDbContext context,
-            ILogger<QuestRepository> logger)
+            ILogger<QuestRepository> logger,
+            IMapper mapper)
         {
             _context = context;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Quest>> GetActiveQuestsAsync(
@@ -372,9 +376,13 @@ namespace Infrastructure.Repositories.Quests
                     .FirstOrDefaultAsync(q => q.Id == questChanges.Id, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {questChanges.Id} not found.");
 
+            //_logger.LogDebug("Quest from database before update: {@existingQuestInDb}", existingQuestInDb);
+
 
             // Apply changes from questFromService to existingQuestInDb's scalar properties
-            _context.Entry(existingQuestInDb).CurrentValues.SetValues(questChanges);
+            _mapper.Map(questChanges, existingQuestInDb);
+
+            //_logger.LogDebug("Quest from database after update: {@existingQuestInDb}", existingQuestInDb);
 
             //if (questChanges.Statistics != null && existingQuestInDb.IsRepeatable()) // If the incoming data has statistics and quest is repeatable
             //{
@@ -422,6 +430,16 @@ namespace Infrastructure.Repositories.Quests
                 .Include(q => q.SeasonalQuest_Season)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        public async Task<Quest?> GetQuestByIdForCompletionAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _context.Quests
+                .Where(q => q.Id == questId)
+                .Include(q => q.Account)
+                    .ThenInclude(a => a.Profile)
+                .Include(q => q.WeeklyQuest_Days)
+                .Include(q => q.MonthlyQuest_Days)
         }
 
         private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)

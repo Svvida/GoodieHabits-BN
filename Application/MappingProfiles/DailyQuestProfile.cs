@@ -10,6 +10,8 @@ namespace Application.MappingProfiles
     {
         public DailyQuestProfile()
         {
+            CreateMap<Quest, Quest>()
+                .ForMember(dest => dest.Quest_QuestLabels, opt => opt.Ignore());
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<Quest, GetDailyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))

@@ -1,4 +1,6 @@
-﻿using Domain.Interfaces.Quests;
+﻿using AutoMapper;
+using Domain.Exceptions;
+using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +12,14 @@ namespace Infrastructure.Repositories.Quests
     {
         private readonly AppDbContext _context;
         private readonly ILogger<QuestOccurrenceRepository> _logger;
+        private readonly IMapper _mapper;
 
-        public QuestOccurrenceRepository(AppDbContext context, ILogger<QuestOccurrenceRepository> logger)
+        public QuestOccurrenceRepository(AppDbContext context, ILogger<QuestOccurrenceRepository> logger
+            , IMapper mapper)
         {
             _context = context;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task SaveOccurrencesAsync(List<QuestOccurrence> occurences, CancellationToken cancellationToken = default)
@@ -32,7 +37,12 @@ namespace Infrastructure.Repositories.Quests
 
         public async Task UpdateOccurrence(QuestOccurrence occurence, CancellationToken cancellationToken = default)
         {
-            _context.QuestOccurrences.Update(occurence);
+            var existingOccurrence = await _context.QuestOccurrences
+                .FirstOrDefaultAsync(q => q.Id == occurence.Id, cancellationToken)
+                .ConfigureAwait(false)
+                ?? throw new NotFoundException($"Occurrence with ID: {occurence.Id} not found.");
+
+            _mapper.Map(occurence, existingOccurrence);
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 

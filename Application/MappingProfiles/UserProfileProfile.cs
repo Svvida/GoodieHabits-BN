@@ -10,6 +10,7 @@ namespace Application.MappingProfiles
     {
         public UserProfileProfile()
         {
+            CreateMap<UserProfile, UserProfile>();
             // Entity -> DTO
             CreateMap<UserProfile, GetUserProfileStatsDto>()
                 .ForMember(dest => dest.Quests, opt => opt.MapFrom(src => src))

@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using AutoMapper;
+using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,12 @@ namespace Infrastructure.Repositories
     public class UserProfileRepository : IUserProfileRepository
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
 
-        public UserProfileRepository(AppDbContext context)
+        public UserProfileRepository(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
@@ -29,7 +32,13 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateAsync(UserProfile userProfile, CancellationToken cancellationToken = default)
         {
-            _context.UserProfiles.Update(userProfile);
+            var existingProfile = await _context.UserProfiles
+                .FirstOrDefaultAsync(u => u.Id == userProfile.Id, cancellationToken)
+                .ConfigureAwait(false)
+                ?? throw new KeyNotFoundException($"User profile with ID: {userProfile.Id} not found.");
+
+            _mapper.Map(userProfile, existingProfile);
+
             await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 

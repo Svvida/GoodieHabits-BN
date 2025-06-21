@@ -186,7 +186,7 @@ namespace Application.Services.Quests
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
 
-            await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
+            //await _questRepository.UpdateQuestAsync(existingQuest, cancellationToken);
             await _questStatisticsService.ProcessStatisticsForQuestAsync(existingQuest, cancellationToken);
 
             if (completionContext.ShouldIncrementCount)
@@ -321,16 +321,20 @@ namespace Application.Services.Quests
         // Occurrence management
         private async Task<QuestOccurrence?> GetOrCreateOccurrenceAsync(Quest quest, Instant nowUtc, CancellationToken cancellationToken)
         {
-            var occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
+            QuestOccurrence? occurrence = null;
 
-            _logger.LogDebug("Occurrence for quest: {@occurrence}", occurrence);
-
-            if (quest.IsRepeatable() && occurrence is null)
+            if (quest.IsRepeatable())
             {
-                _logger.LogDebug("Missing occurrence for quest, creating new one.");
-                await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
                 occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
-                _logger.LogDebug("Saved occurrence: {@occurrence}", occurrence);
+                _logger.LogDebug("Occurrence for quest: {@occurrence}", occurrence);
+
+                if (occurrence is null)
+                {
+                    _logger.LogDebug("Missing occurrence for quest, creating new one.");
+                    await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
+                    occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
+                    _logger.LogDebug("Saved occurrence: {@occurrence}", occurrence);
+                }
             }
 
             return occurrence;
@@ -375,7 +379,7 @@ namespace Application.Services.Quests
                 _logger.LogDebug("Occurrence for quest is not null, setting 'WasCompleted' to true");
                 context.Occurrence.WasCompleted = true;
                 context.Occurrence.CompletedAt = context.NowUtc.ToDateTimeUtc();
-                await _questOccurrenceRepository.UpdateOccurrence(context.Occurrence, cancellationToken);
+                //await _questOccurrenceRepository.UpdateOccurrence(context.Occurrence, cancellationToken);
             }
 
             quest.LastCompletedAt = context.NowUtc.ToDateTimeUtc();
@@ -389,7 +393,7 @@ namespace Application.Services.Quests
             {
                 _logger.LogDebug("Occurrence for quest is not null, setting 'WasCompleted' to false");
                 occurrence.WasCompleted = false;
-                await _questOccurrenceRepository.UpdateOccurrence(occurrence, cancellationToken);
+                //await _questOccurrenceRepository.UpdateOccurrence(occurrence, cancellationToken);
             }
 
             quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
