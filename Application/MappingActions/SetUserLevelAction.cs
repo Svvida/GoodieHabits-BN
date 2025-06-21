@@ -1,4 +1,4 @@
-﻿using Application.Dtos.Profiles;
+﻿using Application.Dtos.UserProfileStats;
 using Application.Interfaces;
 using Application.Models;
 using AutoMapper;

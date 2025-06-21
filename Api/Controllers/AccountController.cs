@@ -28,7 +28,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var account = await _accountService.GetAccountByIdAsync(accountId);
+            var account = await _accountService.GetAccountWithProfileInfoAsync(accountId);
             if (account is null)
             {
                 return NotFound(new ProblemDetails

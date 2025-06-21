@@ -4,18 +4,18 @@ namespace Api.BackgroundTasks
 {
     public class ProcessOccurrencesTask : StartupTask
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ProcessOccurrencesTask> _logger;
 
-        public ProcessOccurrencesTask(IServiceProvider serviceProvider, ILogger<ProcessOccurrencesTask> logger)
+        public ProcessOccurrencesTask(IServiceScopeFactory scopeFactory, ILogger<ProcessOccurrencesTask> logger)
         {
-            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = _scopeFactory.CreateScope();
             var serviceProvider = scope.ServiceProvider;
             var questStatisticsService = serviceProvider.GetRequiredService<IQuestStatisticsService>();
             _logger.LogInformation("Start processing occurrences.");

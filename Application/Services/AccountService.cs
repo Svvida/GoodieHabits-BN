@@ -43,6 +43,13 @@ namespace Application.Services
             return _mapper.Map<GetAccountDto>(account);
         }
 
+        public async Task<GetAccountDto> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var account = await _accountRepository.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {accountId} was not found");
+            return _mapper.Map<GetAccountDto>(account);
+        }
+
         public async Task UpdateAccountAsync(int accountId, UpdateAccountDto patchDto, CancellationToken cancellationToken = default)
         {
             var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Profile).ConfigureAwait(false)

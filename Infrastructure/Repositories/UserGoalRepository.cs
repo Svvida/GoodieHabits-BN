@@ -1,4 +1,6 @@
-﻿using Domain.Enum;
+﻿using AutoMapper;
+using Domain.Enum;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
@@ -9,10 +11,12 @@ namespace Infrastructure.Repositories
     public class UserGoalRepository : IUserGoalRepository
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
 
-        public UserGoalRepository(AppDbContext context)
+        public UserGoalRepository(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task CreateAsync(UserGoal userGoal, CancellationToken cancellationToken = default)
@@ -23,7 +27,13 @@ namespace Infrastructure.Repositories
 
         public async Task UpdateAsync(UserGoal userGoal, CancellationToken cancellationToken = default)
         {
-            _context.UserGoals.Update(userGoal);
+            var existingGoal = await _context.UserGoals
+                .FirstOrDefaultAsync(ug => ug.Id == userGoal.Id, cancellationToken)
+                .ConfigureAwait(false)
+                ?? throw new NotFoundException($"User Goal with ID: {userGoal.Id} not found.");
+
+            _mapper.Map(userGoal, existingGoal);
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 

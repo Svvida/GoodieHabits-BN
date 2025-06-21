@@ -19,5 +19,6 @@ namespace Domain.Interfaces.Quests
         void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd);
         void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove);
         Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestByIdForCompletionAsync(int questId, CancellationToken cancellationToken = default);
     }
 }
