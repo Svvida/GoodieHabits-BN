@@ -58,7 +58,7 @@ public class Function
 
             _logger.LogInformation("Attempting to expire goals...");
 
-            var expiredGoals = await resetRepo.ExpireGoalsAsync(CancellationToken.None);
+            var expiredGoals = await resetRepo.PrepareGoalsForExpirationAsync(CancellationToken.None);
 
             _logger.LogInformation($"{expiredGoals} goals expired successfully.");
         }

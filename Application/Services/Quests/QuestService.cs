@@ -111,7 +111,7 @@ namespace Application.Services.Quests
             {
                 createdQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(createdQuest);
                 await _questRepository.UpdateQuestAsync(createdQuest, cancellationToken).ConfigureAwait(false);
-                var occurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(createdQuest, cancellationToken).ConfigureAwait(false);
+                var occurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(createdQuest, cancellationToken).ConfigureAwait(false);
 
                 _logger.LogDebug("Initial occurrences created: {@occurrences}", occurrences);
             }
@@ -148,7 +148,7 @@ namespace Application.Services.Quests
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
                 if (await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, now, cancellationToken).ConfigureAwait(false) is null)
                 {
-                    var occurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(existingQuest, cancellationToken).ConfigureAwait(false);
+                    var occurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
                     _logger.LogDebug("New occurrences created: {@occurrences}", occurrences);
                 }
             }
@@ -331,7 +331,7 @@ namespace Application.Services.Quests
                 if (occurrence is null)
                 {
                     _logger.LogDebug("Missing occurrence for quest, creating new one.");
-                    await _questOccurrenceGenerator.GenerateMissingOccurrencesAsync(quest, cancellationToken);
+                    await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken);
                     occurrence = await _questOccurrenceRepository.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
                     _logger.LogDebug("Saved occurrence: {@occurrence}", occurrence);
                 }

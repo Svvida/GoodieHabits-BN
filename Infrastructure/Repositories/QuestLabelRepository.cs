@@ -1,29 +1,15 @@
-﻿using AutoMapper;
-using Domain.Exceptions;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class QuestLabelRepository : IQuestLabelRepository
+    public class QuestLabelRepository : BaseRepository<QuestLabel>, IQuestLabelRepository
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
 
-        public QuestLabelRepository(AppDbContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-        }
-
-        public async Task<QuestLabel?> GetLabelByIdAsync(int labelId, CancellationToken cancellationToken = default)
-        {
-            return await _context.QuestLabels
-                .FirstOrDefaultAsync(ql => ql.Id == labelId, cancellationToken)
-                .ConfigureAwait(false) ?? null;
-        }
+        public QuestLabelRepository(AppDbContext context) : base(context) { }
 
         public async Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int accountId, CancellationToken cancellationToken = default)
         {
@@ -32,27 +18,6 @@ namespace Infrastructure.Repositories
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public async Task CreateLabelAsync(QuestLabel label, CancellationToken cancellationToken = default)
-        {
-            await _context.QuestLabels.AddAsync(label, cancellationToken).ConfigureAwait(false);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task UpdateLabelAsync(QuestLabel label, CancellationToken cancellationToken = default)
-        {
-            var existingLabel = await GetLabelByIdAsync(label.Id, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest Label with ID: {label.Id} not found.");
-
-            _mapper.Map(label, existingLabel);
-
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-        public async Task DeleteLabelAsync(QuestLabel label, CancellationToken cancellationToken = default)
-        {
-            _context.QuestLabels.Remove(label);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<QuestLabel?> GetLabelByValueAsync(string value, int accountId, CancellationToken cancellationToken = default)

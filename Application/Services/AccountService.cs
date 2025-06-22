@@ -35,14 +35,6 @@ namespace Application.Services
             _logger = logger;
         }
 
-        public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
-        {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Profile).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID {accountId} was not found");
-
-            return _mapper.Map<GetAccountDto>(account);
-        }
-
         public async Task<GetAccountDto> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
         {
             var account = await _accountRepository.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
@@ -52,7 +44,7 @@ namespace Application.Services
 
         public async Task UpdateAccountAsync(int accountId, UpdateAccountDto patchDto, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Profile).ConfigureAwait(false)
+            var account = await _accountRepository.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");
 
             if (patchDto.Login is not null && !patchDto.Login.Equals(account.Login, StringComparison.OrdinalIgnoreCase))
@@ -75,7 +67,7 @@ namespace Application.Services
 
             _mapper.Map(patchDto, account);
 
-            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+            _accountRepository.Update(account);
         }
 
         public async Task ChangePasswordAsync(int accountId, ChangePasswordDto resetPasswordDto, CancellationToken cancellationToken = default)
@@ -89,7 +81,7 @@ namespace Application.Services
 
             account.HashPassword = _passwordHasher.HashPassword(account, resetPasswordDto.NewPassword);
 
-            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+            _accountRepository.Update(account);
         }
 
         public async Task DeleteAccountAsync(int accountId, DeleteAccountDto deleteAccountDto, CancellationToken cancellationToken = default)
@@ -102,7 +94,7 @@ namespace Application.Services
                 throw new UnauthorizedException("Invalid password");
 
             await _questLabelRepository.DeleteQuestLabelsByAccountIdAsync(accountId, cancellationToken).ConfigureAwait(false);
-            await _accountRepository.DeleteAsync(account, cancellationToken).ConfigureAwait(false);
+            _accountRepository.Delete(account);
         }
 
         public async Task UpdateTimeZoneIfChangedAsync(int accountId, string? timeZone, CancellationToken cancellationToken = default)
@@ -125,7 +117,7 @@ namespace Application.Services
             if (!string.Equals(account.TimeZone, normalizedTimeZone, StringComparison.Ordinal))
             {
                 account.TimeZone = normalizedTimeZone;
-                await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+                _accountRepository.Update(account);
                 _logger.LogInformation("Updated timezone for user {UserId} to {TimeZone}.", accountId, normalizedTimeZone);
             }
         }

@@ -58,7 +58,7 @@ public class Function
 
             _logger.LogInformation("Attempting to reset quests...");
 
-            var resetedQuests = await resetRepo.ResetQuestsAsync(CancellationToken.None);
+            var resetedQuests = await resetRepo.PrepareQuestsForResetAsync(CancellationToken.None);
 
             _logger.LogInformation($"{resetedQuests} quests reset successfully.");
         }

@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces.Resetting;
+﻿using Application.Interfaces.Quests;
 
 namespace Api.BackgroundTasks
 {
@@ -15,10 +15,28 @@ namespace Api.BackgroundTasks
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var resetService = scope.ServiceProvider.GetRequiredService<IResetQuestsRepository>();
-            int resetCount = await resetService.ResetQuestsAsync(cancellationToken);
-            _logger.LogInformation("ResetQuestsTask completed. Reset {Count} quests.", resetCount);
+            _logger.LogInformation("ResetQuestsTask started.");
+            await using var scope = _scopeFactory.CreateAsyncScope();
+
+            try
+            {
+                var questResetService = scope.ServiceProvider.GetRequiredService<IQuestResetService>();
+
+                int affectedRows = await questResetService.ResetCompletedQuestsAsync(cancellationToken).ConfigureAwait(false);
+
+                if (affectedRows > 0)
+                {
+                    _logger.LogInformation("ResetQuestsTask successfully saved changes to the database. Affected rows: {Count}.", affectedRows);
+                }
+                else
+                {
+                    _logger.LogInformation("ResetQuestsTask found no quests to reset.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while executing ResetQuestsTask: {Message}", ex.Message);
+            }
         }
     }
 }

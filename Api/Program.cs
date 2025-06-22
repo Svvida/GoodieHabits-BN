@@ -20,16 +20,11 @@ using Application.Validators.Quests;
 using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
-using Domain.Interfaces.Quests;
-using Domain.Interfaces.Resetting;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Quests;
-using Infrastructure.Repositories.Resetting;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -169,15 +164,7 @@ namespace Api
             builder.Services.AddFluentValidationRulesToSwagger();
 
             // Register Repositories
-            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-            builder.Services.AddScoped<IQuestRepository, QuestRepository>();
-            builder.Services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
-            builder.Services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
-            builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
-            builder.Services.AddScoped<IUserGoalRepository, UserGoalRepository>();
-            builder.Services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
-            builder.Services.AddScoped<IQuestOccurrenceRepository, QuestOccurrenceRepository>();
-            builder.Services.AddScoped<IQuestStatisticsRepository, QuestStatisticsRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -194,9 +181,10 @@ namespace Api
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
-            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrenceGenerator>();
+            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
             builder.Services.AddScoped<IStatsService, StatsService>();
+            builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

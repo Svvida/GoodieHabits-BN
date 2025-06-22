@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Quests;
 using Domain.Enum;
+using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -11,13 +12,56 @@ namespace Application.Services.Quests
     {
         private readonly ILogger<QuestResetService> _logger;
         private readonly IClock _clock;
+        private readonly IUnitOfWork _unitOfWork;
 
         public QuestResetService(
             ILogger<QuestResetService> logger,
-            IClock clock)
+            IClock clock,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _clock = clock;
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<int> ResetCompletedQuestsAsync(CancellationToken cancellationToken = default)
+        {
+            var questsToReset = await _unitOfWork.Quests.GetQuestsEligibleForResetAsync(cancellationToken).ConfigureAwait(false);
+
+            if (!questsToReset.Any())
+            {
+                _logger.LogInformation("No quests eligible for reset at this time.");
+                return 0;
+            }
+
+            foreach (var quest in questsToReset)
+            {
+                quest.IsCompleted = false;
+            }
+
+            var resetQuestsByAccount = questsToReset
+                .GroupBy(q => q.AccountId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var accountIds = resetQuestsByAccount.Keys.ToHashSet();
+
+            var userProfiles = await _unitOfWork.UserProfiles.GetProfilesByAccountIdsAsync(accountIds, cancellationToken).ConfigureAwait(false);
+
+            foreach (var profile in userProfiles)
+            {
+                if (resetQuestsByAccount.TryGetValue(profile.AccountId, out var count))
+                {
+                    profile.CompletedExistingQuests = Math.Max(0, profile.CompletedExistingQuests - count);
+                    _logger.LogDebug("Profile ID: {ProfileId} - Reset {Count} quests. New CompletedExistingQuests: {CompletedQuests}",
+                        profile.Id, count, profile.CompletedExistingQuests);
+                }
+                else
+                {
+                    _logger.LogDebug("Profile ID: {ProfileId} - No quests to reset.", profile.Id);
+                }
+            }
+
+            return await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public DateTime? GetNextResetTimeUtc(Quest quest)

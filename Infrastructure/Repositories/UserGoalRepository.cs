@@ -1,41 +1,16 @@
-﻿using AutoMapper;
-using Domain.Enum;
-using Domain.Exceptions;
+﻿using Domain.Enum;
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class UserGoalRepository : IUserGoalRepository
+    public class UserGoalRepository : BaseRepository<UserGoal>, IUserGoalRepository
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
 
-        public UserGoalRepository(AppDbContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-        }
-
-        public async Task CreateAsync(UserGoal userGoal, CancellationToken cancellationToken = default)
-        {
-            await _context.UserGoals.AddAsync(userGoal, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task UpdateAsync(UserGoal userGoal, CancellationToken cancellationToken = default)
-        {
-            var existingGoal = await _context.UserGoals
-                .FirstOrDefaultAsync(ug => ug.Id == userGoal.Id, cancellationToken)
-                .ConfigureAwait(false)
-                ?? throw new NotFoundException($"User Goal with ID: {userGoal.Id} not found.");
-
-            _mapper.Map(userGoal, existingGoal);
-
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+        public UserGoalRepository(AppDbContext context) : base(context) { }
 
         public async Task<int> GetActiveGoalsCountByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
         {
@@ -66,6 +41,14 @@ namespace Infrastructure.Repositories
         {
             return await _context.UserGoals
                 .AnyAsync(ug => ug.QuestId == questId && !ug.IsExpired, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<UserGoal>> GetGoalsToExpireAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.UserGoals
+                .Where(ug => !ug.IsExpired && ug.EndsAt <= DateTime.UtcNow)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
     }

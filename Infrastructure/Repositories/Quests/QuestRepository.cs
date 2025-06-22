@@ -1,29 +1,17 @@
-﻿using AutoMapper;
-using Domain.Enum;
+﻿using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class QuestRepository : IQuestRepository
+    public class QuestRepository : BaseRepository<Quest>, IQuestRepository
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<QuestRepository> _logger;
-        private readonly IMapper _mapper;
-
-        public QuestRepository(
-            AppDbContext context,
-            ILogger<QuestRepository> logger,
-            IMapper mapper)
-        {
-            _context = context;
-            _logger = logger;
-            _mapper = mapper;
-        }
+        public QuestRepository(AppDbContext context) : base(context) { }
 
         public async Task<IEnumerable<Quest>> GetActiveQuestsAsync(
             int accountId,
@@ -221,7 +209,6 @@ namespace Infrastructure.Repositories.Quests
             }
 
             var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
             return result;
         }
 
@@ -329,18 +316,6 @@ namespace Infrastructure.Repositories.Quests
             }
         }
 
-        public async Task DeleteQuestAsync(Quest quest, CancellationToken cancellationToken = default)
-        {
-            _context.Quests.Remove(quest);
-            var result = await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            if (result == 0)
-            {
-                // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
-                _logger.LogError("Quest with id {questId} not found.", quest.Id);
-                throw new InvalidArgumentException($"Failed to delete quest with ID {quest.Id}.  Possible authorization failure or data inconsistency.");
-            }
-        }
-
         public void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd)
         {
             _context.Quest_QuestLabels.AddRange(labelsToAdd);
@@ -361,44 +336,6 @@ namespace Infrastructure.Repositories.Quests
                         q.AccountId == accountId,
                         cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public async Task AddQuestAsync(Quest quest, CancellationToken cancellationToken = default)
-        {
-            _context.Quests.Add(quest);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task UpdateQuestAsync(Quest questChanges, CancellationToken cancellationToken = default)
-        {
-
-            var existingQuestInDb = await _context.Quests
-                    .FirstOrDefaultAsync(q => q.Id == questChanges.Id, cancellationToken)
-                ?? throw new NotFoundException($"Quest with ID {questChanges.Id} not found.");
-
-            //_logger.LogDebug("Quest from database before update: {@existingQuestInDb}", existingQuestInDb);
-
-
-            // Apply changes from questFromService to existingQuestInDb's scalar properties
-            _mapper.Map(questChanges, existingQuestInDb);
-
-            //_logger.LogDebug("Quest from database after update: {@existingQuestInDb}", existingQuestInDb);
-
-            //if (questChanges.Statistics != null && existingQuestInDb.IsRepeatable()) // If the incoming data has statistics and quest is repeatable
-            //{
-            //    if (existingQuestInDb.Statistics == null)
-            //    {
-            //        existingQuestInDb.Statistics = new QuestStatistics { QuestId = existingQuestInDb.Id };
-
-            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-            //    }
-            //    else
-            //    {
-            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-            //    }
-            //}
-
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd)
@@ -431,15 +368,14 @@ namespace Infrastructure.Repositories.Quests
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
-        public async Task<Quest?> GetQuestByIdForCompletionAsync(int questId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetQuestsEligibleForResetAsync(CancellationToken cancellationToken = default)
         {
-            var quest = await _context.Quests
-                .Where(q => q.Id == questId)
-                .Include(q => q.Account)
-                    .ThenInclude(a => a.Profile)
-                .Include(q => q.WeeklyQuest_Days)
-                .Include(q => q.MonthlyQuest_Days)
+            return await _context.Quests
+                .Where(q => q.IsCompleted &&
+                       (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow &&
+                       (q.NextResetAt.HasValue && q.NextResetAt <= DateTime.UtcNow))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)

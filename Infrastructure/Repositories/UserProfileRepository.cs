@@ -1,21 +1,14 @@
-﻿using AutoMapper;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class UserProfileRepository : IUserProfileRepository
+    public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
-
-        public UserProfileRepository(AppDbContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-        }
+        public UserProfileRepository(AppDbContext context) : base(context) { }
 
         public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
         {
@@ -30,16 +23,12 @@ namespace Infrastructure.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task UpdateAsync(UserProfile userProfile, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<UserProfile>> GetProfilesByAccountIdsAsync(IEnumerable<int> accountIds, CancellationToken cancellationToken = default)
         {
-            var existingProfile = await _context.UserProfiles
-                .FirstOrDefaultAsync(u => u.Id == userProfile.Id, cancellationToken)
-                .ConfigureAwait(false)
-                ?? throw new KeyNotFoundException($"User profile with ID: {userProfile.Id} not found.");
-
-            _mapper.Map(userProfile, existingProfile);
-
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.UserProfiles
+                .Where(u => accountIds.Contains(u.AccountId))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public async Task<UserProfile?> GetUserProfileWithGoalsAsync(int accountId, CancellationToken cancellationToken = default)
