@@ -1,11 +1,9 @@
 ﻿using Domain.Enum;
-using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories.Quests
 {
@@ -141,13 +139,7 @@ namespace Infrastructure.Repositories.Quests
                     : new List<WeeklyQuest_Day>()
             }).AsNoTracking();
 
-            //var result = await ApplyQuestProjection(baseQuery).ToListAsync(cancellationToken).ConfigureAwait(false);
-            //_logger.LogDebug("Fetched {@result} quests from repository.", result);
-            //return result;
-
-            var result = await projectedQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
-            return result;
+            return await projectedQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<Quest>> GetQuestsByTypeAsync(
@@ -174,9 +166,7 @@ namespace Infrastructure.Repositories.Quests
                 quests = quests.Include(q => q.SeasonalQuest_Season).AsNoTracking();
             }
 
-            var result = await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
-            return result;
+            return await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
@@ -208,8 +198,7 @@ namespace Infrastructure.Repositories.Quests
                 quest = quest.Include(q => q.SeasonalQuest_Season).AsNoTracking();
             }
 
-            var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            return result;
+            return await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default)
@@ -302,30 +291,6 @@ namespace Infrastructure.Repositories.Quests
             return await projectedQuests.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
-        {
-            var result = await _context.Quests.Where(q => q.Id == questId)
-                .ExecuteDeleteAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (result == 0)
-            {
-                // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
-                _logger.LogError("Quest with id {questId} not found.", questId);
-                throw new InvalidArgumentException($"Failed to delete quest with ID {questId}.  Possible authorization failure or data inconsistency.");
-            }
-        }
-
-        public void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd)
-        {
-            _context.Quest_QuestLabels.AddRange(labelsToAdd);
-        }
-
-        public void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove)
-        {
-            _context.Quest_QuestLabels.RemoveRange(labelsToRemove);
-        }
-
         public async Task<bool> IsQuestOwnedByUserAsync(
             int questId,
             int accountId,
@@ -336,15 +301,6 @@ namespace Infrastructure.Repositories.Quests
                         q.AccountId == accountId,
                         cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd)
-        {
-            _context.WeeklyQuest_Days.AddRange(weekdaysToAdd);
-        }
-        public void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove)
-        {
-            _context.WeeklyQuest_Days.RemoveRange(weekdaysToRemove);
         }
 
         public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default)

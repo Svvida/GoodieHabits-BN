@@ -10,6 +10,7 @@ namespace Domain.Interfaces
         Task<Account?> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default);
         Task<bool> DoesLoginExistAsync(string login, int accountIdToExclude, CancellationToken cancellationToken = default);
         Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default);
+        Task<bool> DoesNicknameExistAsync(string nickname, int accountIdToExclude, CancellationToken cancellationToken = default);
         // In delete method, we need to manually delete Quest_QuestLabels
     }
 }

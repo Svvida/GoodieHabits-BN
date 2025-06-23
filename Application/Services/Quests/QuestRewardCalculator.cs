@@ -9,12 +9,12 @@ namespace Application.Services.Quests
 {
     public class QuestRewardCalculator : IQuestRewardCalculator
     {
-        private readonly IUserGoalRepository _userGoalRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<QuestRewardCalculator> _logger;
 
-        public QuestRewardCalculator(IUserGoalRepository userGoalRepository, ILogger<QuestRewardCalculator> logger)
+        public QuestRewardCalculator(IUnitOfWork unitOfWork, ILogger<QuestRewardCalculator> logger)
         {
-            _userGoalRepository = userGoalRepository;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -22,7 +22,7 @@ namespace Application.Services.Quests
         {
             var rewards = new QuestRewards();
 
-            var userGoal = await _userGoalRepository.GetActiveGoalByQuestIdAsync(quest.Id, cancellationToken).ConfigureAwait(false);
+            var userGoal = await _unitOfWork.UserGoals.GetActiveGoalByQuestIdAsync(quest.Id, cancellationToken).ConfigureAwait(false);
 
             if (userGoal is not null)
             {

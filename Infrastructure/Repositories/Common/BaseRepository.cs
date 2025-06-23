@@ -20,6 +20,17 @@ namespace Infrastructure.Repositories.Common
                 .ConfigureAwait(false);
         }
 
+        public async Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<T>().AnyAsync(entity => EF.Property<int>(entity, "Id") == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task ExecuteDeleteAsync(int id, CancellationToken cancellationToken = default)
+        {
+            await _context.Set<T>().Where(entity => EF.Property<int>(entity, "Id") == id)
+                .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        }
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
             await _context.Set<T>().AddAsync(entity, cancellationToken).ConfigureAwait(false);
@@ -33,6 +44,11 @@ namespace Infrastructure.Repositories.Common
         public void Delete(T entity)
         {
             _context.Set<T>().Remove(entity);
+        }
+
+        public void DeleteRange(IEnumerable<T> entities)
+        {
+            _context.Set<T>().RemoveRange(entities);
         }
     }
 }

@@ -13,5 +13,8 @@ namespace Application.Dtos.Quests
         public string? Emoji { get; set; }
         public string? Priority { get; set; }
         public HashSet<int> Labels { get; set; } = null!;
+
+        [JsonIgnore]
+        public int AccountId { get; set; }
     }
 }

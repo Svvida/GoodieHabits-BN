@@ -5,9 +5,8 @@ namespace Domain.Interfaces
 {
     public interface IQuestLabelRepository : IBaseRepository<QuestLabel>
     {
-        Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int accountId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int accountId, bool asNoTracking, CancellationToken cancellationToken = default);
         Task<QuestLabel?> GetLabelByValueAsync(string value, int accountId, CancellationToken cancellationToken = default);
         Task<bool> IsLabelOwnedByUserAsync(int labelId, int accountId, CancellationToken cancellationToken = default);
-        Task DeleteQuestLabelsByAccountIdAsync(int accountId, CancellationToken cancellationToken = default);
     }
 }
