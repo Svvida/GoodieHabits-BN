@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Application.Dtos.Accounts;
+﻿using Application.Dtos.Accounts;
 using Application.Services;
 using AutoMapper;
 using Domain.Exceptions;
@@ -16,21 +15,17 @@ namespace Tests.Services
     public class AccountServiceTests
     {
         private readonly AccountService _accountService;
-        private readonly Mock<IAccountRepository> _accountRepositoryMock = new();
-        private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock = new();
         private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock = new();
-        private readonly Mock<IQuestLabelRepository> _questLabelRepositoryMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<ILogger<AccountService>> _loggerMock = new();
+        private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
         public AccountServiceTests()
         {
             _accountService = new AccountService(
-                _accountRepositoryMock.Object,
+                _unitOfWorkMock.Object,
                 _mapperMock.Object,
-                _userProfileRepositoryMock.Object,
                 _passwordHasherMock.Object,
-                _questLabelRepositoryMock.Object,
                 _loggerMock.Object);
         }
 
@@ -45,18 +40,18 @@ namespace Tests.Services
                 Email = account.Email
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
             _mapperMock.Setup(m => m.Map<GetAccountDto>(account))
                 .Returns(expectedDto);
 
             // Act
-            var result = await _accountService.GetAccountByIdAsync(1);
+            var result = await _accountService.GetAccountWithProfileInfoAsync(1);
 
             // Assert
-            _accountRepositoryMock.Verify(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
             _mapperMock.Verify(m => m.Map<GetAccountDto>(account), Times.Once);
             result.Should().BeSameAs(expectedDto);
         }
@@ -65,12 +60,12 @@ namespace Tests.Services
         public async Task GetAccountByIdAsync_ShouldThrowNotFoundException_WhenAccountDoesNotExist()
         {
             // Arrange
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Account?)null);
 
             // Act
-            var act = async () => await _accountService.GetAccountByIdAsync(1);
+            var act = async () => await _accountService.GetAccountWithProfileInfoAsync(1);
 
             // Assert
             await act.Should().ThrowAsync<NotFoundException>()
@@ -89,20 +84,20 @@ namespace Tests.Services
                 Nickname = "NewNickname"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            _userProfileRepositoryMock
-                .Setup(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.UserProfiles.DoesNicknameExistAsync(updateDto.Nickname, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _mapperMock
@@ -112,14 +107,14 @@ namespace Tests.Services
             await _accountService.UpdateAccountAsync(1, updateDto);
 
             // Assert
-            _accountRepositoryMock.Verify(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()), Times.Once);
-            _accountRepositoryMock.Verify(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()), Times.Once);
-            _accountRepositoryMock.Verify(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()), Times.Once);
-            _userProfileRepositoryMock.Verify(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.UserProfiles.DoesNicknameExistAsync(updateDto.Nickname, 1, It.IsAny<CancellationToken>()), Times.Once);
 
             _mapperMock.Verify(m => m.Map(updateDto, account), Times.Once);
 
-            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.Is<Account>(a => a == account), It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -132,12 +127,12 @@ namespace Tests.Services
                 Login = "NewLogin"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.DoesLoginExistAsync(updateDto.Login, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -158,12 +153,12 @@ namespace Tests.Services
                 Email = "existing@email.com"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.DoesEmailExistAsync(updateDto.Email, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -184,12 +179,12 @@ namespace Tests.Services
                 Nickname = "ExistingNickname"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>(), It.IsAny<Expression<Func<Account, object>>[]>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
-            _userProfileRepositoryMock
-                .Setup(repo => repo.DoesNicknameExistAsync(updateDto.Nickname, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.UserProfiles.DoesNicknameExistAsync(updateDto.Nickname, 1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -217,8 +212,8 @@ namespace Tests.Services
                 NewPassword = newPassword
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
             _passwordHasherMock
@@ -229,10 +224,6 @@ namespace Tests.Services
                 .Setup(hasher => hasher.HashPassword(account, changePasswordDto.NewPassword))
                 .Returns(newlyHashedPassword);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
             // Act
             await _accountService.ChangePasswordAsync(accountId, changePasswordDto, CancellationToken.None);
 
@@ -242,10 +233,6 @@ namespace Tests.Services
             _passwordHasherMock.Verify(hasher => hasher.HashPassword(account, newPassword), Times.Once);
 
             account.HashPassword.Should().Be(newlyHashedPassword);
-
-            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(
-                It.Is<Account>(a => a.Id == accountId && a.HashPassword == newlyHashedPassword),
-                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -261,8 +248,8 @@ namespace Tests.Services
                 NewPassword = "newPassword"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
             _passwordHasherMock
@@ -278,7 +265,7 @@ namespace Tests.Services
 
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, correctOldPasswordHash, changePasswordDto.OldPassword), Times.Once);
             _passwordHasherMock.Verify(hasher => hasher.HashPassword(It.IsAny<Account>(), It.IsAny<string>()), Times.Never);
-            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -292,8 +279,8 @@ namespace Tests.Services
                 NewPassword = "newPassword"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(nonExistentAccountId, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(nonExistentAccountId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Account?)null);
 
             // Act
@@ -305,7 +292,7 @@ namespace Tests.Services
 
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(It.IsAny<Account>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
             _passwordHasherMock.Verify(hasher => hasher.HashPassword(It.IsAny<Account>(), It.IsAny<string>()), Times.Never);
-            _accountRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -320,8 +307,8 @@ namespace Tests.Services
                 Password = "wrongOldPassword"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
             _passwordHasherMock
@@ -336,8 +323,8 @@ namespace Tests.Services
                 .WithMessage("Invalid password");
 
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
-            _questLabelRepositoryMock.Verify(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, CancellationToken.None), Times.Never);
-            _accountRepositoryMock.Verify(repo => repo.DeleteAsync(It.IsAny<Account>(), CancellationToken.None), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(CancellationToken.None), Times.Never);
         }
 
         [Fact]
@@ -352,33 +339,23 @@ namespace Tests.Services
                 Password = "correctOldPassword"
             };
 
-            _accountRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            _unitOfWorkMock
+                .Setup(repo => repo.Accounts.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
             _passwordHasherMock
                 .Setup(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password))
                 .Returns(PasswordVerificationResult.Success);
 
-            _accountRepositoryMock
-                .Setup(repo => repo.DeleteAsync(account, It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            _questLabelRepositoryMock
-                .Setup(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
             // Act
             Func<Task> act = async () => await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, CancellationToken.None);
 
             // Assert
             await act.Should().NotThrowAsync();
-            _questLabelRepositoryMock.Verify(repo => repo.DeleteQuestLabelsByAccountIdAsync(accountId, CancellationToken.None), Times.Once);
-            _accountRepositoryMock.Verify(repo => repo.DeleteAsync(account, CancellationToken.None), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Once);
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
 
-            _accountRepositoryMock.Verify();
-            _questLabelRepositoryMock.Verify();
+            _unitOfWorkMock.Verify();
         }
     }
 }

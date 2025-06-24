@@ -8,18 +8,18 @@ namespace Application.Services
 {
     public class StatsService : IStatsService
     {
-        private readonly IUserProfileRepository _userProfileRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StatsService(IUserProfileRepository userProfileRepository, IMapper mapper)
+        public StatsService(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _userProfileRepository = userProfileRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         public async Task<GetUserProfileStatsDto> GetUserProfileStatsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var userProfile = await _userProfileRepository.GetUserProfileWithGoalsAsync(accountId, cancellationToken).ConfigureAwait(false)
+            var userProfile = await _unitOfWork.UserProfiles.GetUserProfileWithGoalsAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"User profile for account ID {accountId} was not found.");
 
             return _mapper.Map<GetUserProfileStatsDto>(userProfile);

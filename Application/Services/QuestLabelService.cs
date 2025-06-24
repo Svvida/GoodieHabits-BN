@@ -9,50 +9,54 @@ namespace Application.Services
 {
     public class QuestLabelService : IQuestLabelService
     {
-        private readonly IQuestLabelRepository _questLabelRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IQuestLabelRepository _questLabelRepository;
         public QuestLabelService(
-            IQuestLabelRepository questLabelRepository,
-            IMapper mapper)
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IQuestLabelRepository questLabelRepository)
         {
-            _questLabelRepository = questLabelRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _questLabelRepository = questLabelRepository;
         }
 
         public async Task<IEnumerable<GetQuestLabelDto>> GetUserLabelsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var labels = await _questLabelRepository.GetUserLabelsAsync(accountId, cancellationToken).ConfigureAwait(false);
+            var labels = await _unitOfWork.QuestLabels.GetUserLabelsAsync(accountId, true, cancellationToken).ConfigureAwait(false);
 
             return _mapper.Map<IEnumerable<GetQuestLabelDto>>(labels);
         }
 
         public async Task<int> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
         {
-            if (await _questLabelRepository.GetLabelByValueAsync(createDto.Value, createDto.AccountId, cancellationToken).ConfigureAwait(false) != null)
+            if (await _unitOfWork.QuestLabels.GetLabelByValueAsync(createDto.Value, createDto.AccountId, cancellationToken).ConfigureAwait(false) != null)
                 throw new ConflictException($"Label with value: {createDto.Value} already exists");
 
             var label = _mapper.Map<QuestLabel>(createDto);
-            await _questLabelRepository.CreateLabelAsync(label, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.QuestLabels.AddAsync(label, cancellationToken).ConfigureAwait(false);
 
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return label.Id;
         }
 
         public async Task PatchLabelAsync(int labelId, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
+            var label = await _questLabelRepository.GetByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
 
-            var mappedLabel = _mapper.Map(patchDto, label);
+            _mapper.Map(patchDto, label);
 
-            await _questLabelRepository.UpdateLabelAsync(mappedLabel, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task DeleteLabelAsync(int labelId, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetLabelByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
+            if (!await _unitOfWork.QuestLabels.ExistsByIdAsync(labelId, cancellationToken).ConfigureAwait(false))
+                throw new NotFoundException($"QuestLabel with ID: {labelId} does not exist");
 
-            await _questLabelRepository.DeleteLabelAsync(label, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.QuestLabels.ExecuteDeleteAsync(labelId, cancellationToken).ConfigureAwait(false);
         }
     }
 }

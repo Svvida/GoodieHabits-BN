@@ -18,7 +18,7 @@ namespace Application.Services
     public class AuthService : IAuthService
     {
         private readonly JwtSettings _jwtSettings;
-        private readonly IAccountRepository _accountRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IMapper _mapper;
         private readonly ITokenGenerator _tokenGenerator;
@@ -26,14 +26,14 @@ namespace Application.Services
 
         public AuthService(
             IOptions<JwtSettings> jwtSettings,
-            IAccountRepository accountRepository,
+            IUnitOfWork unitOfWork,
             IPasswordHasher<Account> passwordHasher,
             IMapper mapper,
             ITokenGenerator tokenGenerator,
             ITokenValidator tokenValidator)
         {
             _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
-            _accountRepository = accountRepository;
+            _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             _mapper = mapper;
             _tokenGenerator = tokenGenerator;
@@ -45,12 +45,12 @@ namespace Application.Services
             Account account;
             if (IsEmail(loginDto.Login))
             {
-                account = await _accountRepository.GetByEmailAsync(loginDto.Login, cancellationToken)
+                account = await _unitOfWork.Accounts.GetByEmailAsync(loginDto.Login, cancellationToken)
                 ?? throw new UnauthorizedException("Invalid credentials.");
             }
             else
             {
-                account = await _accountRepository.GetByUsernameAsync(loginDto.Login, cancellationToken)
+                account = await _unitOfWork.Accounts.GetByUsernameAsync(loginDto.Login, cancellationToken)
                 ?? throw new UnauthorizedException("Invalid credentials.");
             }
 
@@ -69,14 +69,15 @@ namespace Application.Services
 
         public async Task<AuthResponseDto> RegisterAsync(CreateAccountDto createDto, CancellationToken cancellationToken = default)
         {
-            if (await _accountRepository.GetByEmailAsync(createDto.Email, cancellationToken) != null)
+            if (await _unitOfWork.Accounts.GetByEmailAsync(createDto.Email, cancellationToken) != null)
                 throw new ConflictException($"Account with email {createDto.Email} already exists");
 
             var accountEntity = _mapper.Map<Account>(createDto);
 
             accountEntity.HashPassword = _passwordHasher.HashPassword(accountEntity, createDto.Password);
 
-            await _accountRepository.AddAsync(accountEntity, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.Accounts.AddAsync(accountEntity, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return new AuthResponseDto
             {
@@ -93,7 +94,7 @@ namespace Application.Services
             if (string.IsNullOrWhiteSpace(accountId))
                 throw new UnauthorizedException("Invalid refresh token");
 
-            var account = await _accountRepository.GetByIdAsync(int.Parse(accountId), cancellationToken)
+            var account = await _unitOfWork.Accounts.GetByIdAsync(int.Parse(accountId), cancellationToken)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
             return new RefreshResponseDto
