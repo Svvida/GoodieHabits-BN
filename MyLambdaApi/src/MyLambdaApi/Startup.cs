@@ -3,7 +3,6 @@ using System.Text;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
-using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Application.MappingProfiles;
@@ -16,16 +15,11 @@ using Application.Validators.Quests;
 using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
-using Domain.Interfaces.Quests;
-using Domain.Interfaces.Resetting;
 using Domain.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Quests;
-using Infrastructure.Repositories.Resetting;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +29,7 @@ using Microsoft.OpenApi.Models;
 using MyLambdaApi.Converters;
 using MyLambdaApi.Filters;
 using MyLambdaApi.Middlewares;
+using NodaTime;
 
 namespace MyLambdaApi;
 
@@ -126,12 +121,7 @@ public class Startup
         services.AddFluentValidationRulesToSwagger();
 
         // Register Repositories
-        services.AddScoped<IAccountRepository, AccountRepository>();
-        services.AddScoped<IQuestRepository, QuestRepository>();
-        services.AddScoped<IResetQuestsRepository, ResetQuestsRepository>();
-        services.AddScoped<IQuestLabelRepository, QuestLabelRepository>();
-        services.AddScoped<IUserProfileRepository, UserProfileRepository>();
-        services.AddScoped<IUserGoalRepository, UserGoalRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Register Services
         services.AddScoped<IAccountService, AccountService>();
@@ -139,12 +129,17 @@ public class Startup
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuestResetService, QuestResetService>();
         services.AddScoped<IQuestLabelService, QuestLabelService>();
-        services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
-        services.AddScoped<IQuestWeekdaysHandler, QuestWeekdaysHandler>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenValidator, TokenValidator>();
         services.AddSingleton<ILevelingService, LevelingService>();
         services.AddScoped<IUserGoalService, UserGoalService>();
+        services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
+        services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
+        services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
+        services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
+        services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
+        services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<IGoalExpirationService, GoalExpirationService>();
 
         // Register Validators
         services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

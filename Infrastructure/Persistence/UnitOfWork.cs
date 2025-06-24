@@ -16,7 +16,6 @@ namespace Infrastructure.Persistence
         private IQuestLabelRepository? _questLabelRepository;
         private IQuestOccurrenceRepository? _questOccurrenceRepository;
         private IQuestStatisticsRepository? _questStatisticsRepository;
-        private IQuestQuestLabelsRepository? _questQuestLabelsRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -30,7 +29,6 @@ namespace Infrastructure.Persistence
         public IQuestLabelRepository QuestLabels => _questLabelRepository ??= new QuestLabelRepository(_context);
         public IQuestOccurrenceRepository QuestOccurrences => _questOccurrenceRepository ??= new QuestOccurrenceRepository(_context);
         public IQuestStatisticsRepository QuestStatistics => _questStatisticsRepository ??= new QuestStatisticsRepository(_context);
-        public IQuestQuestLabelsRepository Quest_QuestLabels => _questQuestLabelsRepository ??= new QuestQuestLabelsRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

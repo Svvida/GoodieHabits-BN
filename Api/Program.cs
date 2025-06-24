@@ -7,7 +7,6 @@ using Api.Middlewares;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
-using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Application.MappingProfiles;
@@ -172,7 +171,6 @@ namespace Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
-            builder.Services.AddScoped<IQuestLabelsHandler, QuestLabelsHandler>();
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();

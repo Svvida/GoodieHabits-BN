@@ -20,7 +20,6 @@ namespace Application.Services.Quests
     public class QuestService : IQuestService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IQuestLabelsHandler _questLabelsHandler;
         private readonly IMapper _mapper;
         private readonly ILogger<QuestService> _logger;
         private readonly IQuestResetService _questResetService;
@@ -30,7 +29,6 @@ namespace Application.Services.Quests
 
         public QuestService(
             IUnitOfWork unitOfWork,
-            IQuestLabelsHandler questLabelsHandler,
             IMapper mapper,
             ILogger<QuestService> logger,
             IQuestResetService questResetService,
@@ -39,7 +37,6 @@ namespace Application.Services.Quests
             IQuestOccurrenceGenerator questOccurrenceGenerator)
         {
             _unitOfWork = unitOfWork;
-            _questLabelsHandler = questLabelsHandler;
             _mapper = mapper;
             _logger = logger;
             _questResetService = questResetService;

@@ -11,7 +11,6 @@ namespace Domain.Interfaces
         IQuestLabelRepository QuestLabels { get; }
         IQuestOccurrenceRepository QuestOccurrences { get; }
         IQuestStatisticsRepository QuestStatistics { get; }
-        IQuestQuestLabelsRepository Quest_QuestLabels { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
