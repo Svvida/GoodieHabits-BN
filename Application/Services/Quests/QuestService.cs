@@ -5,7 +5,6 @@ using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Helpers;
-using Application.Interfaces;
 using Application.Interfaces.Quests;
 using Application.Models;
 using AutoMapper;
@@ -116,9 +115,37 @@ namespace Application.Services.Quests
             existingQuest.UpdateDates(updateDto.StartDate, updateDto.EndDate);
 
             existingQuest = _mapper.Map(updateDto, existingQuest);
-            _logger.LogDebug("Quest updated after mapping: {@quest}", existingQuest);
 
-            existingQuest = await _questLabelsHandler.HandleUpdateLabelsAsync(existingQuest, updateDto, cancellationToken).ConfigureAwait(false);
+            // Update labels if provided
+            var existingLabels = existingQuest.Quest_QuestLabels.ToList();
+
+            HashSet<int> existingLabelsHashSet = [.. existingQuest.Quest_QuestLabels.Select(x => x.QuestLabelId)];
+            HashSet<int> newLabelsHashSet = [.. updateDto.Labels];
+
+            _logger.LogDebug("Existing labels: {@existingLabels}", existingLabels);
+            _logger.LogDebug("New labels: {@newLabels}", newLabelsHashSet);
+
+            var labelsToAdd = updateDto.Labels
+                .Where(labelId => !existingLabelsHashSet.Contains(labelId))
+                .Select(labelId => new Quest_QuestLabel
+                {
+                    QuestId = existingQuest.Id,
+                    QuestLabelId = labelId
+                }).ToList();
+
+            var labelsToRemove = existingLabels
+                .Where(existingLabel => !newLabelsHashSet.Contains(existingLabel.QuestLabelId))
+                .ToList();
+
+            foreach (var label in labelsToAdd)
+            {
+                existingQuest.Quest_QuestLabels.Add(label);
+            }
+
+            foreach (var label in labelsToRemove)
+            {
+                existingQuest.Quest_QuestLabels.Remove(label);
+            }
 
             var now = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
             if (existingQuest.IsRepeatable())
@@ -155,8 +182,6 @@ namespace Application.Services.Quests
                     existingQuest.WeeklyQuest_Days.Remove(weekday);
                 }
             }
-
-            _logger.LogDebug("Updated quest: {@existingQuest}", existingQuest);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

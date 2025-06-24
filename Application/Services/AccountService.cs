@@ -55,7 +55,7 @@ namespace Application.Services
 
             if (patchDto.Nickname is not null && !patchDto.Nickname.Equals(account.Profile.Nickname, StringComparison.OrdinalIgnoreCase))
             {
-                if (await _unitOfWork.Accounts.DoesNicknameExistAsync(patchDto.Nickname, accountId, cancellationToken).ConfigureAwait(false))
+                if (await _unitOfWork.UserProfiles.DoesNicknameExistAsync(patchDto.Nickname, accountId, cancellationToken).ConfigureAwait(false))
                     throw new ConflictException($"Nickname {patchDto.Nickname} is already in use");
             }
 

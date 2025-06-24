@@ -37,10 +37,5 @@ namespace Infrastructure.Repositories
         {
             return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Email == email, cancellationToken).ConfigureAwait(false);
         }
-
-        public async Task<bool> DoesNicknameExistAsync(string nickname, int accountIdToExclude, CancellationToken cancellationToken = default)
-        {
-            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Profile.Nickname == nickname, cancellationToken).ConfigureAwait(false);
-        }
     }
 }

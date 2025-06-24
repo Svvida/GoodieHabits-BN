@@ -10,9 +10,9 @@ namespace Infrastructure.Repositories
     {
         public UserProfileRepository(AppDbContext context) : base(context) { }
 
-        public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
+        public async Task<bool> DoesNicknameExistAsync(string nickname, int accountId, CancellationToken cancellationToken = default)
         {
-            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname, cancellationToken)
+            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname && u.AccountId != accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
 

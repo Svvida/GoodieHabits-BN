@@ -1,7 +1,7 @@
 using Amazon.Lambda.Core;
-using Domain.Interfaces.Resetting;
+using Application.Interfaces;
+using Application.Services;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Resetting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,7 +40,7 @@ public class Function
             options.UseSqlServer(connectionString);
         });
 
-        services.AddScoped<IGoalExpirationRepository, GoalExpirationRepository>();
+        services.AddScoped<IGoalExpirationService, GoalExpirationService>();
 
         _serviceProvider = services.BuildServiceProvider();
 
@@ -54,11 +54,11 @@ public class Function
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var resetRepo = scope.ServiceProvider.GetRequiredService<IGoalExpirationRepository>();
+            var expirationService = scope.ServiceProvider.GetRequiredService<IGoalExpirationService>();
 
             _logger.LogInformation("Attempting to expire goals...");
 
-            var expiredGoals = await resetRepo.PrepareGoalsForExpirationAsync(CancellationToken.None);
+            var expiredGoals = await expirationService.ExpireGoalsAndSaveAsync(CancellationToken.None);
 
             _logger.LogInformation($"{expiredGoals} goals expired successfully.");
         }
