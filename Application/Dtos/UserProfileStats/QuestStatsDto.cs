@@ -3,7 +3,7 @@
     public class QuestStatsDto
     {
         public int CurrentTotal { get; set; }
-        public int CurrentCompleted { get; set; }
+        public int CurrentEverCompleted { get; set; }
     }
 
 }

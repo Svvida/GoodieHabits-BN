@@ -14,7 +14,8 @@ namespace Domain.Models
         public int CompletedQuests { get; set; } = 0;
         public int TotalQuests { get; set; } = 0;
         public int ExistingQuests { get; set; } = 0;
-        public int CompletedExistingQuests { get; set; } = 0;
+        public int CurrentlyCompletedExistingQuests { get; set; } = 0;
+        public int EverCompletedExistingQuests { get; set; } = 0;
         // Stats for goals
         public int CompletedGoals { get; set; } = 0;
         public int ExpiredGoals { get; set; } = 0;

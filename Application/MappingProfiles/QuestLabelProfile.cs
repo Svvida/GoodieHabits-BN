@@ -8,7 +8,6 @@ namespace Application.MappingProfiles
     {
         public QuestLabelProfile()
         {
-            CreateMap<QuestLabel, QuestLabel>();
             // Entity -> DTO
             CreateMap<QuestLabel, GetQuestLabelDto>();
 

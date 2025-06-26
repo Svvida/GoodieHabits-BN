@@ -51,9 +51,9 @@ namespace Application.Services.Quests
             {
                 if (resetQuestsByAccount.TryGetValue(profile.AccountId, out var count))
                 {
-                    profile.CompletedExistingQuests = Math.Max(0, profile.CompletedExistingQuests - count);
-                    _logger.LogDebug("Profile ID: {ProfileId} - Reset {Count} quests. New CompletedExistingQuests: {CompletedQuests}",
-                        profile.Id, count, profile.CompletedExistingQuests);
+                    profile.CurrentlyCompletedExistingQuests = Math.Max(0, profile.CurrentlyCompletedExistingQuests - count);
+                    _logger.LogDebug("Profile ID: {ProfileId} - Reset {Count} quests. New CurrentlyCompletedExistingQuests: {CompletedQuests}",
+                        profile.Id, count, profile.CurrentlyCompletedExistingQuests);
                 }
                 else
                 {
