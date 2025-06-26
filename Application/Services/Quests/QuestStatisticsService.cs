@@ -21,9 +21,19 @@ namespace Application.Services.Quests
             _unitOfWork = unitOfWork;
         }
 
+        public async Task ProcessStatisticsForQuestAndSaveAsync(int questId, CancellationToken cancellationToken = default)
+        {
+            var quest = await _unitOfWork.Quests.GetQuestForStatsProcessingAsync(questId, cancellationToken).ConfigureAwait(false);
+
+            if (quest is not null)
+                await ProcessStatisticsForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<int> ProcessStatisticsForQuestsAndSaveAsync(CancellationToken cancellationToken = default)
         {
-            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsAsync(cancellationToken);
+            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsForStatsProcessingAsync(cancellationToken);
 
             foreach (var quest in repeatableQuests)
             {
@@ -38,7 +48,18 @@ namespace Application.Services.Quests
             var occurrences = await _unitOfWork.QuestOccurrences.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken);
             var newStats = _questStatisticsCalculator.Calculate(occurrences);
 
-            _logger.LogDebug("Processing statistics for quest {QuestId}: {@NewStats}", quest.Id, newStats);
+            _logger.LogDebug("Processing statistics for quest {QuestId}: {@NewStats}", quest.Id, new
+            {
+                quest.Statistics!.Id,
+                quest.Statistics.QuestId,
+                quest.Statistics.CompletionCount,
+                quest.Statistics.FailureCount,
+                quest.Statistics.OccurrenceCount,
+                quest.Statistics.CurrentStreak,
+                quest.Statistics.LongestStreak,
+                quest.Statistics.LastCompletedAt
+            });
+
 
             UpdateQuestStatistics(quest, newStats);
 

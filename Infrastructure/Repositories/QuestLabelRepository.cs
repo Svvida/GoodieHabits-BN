@@ -36,5 +36,18 @@ namespace Infrastructure.Repositories
                 .AnyAsync(ql => ql.Id == labelId && ql.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<int> CountOwnedLabelsAsync(IEnumerable<int> labelIds, int accountId, CancellationToken cancellationToken = default)
+        {
+            if (labelIds == null || !labelIds.Any())
+            {
+                return 0; // No labels to count
+            }
+
+            return await _context.QuestLabels
+                .AsNoTracking()
+                .CountAsync(ql => labelIds.Contains(ql.Id) && ql.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

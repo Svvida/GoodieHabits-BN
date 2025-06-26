@@ -47,7 +47,7 @@ namespace Application.Services.Quests
 
         public async Task<BaseGetQuestDto?> GetUserQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(questId, questType, cancellationToken).ConfigureAwait(false);
+            var quest = await _unitOfWork.Quests.GetQuestForDisplayAsync(questId, questType, cancellationToken).ConfigureAwait(false);
 
             if (quest is null)
                 return null;
@@ -57,7 +57,7 @@ namespace Application.Services.Quests
 
         public async Task<IEnumerable<BaseGetQuestDto>> GetAllUserQuestsByTypeAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            var quests = await _unitOfWork.Quests.GetQuestsByTypeAsync(accountId, questType, cancellationToken)
+            var quests = await _unitOfWork.Quests.GetQuestsByTypeForDisplayAsync(accountId, questType, cancellationToken)
                 .ConfigureAwait(false);
             return quests.Select(MapToDto);
         }
@@ -67,12 +67,15 @@ namespace Application.Services.Quests
                 ?? throw new NotFoundException($"Account with ID: {createDto.AccountId} not found");
 
             // Check if the account is owner of the labels
-            foreach (var labelId in createDto.Labels)
+            if (createDto.Labels.Count > 0)
             {
-                var isOwner = await _unitOfWork.QuestLabels.IsLabelOwnedByUserAsync(labelId, createDto.AccountId, cancellationToken)
-                    .ConfigureAwait(false);
-                if (!isOwner)
-                    throw new ForbiddenException($"Label with ID: {labelId} does not belong to the user.");
+                int ownedCount = await _unitOfWork.QuestLabels.CountOwnedLabelsAsync(createDto.Labels, createDto.AccountId, cancellationToken).ConfigureAwait(false);
+
+                if (ownedCount != createDto.Labels.Count)
+                {
+                    _logger.LogWarning("User {AccountId} tried to create a quest with labels they do not own.", createDto.AccountId);
+                    throw new ForbiddenException("One or more provided labels do not exist or do not belong to the user.");
+                }
             }
 
             var quest = _mapper.Map<Quest>(createDto);
@@ -99,14 +102,19 @@ namespace Application.Services.Quests
 
         public async Task<BaseGetQuestDto> UpdateUserQuestAsync(BaseUpdateQuestDto updateDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
-            foreach (var label in updateDto.Labels)
+            // Check if the account is owner of the labels
+            if (updateDto.Labels.Count > 0)
             {
-                var isOwner = await _unitOfWork.QuestLabels.IsLabelOwnedByUserAsync(label, updateDto.AccountId, cancellationToken).ConfigureAwait(false);
-                if (!isOwner)
-                    throw new ForbiddenException($"Label with ID: {label} does not belong to the user.");
+                int ownedCount = await _unitOfWork.QuestLabels.CountOwnedLabelsAsync(updateDto.Labels, updateDto.AccountId, cancellationToken).ConfigureAwait(false);
+
+                if (ownedCount != updateDto.Labels.Count)
+                {
+                    _logger.LogWarning("User {AccountId} tried to create a quest with labels they do not own.", updateDto.AccountId);
+                    throw new ForbiddenException("One or more provided labels do not exist or do not belong to the user.");
+                }
             }
 
-            var existingQuest = await _unitOfWork.Quests.GetQuestByIdAsync(updateDto.Id, questType, cancellationToken).ConfigureAwait(false)
+            var existingQuest = await _unitOfWork.Quests.GetQuestByIdAsync(updateDto.Id, questType, false, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {updateDto.Id} not found");
 
             existingQuest.UpdateDates(updateDto.StartDate, updateDto.EndDate);
@@ -150,9 +158,17 @@ namespace Application.Services.Quests
                 existingQuest.NextResetAt = _questResetService.GetNextResetTimeUtc(existingQuest);
                 if (await _unitOfWork.QuestOccurrences.GetCurrentOccurrenceForQuestAsync(existingQuest.Id, now, cancellationToken).ConfigureAwait(false) is null)
                 {
-                    existingQuest.QuestOccurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
-                    _logger.LogDebug("New occurrences created: {@occurrences}", existingQuest.QuestOccurrences);
+                    var generatedOccurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(existingQuest, cancellationToken).ConfigureAwait(false);
+                    if (generatedOccurrences.Count != 0)
+                    {
+                        foreach (var generatedOccurrence in generatedOccurrences)
+                        {
+                            _logger.LogDebug("Adding generated occurrence: {@generatedOccurrence}", generatedOccurrence);
+                            existingQuest.QuestOccurrences.Add(generatedOccurrence);
+                        }
+                    }
                 }
+                existingQuest.Statistics = await _unitOfWork.QuestStatistics.GetStatisticsForQuestAsync(existingQuest.Id, true, cancellationToken).ConfigureAwait(false);
             }
 
             if (questType == QuestTypeEnum.Weekly)
@@ -183,16 +199,17 @@ namespace Application.Services.Quests
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return MapToDto(existingQuest);
+
         }
 
-        public async Task<BaseGetQuestDto> UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var existingQuest = await GetAndValidateQuestAsync(patchDto.Id, questType, cancellationToken);
 
             if (existingQuest.IsCompleted == patchDto.IsCompleted)
             {
                 _logger.LogInformation("Quest {QuestId} completion status is unchanged. No update required.", existingQuest.Id);
-                return MapToDto(existingQuest);
+                return;
             }
 
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
@@ -203,18 +220,19 @@ namespace Application.Services.Quests
 
             existingQuest = _mapper.Map(patchDto, existingQuest);
 
-            await _questStatisticsService.ProcessStatisticsForQuestAsync(existingQuest, cancellationToken);
-
             if (completionContext.ShouldIncrementCount)
             {
                 await ProcessUserRewardsAsync(existingQuest, completionContext.NowUtc, cancellationToken);
             }
 
-            _logger.LogDebug("User profile after quest completion updated: {@existingQuest}", existingQuest.Account.Profile);
+            //_logger.LogDebug("User profile after quest completion updated: {@existingQuest}", existingQuest.Account.Profile);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug("Quest {QuestId} completion updated with {AffectedRows} affected rows.", existingQuest.Id, affectedRows);
 
-            return MapToDto(existingQuest);
+            await _questStatisticsService.ProcessStatisticsForQuestAndSaveAsync(existingQuest.Id, cancellationToken).ConfigureAwait(false);
+
+            return;
         }
 
         public async Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(
@@ -237,7 +255,7 @@ namespace Application.Services.Quests
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 
-            var quests = await _unitOfWork.Quests.GetActiveQuestsAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
+            var quests = await _unitOfWork.Quests.GetActiveQuestsForDisplayAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
                 .ConfigureAwait(false);
 
             return quests.Select(MapToDto);
@@ -295,7 +313,7 @@ namespace Application.Services.Quests
 
         private async Task<Quest> GetAndValidateQuestAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken)
         {
-            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(questId, questType, cancellationToken).ConfigureAwait(false)
+            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(questId, questType, false, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {questId} not found");
 
             if (quest.Account is null || string.IsNullOrWhiteSpace(quest.Account.TimeZone))
@@ -327,7 +345,7 @@ namespace Application.Services.Quests
             if (context.JustCompleted)
             {
                 context.ShouldIncrementCount = ShouldIncrementCompletionCountAsync(quest, context);
-                _logger.LogDebug("Quest {QuestId} completion context: {@context}", quest.Id, context);
+                //_logger.LogDebug("Quest {QuestId} completion context: {@context}", quest.Id, context);
             }
 
             return context;
@@ -341,7 +359,7 @@ namespace Application.Services.Quests
             if (quest.IsRepeatable())
             {
                 occurrence = await _unitOfWork.QuestOccurrences.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
-                _logger.LogDebug("Occurrence for quest: {@occurrence}", occurrence);
+                //_logger.LogDebug("Occurrence for quest: {@occurrence}", occurrence);
 
                 if (occurrence is null)
                 {
@@ -350,7 +368,7 @@ namespace Application.Services.Quests
                     var sortedOccurrences = generatedMissingOccurrences.OrderByDescending(o => o.OccurrenceEnd).ToList();
                     occurrence = sortedOccurrences.FirstOrDefault(o => o.OccurrenceStart <= nowUtc.ToDateTimeUtc() && o.OccurrenceEnd >= nowUtc.ToDateTimeUtc());
                     //occurrence = await _unitOfWork.QuestOccurrences.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc.ToDateTimeUtc(), cancellationToken);
-                    _logger.LogDebug("Current occurrence: {@occurrence}", occurrence);
+                    //_logger.LogDebug("Current occurrence: {@occurrence}", occurrence);
                 }
             }
 

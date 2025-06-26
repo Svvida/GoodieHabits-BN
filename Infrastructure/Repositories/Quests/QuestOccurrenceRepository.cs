@@ -37,6 +37,7 @@ namespace Infrastructure.Repositories.Quests
         {
             return await _context.QuestOccurrences
                 .Where(q => q.QuestId == questId)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
