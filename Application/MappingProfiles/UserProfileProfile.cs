@@ -10,7 +10,6 @@ namespace Application.MappingProfiles
     {
         public UserProfileProfile()
         {
-            CreateMap<UserProfile, UserProfile>();
             // Entity -> DTO
             CreateMap<UserProfile, GetUserProfileStatsDto>()
                 .ForMember(dest => dest.Quests, opt => opt.MapFrom(src => src))
@@ -19,7 +18,7 @@ namespace Application.MappingProfiles
 
             CreateMap<UserProfile, QuestStatsDto>()
                 .ForMember(dest => dest.CurrentTotal, opt => opt.MapFrom(src => src.ExistingQuests))
-                .ForMember(dest => dest.CurrentCompleted, opt => opt.MapFrom(src => src.CompletedExistingQuests));
+                .ForMember(dest => dest.CurrentEverCompleted, opt => opt.MapFrom(src => src.EverCompletedExistingQuests));
 
             CreateMap<UserProfile, GoalStatsDto>()
                 .AfterMap<SetUserProfileGoalsAction>();

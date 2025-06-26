@@ -19,7 +19,7 @@ namespace Api.Controllers
             _statsService = statsService;
         }
 
-        [HttpGet]
+        [HttpGet("profile")]
         public async Task<ActionResult<GetUserProfileStatsDto>> GetUserProfileStats(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;

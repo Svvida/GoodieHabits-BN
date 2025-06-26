@@ -28,7 +28,7 @@ namespace Infrastructure.Repositories.Resetting
             foreach (var quest in questsToReset)
             {
                 quest.IsCompleted = false;
-                quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
+                quest.Account.Profile.CurrentlyCompletedExistingQuests = Math.Max(0, quest.Account.Profile.CurrentlyCompletedExistingQuests - 1);
             }
         }
     }

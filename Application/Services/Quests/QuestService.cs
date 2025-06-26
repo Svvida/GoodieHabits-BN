@@ -272,9 +272,11 @@ namespace Application.Services.Quests
             questToDelete.Account = account;
 
             if (questToDelete.IsCompleted)
-            {
-                questToDelete.Account.Profile.CompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.CompletedExistingQuests - 1);
-            }
+                questToDelete.Account.Profile.CurrentlyCompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.CurrentlyCompletedExistingQuests - 1);
+
+            if (questToDelete.WasEverCompleted)
+                questToDelete.Account.Profile.EverCompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.EverCompletedExistingQuests - 1);
+
             if (await _unitOfWork.UserGoals.IsQuestActiveGoalAsync(questId, cancellationToken).ConfigureAwait(false))
             {
                 _logger.LogInformation("Deleting quest with ID: {questId} that is active goal", questId);
@@ -416,9 +418,15 @@ namespace Application.Services.Quests
                 context.Occurrence.CompletedAt = context.NowUtc.ToDateTimeUtc();
             }
 
+            if (quest.WasEverCompleted is false)
+            {
+                quest.WasEverCompleted = true;
+                quest.Account.Profile.EverCompletedExistingQuests++;
+            }
+
             quest.LastCompletedAt = context.NowUtc.ToDateTimeUtc();
             quest.NextResetAt = _questResetService.GetNextResetTimeUtc(quest);
-            quest.Account.Profile.CompletedExistingQuests++;
+            quest.Account.Profile.CurrentlyCompletedExistingQuests++;
         }
 
         private void HandleQuestUncompletion(Quest quest, QuestOccurrence? occurrence)
@@ -429,7 +437,7 @@ namespace Application.Services.Quests
                 occurrence.WasCompleted = false;
             }
 
-            quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
+            quest.Account.Profile.CurrentlyCompletedExistingQuests = Math.Max(0, quest.Account.Profile.CurrentlyCompletedExistingQuests - 1);
         }
 
         private async Task ProcessUserRewardsAsync(Quest quest, Instant completionTime, CancellationToken cancellationToken)
