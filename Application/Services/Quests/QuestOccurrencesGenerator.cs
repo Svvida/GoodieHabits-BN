@@ -47,7 +47,7 @@ namespace Application.Services.Quests
 
         public async Task<int> GenerateAndSaveMissingOccurrencesForQuestsAsync(CancellationToken cancellationToken = default)
         {
-            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsAsync(cancellationToken);
+            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsAsync(true, cancellationToken);
             _logger.LogDebug("Found {Count} repeatable quests to process.", repeatableQuests.Count());
 
             List<QuestOccurrence> allNewOccurrences = [];

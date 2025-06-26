@@ -37,7 +37,7 @@ namespace Application.Services
             QuestTypeEnum questType = (QuestTypeEnum)Enum.Parse(typeof(QuestTypeEnum), goalDto.QuestType, true);
             GoalTypeEnum goalType = (GoalTypeEnum)Enum.Parse(typeof(GoalTypeEnum), goalDto.GoalType, true);
 
-            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(goalDto.QuestId, questType, cancellationToken).ConfigureAwait(false)
+            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(goalDto.QuestId, questType, false, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID {goalDto.QuestId} of type {questType} not found.");
 
             if (quest.IsCompleted == true)
@@ -82,14 +82,14 @@ namespace Application.Services
 
             await _unitOfWork.UserGoals.AddAsync(userGoal, cancellationToken).ConfigureAwait(false);
 
-            var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(quest.AccountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"User profile for account ID {quest.AccountId} not found.");
+            //var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(quest.AccountId, cancellationToken).ConfigureAwait(false)
+            //    ?? throw new NotFoundException($"User profile for account ID {quest.AccountId} not found.");
 
-            userProfile.TotalGoals++;
-            userProfile.ActiveGoals++;
+            quest.Account.Profile.TotalGoals++;
+            quest.Account.Profile.ActiveGoals++;
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, userProfile);
+            _logger.LogDebug("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, quest.Account.Profile);
         }
 
         public async Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
@@ -97,7 +97,7 @@ namespace Application.Services
             var userGoal = await _unitOfWork.UserGoals.GetUserActiveGoalByTypeAsync(accountId, goalType, cancellationToken).ConfigureAwait(false);
             if (userGoal == null)
                 return null;
-            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(userGoal.QuestId, userGoal.Quest.QuestType, cancellationToken).ConfigureAwait(false)
+            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(userGoal.QuestId, userGoal.Quest.QuestType, true, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID {userGoal.QuestId} not found");
             return quest.QuestType switch
             {

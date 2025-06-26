@@ -75,8 +75,8 @@ namespace Api.Controllers
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
-            var updatedQuest = await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return Ok(updatedQuest);
+            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            return Ok();
 
         }
 

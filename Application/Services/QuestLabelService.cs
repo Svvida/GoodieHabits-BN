@@ -11,15 +11,12 @@ namespace Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IQuestLabelRepository _questLabelRepository;
         public QuestLabelService(
             IUnitOfWork unitOfWork,
-            IMapper mapper,
-            IQuestLabelRepository questLabelRepository)
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _questLabelRepository = questLabelRepository;
         }
 
         public async Task<IEnumerable<GetQuestLabelDto>> GetUserLabelsAsync(int accountId, CancellationToken cancellationToken = default)
@@ -43,7 +40,7 @@ namespace Application.Services
 
         public async Task PatchLabelAsync(int labelId, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
-            var label = await _questLabelRepository.GetByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
+            var label = await _unitOfWork.QuestLabels.GetByIdAsync(labelId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"QuestLabel with ID: {labelId} not found");
 
             _mapper.Map(patchDto, label);
