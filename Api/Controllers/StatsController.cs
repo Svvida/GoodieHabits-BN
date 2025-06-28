@@ -1,4 +1,5 @@
-﻿using Application.Dtos.UserProfileStats;
+﻿using Application.Dtos.Stats;
+using Application.Dtos.UserProfileStats;
 using Application.Interfaces;
 using Domain;
 using Domain.Exceptions;
@@ -28,17 +29,19 @@ namespace Api.Controllers
 
             var profileStats = await _statsService.GetUserProfileStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
 
-            if (profileStats is null)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Quest not found",
-                    Detail = $"Profile with account ID {accountId} was not found"
-                });
-            }
-
             return Ok(profileStats);
+        }
+
+        [HttpGet("extended")]
+        public async Task<ActionResult<GetUserExtendedStatsDto>> GetUserExtendedStats(CancellationToken cancellationToken = default)
+        {
+            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            var extendedStats = await _statsService.GetUserExtendedStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
+
+            return Ok(extendedStats);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Application.Dtos.UserProfileStats;
+﻿using Application.Dtos.Stats;
+using Application.Dtos.UserProfileStats;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Exceptions;
@@ -23,6 +24,14 @@ namespace Application.Services
                 ?? throw new NotFoundException($"User profile for account ID {accountId} was not found.");
 
             return _mapper.Map<GetUserProfileStatsDto>(userProfile);
+        }
+
+        public async Task<GetUserExtendedStatsDto> GetUserExtendedStatsAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            var userProfile = await _unitOfWork.UserProfiles.GetUserProfileWithGoalsAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"User profile for account ID {accountId} was not found.");
+
+            return _mapper.Map<GetUserExtendedStatsDto>(userProfile);
         }
     }
 }
