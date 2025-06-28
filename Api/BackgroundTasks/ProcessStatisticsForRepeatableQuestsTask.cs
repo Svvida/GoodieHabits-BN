@@ -1,29 +1,41 @@
 ﻿using Application.Interfaces.Quests;
-using Domain.Interfaces.Quests;
 
 namespace Api.BackgroundTasks
 {
     public class ProcessStatisticsForRepeatableQuestsTask : StartupTask
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ProcessStatisticsForRepeatableQuestsTask> _logger;
 
-        public ProcessStatisticsForRepeatableQuestsTask(IServiceProvider serviceProvider, ILogger<ProcessStatisticsForRepeatableQuestsTask> logger)
+        public ProcessStatisticsForRepeatableQuestsTask(IServiceScopeFactory scopeFactory, ILogger<ProcessStatisticsForRepeatableQuestsTask> logger)
         {
-            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var questRepository = scope.ServiceProvider.GetRequiredService<IQuestRepository>();
-            var statisticsService = scope.ServiceProvider.GetRequiredService<IQuestStatisticsService>();
+            _logger.LogInformation("Starting processing of repeatable quests statistics.");
+            await using var scope = _scopeFactory.CreateAsyncScope();
 
-            var repeatableQuests = await questRepository.GetRepeatableQuestsAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Start processing occurrences for repeatable quests.");
-            await statisticsService.ProcessStatisticsForQuestsAsync(repeatableQuests, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Statistics processing completed for repeatable quests.");
+            try
+            {
+                var statisticsService = scope.ServiceProvider.GetRequiredService<IQuestStatisticsService>();
+                int affectedRows = await statisticsService.ProcessStatisticsForQuestsAndSaveAsync(cancellationToken).ConfigureAwait(false);
+
+                if (affectedRows > 0)
+                {
+                    _logger.LogInformation("ProcessStatistics task successfully saved changes to the database. Affected rows: {Count}.", affectedRows);
+                }
+                else
+                {
+                    _logger.LogInformation("ProcessStatistics found no stats to process.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing repeatable quests statistics.");
+            }
         }
     }
 }

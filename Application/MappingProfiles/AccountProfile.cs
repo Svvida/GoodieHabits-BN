@@ -10,6 +10,7 @@ namespace Application.MappingProfiles
         {
             // Entity -> DTO
             CreateMap<Account, GetAccountDto>()
+                .ForMember(dest => dest.JoinDate, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.Profile, opt => opt.MapFrom(src => src.Profile));
 
             // Create DTO -> Entity

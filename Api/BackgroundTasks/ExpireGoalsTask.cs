@@ -1,22 +1,39 @@
-﻿using Domain.Interfaces.Resetting;
+﻿using Application.Interfaces;
 
 namespace Api.BackgroundTasks
 {
     public class ExpireGoalsTask : StartupTask
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ExpireGoalsTask> _logger;
-        public ExpireGoalsTask(IServiceProvider serviceProvider, ILogger<ExpireGoalsTask> logger)
+        public ExpireGoalsTask(IServiceScopeFactory scopeFactory, ILogger<ExpireGoalsTask> logger)
         {
-            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var goalExpirationRepository = scope.ServiceProvider.GetRequiredService<IGoalExpirationRepository>();
-            int expiredCount = await goalExpirationRepository.ExpireGoalsAsync(cancellationToken);
-            _logger.LogInformation("ExpireGoalsTask completed. Expired {Count} goals.", expiredCount);
+            _logger.LogInformation("ExpireGoalsTask is starting.");
+            await using var scope = _scopeFactory.CreateAsyncScope();
+
+            try
+            {
+                var expirationService = scope.ServiceProvider.GetRequiredService<IGoalExpirationService>();
+                int affectedRows = await expirationService.ExpireGoalsAndSaveAsync(cancellationToken);
+
+                if (affectedRows > 0)
+                {
+                    _logger.LogInformation("ExpireGoalsTask successfully saved changes to the database. Affected rows: {Count}.", affectedRows);
+                }
+                else
+                {
+                    _logger.LogInformation("ExpireGoalsTask found no goals to expire.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while executing ExpireGoalsTask: {Message}", ex.Message);
+            }
         }
     }
 }

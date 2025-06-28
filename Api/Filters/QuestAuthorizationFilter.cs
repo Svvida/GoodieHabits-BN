@@ -1,5 +1,5 @@
 ﻿using Domain;
-using Domain.Interfaces.Quests;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -7,12 +7,12 @@ namespace Api.Filters
 {
     public class QuestAuthorizationFilter : IAsyncAuthorizationFilter
     {
-        private readonly IQuestRepository _questRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<QuestAuthorizationFilter> _logger;
 
-        public QuestAuthorizationFilter(IQuestRepository questRepository, ILogger<QuestAuthorizationFilter> logger)
+        public QuestAuthorizationFilter(IUnitOfWork unitOfWork, ILogger<QuestAuthorizationFilter> logger)
         {
-            _questRepository = questRepository;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -28,7 +28,7 @@ namespace Api.Filters
                 return;
             }
 
-            bool isOwner = await _questRepository.IsQuestOwnedByUserAsync(questId.Value, accountId.Value);
+            bool isOwner = await _unitOfWork.Quests.IsQuestOwnedByUserAsync(questId.Value, accountId.Value);
 
             if (!isOwner)
             {

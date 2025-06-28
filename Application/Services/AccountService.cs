@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Exceptions;
@@ -12,68 +13,61 @@ namespace Application.Services
 {
     public class AccountService : IAccountService
     {
-        private readonly IAccountRepository _accountRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IUserProfileRepository _userProfileRepository;
         private readonly IPasswordHasher<Account> _passwordHasher;
-        private readonly IQuestLabelRepository _questLabelRepository;
         private readonly ILogger<AccountService> _logger;
 
         public AccountService(
-            IAccountRepository accountRepository,
+            IUnitOfWork unitOfWork,
             IMapper mapper,
-            IUserProfileRepository userProfileRepository,
             IPasswordHasher<Account> passwordHasher,
-            IQuestLabelRepository questLabelRepository,
             ILogger<AccountService> logger)
         {
-            _accountRepository = accountRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _userProfileRepository = userProfileRepository;
             _passwordHasher = passwordHasher;
-            _questLabelRepository = questLabelRepository;
             _logger = logger;
         }
 
-        public async Task<GetAccountDto> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<GetAccountDto> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Profile).ConfigureAwait(false)
+            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");
-
             return _mapper.Map<GetAccountDto>(account);
         }
 
         public async Task UpdateAccountAsync(int accountId, UpdateAccountDto patchDto, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken, a => a.Profile).ConfigureAwait(false)
+            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");
 
             if (patchDto.Login is not null && !patchDto.Login.Equals(account.Login, StringComparison.OrdinalIgnoreCase))
             {
-                if (await _accountRepository.DoesLoginExistAsync(patchDto.Login, accountId, cancellationToken).ConfigureAwait(false))
+                if (await _unitOfWork.Accounts.DoesLoginExistAsync(patchDto.Login, accountId, cancellationToken).ConfigureAwait(false))
                     throw new ConflictException($"Login {patchDto.Login} is already in use");
             }
 
             if (patchDto.Email is not null && !patchDto.Email.Equals(account.Email, StringComparison.OrdinalIgnoreCase))
             {
-                if (await _accountRepository.DoesEmailExistAsync(patchDto.Email, accountId, cancellationToken).ConfigureAwait(false))
+                if (await _unitOfWork.Accounts.DoesEmailExistAsync(patchDto.Email, accountId, cancellationToken).ConfigureAwait(false))
                     throw new ConflictException($"Email {patchDto.Email} is already in use");
             }
 
             if (patchDto.Nickname is not null && !patchDto.Nickname.Equals(account.Profile.Nickname, StringComparison.OrdinalIgnoreCase))
             {
-                if (await _userProfileRepository.DoesNicknameExistAsync(patchDto.Nickname, cancellationToken).ConfigureAwait(false))
+                if (await _unitOfWork.UserProfiles.DoesNicknameExistAsync(patchDto.Nickname, accountId, cancellationToken).ConfigureAwait(false))
                     throw new ConflictException($"Nickname {patchDto.Nickname} is already in use");
             }
 
             _mapper.Map(patchDto, account);
 
-            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task ChangePasswordAsync(int accountId, ChangePasswordDto resetPasswordDto, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+            var account = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
             var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, resetPasswordDto.OldPassword);
@@ -82,20 +76,32 @@ namespace Application.Services
 
             account.HashPassword = _passwordHasher.HashPassword(account, resetPasswordDto.NewPassword);
 
-            await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task DeleteAccountAsync(int accountId, DeleteAccountDto deleteAccountDto, CancellationToken cancellationToken = default)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+            var accountForAuth = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
-            var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password);
+            var result = _passwordHasher.VerifyHashedPassword(accountForAuth, accountForAuth.HashPassword, deleteAccountDto.Password);
             if (result != PasswordVerificationResult.Success)
                 throw new UnauthorizedException("Invalid password");
 
-            await _questLabelRepository.DeleteQuestLabelsByAccountIdAsync(accountId, cancellationToken).ConfigureAwait(false);
-            await _accountRepository.DeleteAsync(account, cancellationToken).ConfigureAwait(false);
+            // First fetch and delete labels to avoid db conflict. Needs to be done separately because doing so in one operation violates non nullability on AccountId
+            var labelsToDelete = await _unitOfWork.QuestLabels.GetUserLabelsAsync(accountId, false, cancellationToken).ConfigureAwait(false);
+            if (labelsToDelete.Any())
+            {
+                _unitOfWork.QuestLabels.DeleteRange(labelsToDelete);
+                await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            var accountToDelete = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID: {accountId} not found after label deletion.");
+
+            _unitOfWork.Accounts.Delete(accountToDelete);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task UpdateTimeZoneIfChangedAsync(int accountId, string? timeZone, CancellationToken cancellationToken = default)
@@ -111,16 +117,38 @@ namespace Application.Services
                 return;
             }
 
-            var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false);
+            var account = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false);
             if (account is null)
                 return;
 
             if (!string.Equals(account.TimeZone, normalizedTimeZone, StringComparison.Ordinal))
             {
                 account.TimeZone = normalizedTimeZone;
-                await _accountRepository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
                 _logger.LogInformation("Updated timezone for user {UserId} to {TimeZone}.", accountId, normalizedTimeZone);
+                await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        public async Task WipeoutAccountDataAsync(PasswordConfirmationDto authRequestDto, CancellationToken cancellationToken = default)
+        {
+            var account = await _unitOfWork.Accounts.GetAccountToWipeoutDataAsync(authRequestDto.AccountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {authRequestDto.AccountId} was not found");
+
+            var result = _passwordHasher.VerifyHashedPassword(account, account.HashPassword, authRequestDto.Password);
+            if (result != PasswordVerificationResult.Success)
+                throw new UnauthorizedException("Invalid password");
+
+            // Clear profile information
+            account.Profile.WipeoutData();
+            // Clear quests
+            account.Quests.Clear();
+            // Clear labels
+            var labelsToDelete = account.Labels;
+            _unitOfWork.QuestLabels.DeleteRange(labelsToDelete);
+
+            var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogDebug("Affected rows after wiping out account data: {AffectedRows}", affectedRows);
         }
     }
 }

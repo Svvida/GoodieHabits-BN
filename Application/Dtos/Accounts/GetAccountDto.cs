@@ -1,4 +1,4 @@
-﻿using Application.Dtos.Profiles;
+﻿using Application.Dtos.UserProfile;
 
 namespace Application.Dtos.Accounts
 {
@@ -6,7 +6,8 @@ namespace Application.Dtos.Accounts
     {
         public string? Login { get; set; }
         public required string Email { get; set; }
-        public GetUserProfileDto Profile { get; set; } = new();
+        public DateTime JoinDate { get; set; }
+        public GetUserProfileInfoDto Profile { get; set; } = new();
         public ICollection<GetAccountPreferencesDto> Preferences { get; set; } = [];
     }
 }

@@ -13,7 +13,7 @@ namespace Infrastructure.Repositories.Resetting
             _context = context;
         }
 
-        public async Task<int> ResetQuestsAsync(CancellationToken cancellationToken = default)
+        public async Task PrepareQuestsForResetAsync(CancellationToken cancellationToken = default)
         {
             var questsToReset = await _context.Quests
                 .Where(q => q.IsCompleted == true && (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow && q.NextResetAt <= DateTime.UtcNow)
@@ -23,17 +23,13 @@ namespace Infrastructure.Repositories.Resetting
                 .ConfigureAwait(false);
 
             if (questsToReset.Count == 0)
-                return 0; // No quests to reset
+                return; // No quests to reset
 
             foreach (var quest in questsToReset)
             {
                 quest.IsCompleted = false;
-                quest.Account.Profile.CompletedExistingQuests = Math.Max(0, quest.Account.Profile.CompletedExistingQuests - 1);
+                quest.Account.Profile.CurrentlyCompletedExistingQuests = Math.Max(0, quest.Account.Profile.CurrentlyCompletedExistingQuests - 1);
             }
-
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            return questsToReset.Count; // Return the number of quests reset
         }
     }
 }

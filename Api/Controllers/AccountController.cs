@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 using Application.Interfaces;
 using Domain;
 using Domain.Exceptions;
@@ -28,7 +29,7 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
 
-            var account = await _accountService.GetAccountByIdAsync(accountId);
+            var account = await _accountService.GetAccountWithProfileInfoAsync(accountId);
             if (account is null)
             {
                 return NotFound(new ProblemDetails
@@ -76,6 +77,20 @@ namespace Api.Controllers
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
             await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("accounts/me/wipeout-data")]
+        public async Task<IActionResult> WipeoutAccountData(
+            PasswordConfirmationDto authRequestDto,
+            CancellationToken cancellationToken = default)
+        {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+
+            authRequestDto.AccountId = accountId;
+            await _accountService.WipeoutAccountDataAsync(authRequestDto, cancellationToken);
             return NoContent();
         }
     }

@@ -1,40 +1,15 @@
 ﻿using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class QuestOccurrenceRepository : IQuestOccurrenceRepository
+    public class QuestOccurrenceRepository : BaseRepository<QuestOccurrence>, IQuestOccurrenceRepository
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<QuestOccurrenceRepository> _logger;
 
-        public QuestOccurrenceRepository(AppDbContext context, ILogger<QuestOccurrenceRepository> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
-
-        public async Task SaveOccurrencesAsync(List<QuestOccurrence> occurences, CancellationToken cancellationToken = default)
-        {
-            foreach (var occurrence in occurences)
-            {
-                if (occurrence.Id != 0)
-                {
-                    _logger.LogWarning("Occurrence has non-zero ID before saving: {Id}", occurrence.Id);
-                }
-            }
-            _context.QuestOccurrences.AddRange(occurences);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task UpdateOccurrence(QuestOccurrence occurence, CancellationToken cancellationToken = default)
-        {
-            _context.QuestOccurrences.Update(occurence);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
+        public QuestOccurrenceRepository(AppDbContext context) : base(context) { }
 
         public async Task<bool> IsQuestOccurrenceExistsAsync(int questId, DateTime occurenceStart, DateTime occurenceEnd, CancellationToken cancellationToken = default)
         {
@@ -62,6 +37,7 @@ namespace Infrastructure.Repositories.Quests
         {
             return await _context.QuestOccurrences
                 .Where(q => q.QuestId == questId)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

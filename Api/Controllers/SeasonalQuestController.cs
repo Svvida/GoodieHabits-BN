@@ -75,8 +75,8 @@ namespace Api.Controllers
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
-            var updatedQuest = await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return Ok(updatedQuest);
+            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            return Ok();
 
         }
 
@@ -87,6 +87,11 @@ namespace Api.Controllers
             [FromBody] UpdateSeasonalQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
+            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
+            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
+                return Unauthorized("Invalid access token: missing account identifier.");
+
+            updateDto.AccountId = accountId;
             updateDto.Id = id;
             var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
             return Ok(updatedQuest);

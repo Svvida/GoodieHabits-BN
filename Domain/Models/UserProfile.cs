@@ -14,7 +14,8 @@ namespace Domain.Models
         public int CompletedQuests { get; set; } = 0;
         public int TotalQuests { get; set; } = 0;
         public int ExistingQuests { get; set; } = 0;
-        public int CompletedExistingQuests { get; set; } = 0;
+        public int CurrentlyCompletedExistingQuests { get; set; } = 0;
+        public int EverCompletedExistingQuests { get; set; } = 0;
         // Stats for goals
         public int CompletedGoals { get; set; } = 0;
         public int ExpiredGoals { get; set; } = 0;
@@ -29,6 +30,25 @@ namespace Domain.Models
         {
             Id = id;
             AccountId = accountId;
+        }
+
+        public void WipeoutData()
+        {
+            Nickname = null;
+            Avatar = null;
+            Bio = null;
+            TotalXp = 0;
+            CompletedQuests = 0;
+            TotalQuests = 0;
+            ExistingQuests = 0;
+            CurrentlyCompletedExistingQuests = 0;
+            EverCompletedExistingQuests = 0;
+            CompletedGoals = 0;
+            ExpiredGoals = 0;
+            TotalGoals = 0;
+            ActiveGoals = 0;
+
+            UserProfile_Badges.Clear();
         }
     }
 }

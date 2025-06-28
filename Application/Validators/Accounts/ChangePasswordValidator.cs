@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.ValidatorsExtensions;
 using FluentValidation;
 
 namespace Application.Validators.Accounts
@@ -8,29 +9,16 @@ namespace Application.Validators.Accounts
         public ChangePasswordValidator()
         {
             RuleFor(x => x.OldPassword)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .MinimumLength(6).WithMessage("{PropertyName} must be at least {MinLength} characters long.")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
-                .Matches("^[a-zA-Z0-9_#@!-]*$")
-                .WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: _ @ # -");
+                .Password();
 
             RuleFor(x => x.NewPassword)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .MinimumLength(6).WithMessage("{PropertyName} must be at least {MinLength} characters long.")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
-                .Matches("^[a-zA-Z0-9_#@!-]*$")
-                .WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: _ @ # -")
+                .Password()
                 .NotEqual(x => x.OldPassword)
-                .WithMessage("New password must be different from the old password.");
+                    .WithMessage("New password must be different from the old password.");
 
             RuleFor(x => x.ConfirmNewPassword)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .MinimumLength(6).WithMessage("{PropertyName} must be at least {MinLength} characters long.")
-                .MaximumLength(50).WithMessage("{PropertyName} must not exceed {MaxLength} characters.")
-                .Matches("^[a-zA-Z0-9_#@!-]*$")
-                .WithMessage("{PropertyName} must contain only letters, numbers, and the following special characters: _ @ # -")
                 .Equal(x => x.NewPassword)
-                .WithMessage("The confirmation password does not match your new password.");
+                    .WithMessage("The confirmation password does not match your new password.");
         }
     }
 }

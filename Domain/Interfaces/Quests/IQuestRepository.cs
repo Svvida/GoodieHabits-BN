@@ -1,22 +1,20 @@
 ﻿using Domain.Enum;
+using Domain.Interfaces.Domain.Interfaces;
 using Domain.Models;
 
 namespace Domain.Interfaces.Quests
 {
-    public interface IQuestRepository
+    public interface IQuestRepository : IBaseRepository<Quest>
     {
-        Task<IEnumerable<Quest>> GetActiveQuestsAsync(int accountId, DateTime todayStart, DateTime todayEnd, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
-        Task<IEnumerable<Quest>> GetQuestsByTypeAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
-        Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
-        Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default);
-        Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default);
-        Task DeleteQuestAsync(Quest quest, CancellationToken cancellationToken = default);
-        void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd);
-        void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove);
+        Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(int accountId, DateTime todayStart, DateTime todayEnd, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestForDisplayAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(bool asNoTracking, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestForStatsProcessingAsync(int questId, CancellationToken cancellationToken = default);
         Task<bool> IsQuestOwnedByUserAsync(int questId, int accountId, CancellationToken cancellationToken = default);
-        Task AddQuestAsync(Quest quest, CancellationToken cancellationToken = default);
-        Task UpdateQuestAsync(Quest quest, CancellationToken cancellationToken = default);
-        void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd);
-        void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove);
+        Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetQuestsEligibleForResetAsync(CancellationToken cancellationToken = default);
     }
 }

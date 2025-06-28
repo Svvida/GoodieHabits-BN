@@ -7,11 +7,11 @@ namespace Api.Filters
 {
     public class QuestLabelAuthorizationFilter : IAsyncAuthorizationFilter
     {
-        private readonly IQuestLabelRepository _questLabelRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public QuestLabelAuthorizationFilter(IQuestLabelRepository questLabelRepository)
+        public QuestLabelAuthorizationFilter(IUnitOfWork unitOfWork)
         {
-            _questLabelRepository = questLabelRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -25,7 +25,7 @@ namespace Api.Filters
                 return;
             }
 
-            bool isOwner = await _questLabelRepository.IsLabelOwnedByUserAsync(labelId.Value, accountId.Value);
+            bool isOwner = await _unitOfWork.QuestLabels.IsLabelOwnedByUserAsync(labelId.Value, accountId.Value);
 
             if (!isOwner)
                 context.Result = new ForbidResult();

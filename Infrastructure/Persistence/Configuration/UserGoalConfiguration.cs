@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.ToTable("UserGoals");
             builder.HasKey(ug => ug.Id);
             builder.HasIndex(ug => ug.QuestId);
-            builder.HasIndex(ug => ug.AccountId);
+            builder.HasIndex(ug => new { ug.AccountId, ug.IsExpired, ug.QuestId });
             builder.HasIndex(ug => new { ug.AccountId, ug.IsAchieved, ug.IsExpired });
             builder.HasIndex(ug => ug.EndsAt);
 

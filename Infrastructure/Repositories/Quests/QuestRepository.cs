@@ -1,27 +1,17 @@
 ﻿using Domain.Enum;
-using Domain.Exceptions;
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories.Quests
 {
-    public class QuestRepository : IQuestRepository
+    public class QuestRepository : BaseRepository<Quest>, IQuestRepository
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<QuestRepository> _logger;
+        public QuestRepository(AppDbContext context) : base(context) { }
 
-        public QuestRepository(
-            AppDbContext context,
-            ILogger<QuestRepository> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
-
-        public async Task<IEnumerable<Quest>> GetActiveQuestsAsync(
+        public async Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(
             int accountId,
             DateTime todayStart,
             DateTime todayEnd,
@@ -59,292 +49,187 @@ namespace Infrastructure.Repositories.Quests
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         (q.SeasonalQuest_Season!.Season == currentSeason))
                 )
-                .AsNoTracking()
-                .Include(q => q.Quest_QuestLabels)
-                .AsNoTracking()
-                .AsQueryable();
-
-            var projectedQuery = baseQuery.Select(q => new Quest
-            {
-                Id = q.Id,
-                AccountId = q.AccountId,
-                Account = new Account
+                .Select(q => new Quest
                 {
-                    Id = q.Account.Id,
-                    Login = q.Account.Login,
-                    HashPassword = q.Account.HashPassword,
-                    Email = q.Account.Email,
-                    TimeZone = q.Account.TimeZone,
-                    CreatedAt = q.Account.CreatedAt,
-                    UpdatedAt = q.Account.UpdatedAt,
-                },
-                QuestType = q.QuestType,
-                Title = q.Title,
-                Description = q.Description,
-                Priority = q.Priority,
-                IsCompleted = q.IsCompleted,
-                Emoji = q.Emoji,
-                StartDate = q.StartDate,
-                EndDate = q.EndDate,
-                LastCompletedAt = q.LastCompletedAt,
-                NextResetAt = q.NextResetAt,
-                UpdatedAt = q.UpdatedAt,
-                CreatedAt = q.CreatedAt,
-
-                Statistics = q.Statistics != null
-                    ? new QuestStatistics
+                    Id = q.Id,
+                    QuestType = q.QuestType,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Priority = q.Priority,
+                    IsCompleted = q.IsCompleted,
+                    Emoji = q.Emoji,
+                    StartDate = q.StartDate,
+                    EndDate = q.EndDate,
+                    LastCompletedAt = q.LastCompletedAt,
+                    Statistics = q.Statistics != null
+                            ? new QuestStatistics
+                            {
+                                Id = q.Statistics.Id,
+                                QuestId = q.Id,
+                                OccurrenceCount = q.Statistics.OccurrenceCount,
+                                CompletionCount = q.Statistics.CompletionCount,
+                                FailureCount = q.Statistics.FailureCount,
+                                CurrentStreak = q.Statistics.CurrentStreak,
+                                LongestStreak = q.Statistics.LongestStreak,
+                                LastCompletedAt = q.Statistics.LastCompletedAt
+                            }
+                            : null,
+                    Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
                     {
-                        Id = q.Statistics.Id,
                         QuestId = q.Id,
-                        OccurrenceCount = q.Statistics.OccurrenceCount,
-                        CompletionCount = q.Statistics.CompletionCount,
-                        FailureCount = q.Statistics.FailureCount,
-                        CurrentStreak = q.Statistics.CurrentStreak,
-                        LongestStreak = q.Statistics.LongestStreak,
-                        LastCompletedAt = q.Statistics.LastCompletedAt
-                    }
-                    : null,
+                        QuestLabelId = ql.QuestLabelId,
+                        QuestLabel = new QuestLabel
+                        {
+                            Id = ql.QuestLabelId,
+                            AccountId = q.AccountId,
+                            Value = ql.QuestLabel.Value,
+                            BackgroundColor = ql.QuestLabel.BackgroundColor,
+                            UpdatedAt = ql.QuestLabel.UpdatedAt,
+                            CreatedAt = ql.QuestLabel.CreatedAt
+                        }
+                    }).ToList(),
 
-                Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
-                {
-                    QuestId = q.Id,
-                    QuestLabelId = ql.QuestLabelId,
-                    QuestLabel = new QuestLabel
-                    {
-                        Id = ql.QuestLabelId,
-                        AccountId = q.AccountId,
-                        Value = ql.QuestLabel.Value,
-                        BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        UpdatedAt = ql.QuestLabel.UpdatedAt,
-                        CreatedAt = ql.QuestLabel.CreatedAt
-                    }
-                }).ToList(),
+                    SeasonalQuest_Season = q.SeasonalQuest_Season != null
+                            ? new SeasonalQuest_Season
+                            {
+                                Id = q.SeasonalQuest_Season.Id,
+                                QuestId = q.Id,
+                                Season = q.SeasonalQuest_Season.Season
+                            }
+                            : null,
 
-                SeasonalQuest_Season = q.SeasonalQuest_Season != null
-                    ? new SeasonalQuest_Season
-                    {
-                        Id = q.SeasonalQuest_Season.Id,
-                        QuestId = q.Id,
-                        Season = q.SeasonalQuest_Season.Season
-                    }
-                    : null,
+                    MonthlyQuest_Days = q.MonthlyQuest_Days != null
+                            ? new MonthlyQuest_Days
+                            {
+                                Id = q.MonthlyQuest_Days.Id,
+                                QuestId = q.Id,
+                                StartDay = q.MonthlyQuest_Days.StartDay,
+                                EndDay = q.MonthlyQuest_Days.EndDay
+                            }
+                            : null,
 
-                MonthlyQuest_Days = q.MonthlyQuest_Days != null
-                    ? new MonthlyQuest_Days
-                    {
-                        Id = q.MonthlyQuest_Days.Id,
-                        QuestId = q.Id,
-                        StartDay = q.MonthlyQuest_Days.StartDay,
-                        EndDay = q.MonthlyQuest_Days.EndDay
-                    }
-                    : null,
+                    WeeklyQuest_Days = q.WeeklyQuest_Days != null
+                            ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
+                            {
+                                Id = wd.Id,
+                                QuestId = q.Id,
+                                Weekday = wd.Weekday
+                            }).ToList()
+                            : new List<WeeklyQuest_Day>()
+                })
+                .AsNoTracking();
 
-                WeeklyQuest_Days = q.WeeklyQuest_Days != null
-                    ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
-                    {
-                        Id = wd.Id,
-                        QuestId = q.Id,
-                        Weekday = wd.Weekday
-                    }).ToList()
-                    : new List<WeeklyQuest_Day>()
-            }).AsNoTracking();
-
-            //var result = await ApplyQuestProjection(baseQuery).ToListAsync(cancellationToken).ConfigureAwait(false);
-            //_logger.LogDebug("Fetched {@result} quests from repository.", result);
-            //return result;
-
-            var result = await projectedQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
-            return result;
+            return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetQuestsByTypeAsync(
+        public async Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(
             int accountId,
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var quests = _context.Quests
+            var query = _context.Quests
                 .Where(q => q.AccountId == accountId && q.QuestType == questType)
+                .AsNoTracking()
                 .Include(q => q.Quest_QuestLabels)
-                .ThenInclude(ql => ql.QuestLabel)
+                    .ThenInclude(ql => ql.QuestLabel)
                 .AsNoTracking();
 
-            if (questType == QuestTypeEnum.Monthly)
-            {
-                quests = quests.Include(q => q.MonthlyQuest_Days).AsNoTracking();
-            }
-            if (questType == QuestTypeEnum.Weekly)
-            {
-                quests = quests.Include(q => q.WeeklyQuest_Days).AsNoTracking();
-            }
-            if (questType == QuestTypeEnum.Seasonal)
-            {
-                quests = quests.Include(q => q.SeasonalQuest_Season).AsNoTracking();
-            }
+            if (questType == QuestTypeEnum.Daily)
+                query = query.Include(q => q.Statistics);
 
-            var result = await ApplyQuestProjection(quests).ToListAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
-            return result;
+            else if (questType == QuestTypeEnum.Monthly)
+                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
+
+            else if (questType == QuestTypeEnum.Weekly)
+                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
+
+            else if (questType == QuestTypeEnum.Seasonal)
+                query = query.Include(q => q.SeasonalQuest_Season);
+
+            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default)
         {
-            var quest = _context.Quests
+            var query = _context.Quests
+                .Where(q => q.Id == questId && q.QuestType == questType);
+
+            query = query
+                .Include(q => q.Account)
+                     .ThenInclude(a => a.Profile)
+                .Include(q => q.Quest_QuestLabels)
+                    .ThenInclude(ql => ql.QuestLabel);
+
+            if (questType == QuestTypeEnum.Daily)
+                query = query.Include(q => q.Statistics);
+
+            else if (questType == QuestTypeEnum.Monthly)
+                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
+
+            else if (questType == QuestTypeEnum.Weekly)
+                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
+
+            else if (questType == QuestTypeEnum.Seasonal)
+                query = query.Include(q => q.SeasonalQuest_Season);
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<Quest?> GetQuestForDisplayAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Quests
                 .Where(q => q.Id == questId && q.QuestType == questType)
                 .AsNoTracking()
-                .Include(q => q.Account)
-                    .ThenInclude(a => a.Profile)
-                .AsNoTracking()
                 .Include(q => q.Statistics)
-                .AsNoTracking()
-                .Include(q => q.QuestOccurrences)
-                .AsNoTracking()
                 .Include(q => q.Quest_QuestLabels)
-                .ThenInclude(ql => ql.QuestLabel)
-                .AsNoTracking();
+                    .ThenInclude(ql => ql.QuestLabel)
+                .AsQueryable();
 
             if (questType == QuestTypeEnum.Monthly)
             {
-                quest = quest.Include(q => q.MonthlyQuest_Days).AsNoTracking();
+                query = query.Include(q => q.MonthlyQuest_Days);
             }
             if (questType == QuestTypeEnum.Weekly)
             {
-                quest = quest.Include(q => q.WeeklyQuest_Days).AsNoTracking();
+                query = query.Include(q => q.WeeklyQuest_Days);
             }
             if (questType == QuestTypeEnum.Seasonal)
             {
-                quest = quest.Include(q => q.SeasonalQuest_Season).AsNoTracking();
+                query = query.Include(q => q.SeasonalQuest_Season);
             }
 
-            var result = await ApplyQuestProjection(quest).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("Fetched {@result} quests from repository.", result);
-            return result;
+            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(bool asNoTracking, CancellationToken cancellationToken = default)
         {
-            var quests = _context.Quests
+            var query = _context.Quests
                 .Include(q => q.Account)
-                .AsNoTracking()
-                .Include(q => q.Statistics)
                 .Include(q => q.QuestOccurrences)
                 .Include(q => q.WeeklyQuest_Days)
-                .AsNoTracking()
                 .Include(q => q.MonthlyQuest_Days)
-                .AsNoTracking()
                 .Where(q => q.QuestType == QuestTypeEnum.Daily ||
                 q.QuestType == QuestTypeEnum.Weekly ||
-                q.QuestType == QuestTypeEnum.Monthly)
-                .AsNoTracking();
+                q.QuestType == QuestTypeEnum.Monthly);
 
-            var projectedQuests = quests.Select(q => new Quest
-            {
-                Id = q.Id,
-                AccountId = q.AccountId,
-                Account = new Account
-                {
-                    Id = q.Account.Id,
-                    Login = q.Account.Login,
-                    HashPassword = q.Account.HashPassword,
-                    Email = q.Account.Email,
-                    TimeZone = q.Account.TimeZone,
-                    CreatedAt = q.Account.CreatedAt,
-                    UpdatedAt = q.Account.UpdatedAt,
-                },
-                QuestType = q.QuestType,
-                Title = q.Title,
-                Description = q.Description,
-                Priority = q.Priority,
-                IsCompleted = q.IsCompleted,
-                Emoji = q.Emoji,
-                StartDate = q.StartDate,
-                EndDate = q.EndDate,
-                LastCompletedAt = q.LastCompletedAt,
-                NextResetAt = q.NextResetAt,
-                UpdatedAt = q.UpdatedAt,
-                CreatedAt = q.CreatedAt,
+            if (asNoTracking)
+                query = query.AsNoTracking();
 
-                Statistics = q.Statistics != null
-                    ? new QuestStatistics
-                    {
-                        Id = q.Statistics.Id,
-                        QuestId = q.Id,
-                        OccurrenceCount = q.Statistics.OccurrenceCount,
-                        CompletionCount = q.Statistics.CompletionCount,
-                        FailureCount = q.Statistics.FailureCount,
-                        CurrentStreak = q.Statistics.CurrentStreak,
-                        LongestStreak = q.Statistics.LongestStreak,
-                        LastCompletedAt = q.Statistics.LastCompletedAt
-                    }
-                    : null,
-
-                QuestOccurrences = q.QuestOccurrences != null ? q.QuestOccurrences.Select(qo => new QuestOccurrence
-                {
-                    Id = qo.Id,
-                    QuestId = qo.QuestId,
-                    OccurrenceStart = qo.OccurrenceStart,
-                    OccurrenceEnd = qo.OccurrenceEnd,
-                    WasCompleted = qo.WasCompleted,
-                }).ToList()
-                : new List<QuestOccurrence>(),
-
-                MonthlyQuest_Days = q.MonthlyQuest_Days != null
-                    ? new MonthlyQuest_Days
-                    {
-                        Id = q.MonthlyQuest_Days.Id,
-                        QuestId = q.Id,
-                        StartDay = q.MonthlyQuest_Days.StartDay,
-                        EndDay = q.MonthlyQuest_Days.EndDay
-                    }
-                    : null,
-
-                WeeklyQuest_Days = q.WeeklyQuest_Days != null
-                    ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
-                    {
-                        Id = wd.Id,
-                        QuestId = q.Id,
-                        Weekday = wd.Weekday
-                    }).ToList()
-                    : new List<WeeklyQuest_Day>()
-            }).AsNoTracking();
-
-            return await projectedQuests.ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteQuestByIdAsync(int questId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(CancellationToken cancellationToken = default)
         {
-            var result = await _context.Quests.Where(q => q.Id == questId)
-                .ExecuteDeleteAsync(cancellationToken)
+            return await _context.Quests
+                .Where(q => q.QuestType == QuestTypeEnum.Daily ||
+                            q.QuestType == QuestTypeEnum.Weekly ||
+                            q.QuestType == QuestTypeEnum.Monthly)
+                .Include(q => q.Statistics)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-
-            if (result == 0)
-            {
-                // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
-                _logger.LogError("Quest with id {questId} not found.", questId);
-                throw new InvalidArgumentException($"Failed to delete quest with ID {questId}.  Possible authorization failure or data inconsistency.");
-            }
-        }
-
-        public async Task DeleteQuestAsync(Quest quest, CancellationToken cancellationToken = default)
-        {
-            _context.Quests.Remove(quest);
-            var result = await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            if (result == 0)
-            {
-                // This should never happen if AuthorizationFilter is working correctly. Keeping it here anyways for safety.
-                _logger.LogError("Quest with id {questId} not found.", quest.Id);
-                throw new InvalidArgumentException($"Failed to delete quest with ID {quest.Id}.  Possible authorization failure or data inconsistency.");
-            }
-        }
-
-        public void AddQuestLabels(List<Quest_QuestLabel> labelsToAdd)
-        {
-            _context.Quest_QuestLabels.AddRange(labelsToAdd);
-        }
-
-        public void RemoveQuestLabels(List<Quest_QuestLabel> labelsToRemove)
-        {
-            _context.Quest_QuestLabels.RemoveRange(labelsToRemove);
         }
 
         public async Task<bool> IsQuestOwnedByUserAsync(
@@ -359,172 +244,42 @@ namespace Infrastructure.Repositories.Quests
                 .ConfigureAwait(false);
         }
 
-        public async Task AddQuestAsync(Quest quest, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestForStatsProcessingAsync(int questId, CancellationToken cancellationToken = default)
         {
-            _context.Quests.Add(quest);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.Quests
+                .Include(q => q.Statistics)
+                .FirstOrDefaultAsync(q => q.Id == questId).ConfigureAwait(false);
         }
 
-        public async Task UpdateQuestAsync(Quest questChanges, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default)
         {
+            var activeUserGoalsIds = await _context.UserGoals
+                .Where(g => g.AccountId == accountId && !g.IsExpired)
+                .AsNoTracking()
+                .Select(g => g.QuestId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            var existingQuestInDb = await _context.Quests
-                    .FirstOrDefaultAsync(q => q.Id == questChanges.Id, cancellationToken)
-                ?? throw new NotFoundException($"Quest with ID {questChanges.Id} not found.");
-
-
-            // Apply changes from questFromService to existingQuestInDb's scalar properties
-            _context.Entry(existingQuestInDb).CurrentValues.SetValues(questChanges);
-
-            //if (questChanges.Statistics != null && existingQuestInDb.IsRepeatable()) // If the incoming data has statistics and quest is repeatable
-            //{
-            //    if (existingQuestInDb.Statistics == null)
-            //    {
-            //        existingQuestInDb.Statistics = new QuestStatistics { QuestId = existingQuestInDb.Id };
-
-            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-            //    }
-            //    else
-            //    {
-            //        _context.Entry(existingQuestInDb.Statistics).CurrentValues.SetValues(questChanges.Statistics);
-            //    }
-            //}
-
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.Quests
+                .Where(q => q.AccountId == accountId &&
+                            !q.IsCompleted &&
+                            (q.EndDate ?? DateTime.MaxValue) > now &&
+                            !activeUserGoalsIds.Contains(q.Id))
+                .Include(q => q.WeeklyQuest_Days)
+                .Include(q => q.MonthlyQuest_Days)
+                .Include(q => q.SeasonalQuest_Season)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
-
-        public void AddQuestWeekdays(List<WeeklyQuest_Day> weekdaysToAdd)
+        public async Task<IEnumerable<Quest>> GetQuestsEligibleForResetAsync(CancellationToken cancellationToken = default)
         {
-            _context.WeeklyQuest_Days.AddRange(weekdaysToAdd);
-        }
-        public void RemoveQuestWeekdays(List<WeeklyQuest_Day> weekdaysToRemove)
-        {
-            _context.WeeklyQuest_Days.RemoveRange(weekdaysToRemove);
-        }
-
-        private static IQueryable<Quest> ApplyQuestProjection(IQueryable<Quest> query)
-        {
-            return query.Select(q => new Quest
-            {
-                Id = q.Id,
-                AccountId = q.AccountId,
-                Account = new Account
-                {
-                    Id = q.Account.Id,
-                    Login = q.Account.Login,
-                    HashPassword = q.Account.HashPassword,
-                    Email = q.Account.Email,
-                    TimeZone = q.Account.TimeZone,
-                    CreatedAt = q.Account.CreatedAt,
-                    UpdatedAt = q.Account.UpdatedAt,
-                    Profile = new UserProfile
-                    {
-                        Id = q.Account.Profile.Id,
-                        AccountId = q.AccountId,
-                        TotalQuests = q.Account.Profile.TotalQuests,
-                        CompletedQuests = q.Account.Profile.CompletedQuests,
-                        ExistingQuests = q.Account.Profile.ExistingQuests,
-                        CompletedExistingQuests = q.Account.Profile.CompletedExistingQuests,
-                        CompletedGoals = q.Account.Profile.CompletedGoals,
-                        ExpiredGoals = q.Account.Profile.ExpiredGoals,
-                        TotalGoals = q.Account.Profile.TotalGoals,
-                        ActiveGoals = q.Account.Profile.ActiveGoals,
-                        TotalXp = q.Account.Profile.TotalXp,
-                        CreatedAt = q.Account.Profile.CreatedAt,
-                        UpdatedAt = q.Account.Profile.UpdatedAt,
-                        UserProfile_Badges = q.Account.Profile.UserProfile_Badges.Select(upb => new UserProfile_Badge
-                        {
-                            BadgeId = upb.BadgeId,
-                            UserProfileId = upb.UserProfileId,
-                            EarnedAt = upb.EarnedAt,
-                            Badge = new Badge
-                            {
-                                Id = upb.Badge.Id,
-                                Text = upb.Badge.Text
-                            }
-                        }).ToList()
-                    }
-                },
-                QuestType = q.QuestType,
-                Title = q.Title,
-                Description = q.Description,
-                Priority = q.Priority,
-                IsCompleted = q.IsCompleted,
-                Emoji = q.Emoji,
-                StartDate = q.StartDate,
-                EndDate = q.EndDate,
-                LastCompletedAt = q.LastCompletedAt,
-                NextResetAt = q.NextResetAt,
-                UpdatedAt = q.UpdatedAt,
-                CreatedAt = q.CreatedAt,
-
-                Statistics = q.Statistics != null
-                    ? new QuestStatistics
-                    {
-                        Id = q.Statistics.Id,
-                        QuestId = q.Id,
-                        OccurrenceCount = q.Statistics.OccurrenceCount,
-                        CompletionCount = q.Statistics.CompletionCount,
-                        FailureCount = q.Statistics.FailureCount,
-                        CurrentStreak = q.Statistics.CurrentStreak,
-                        LongestStreak = q.Statistics.LongestStreak,
-                        LastCompletedAt = q.Statistics.LastCompletedAt
-                    }
-                    : null,
-
-                QuestOccurrences = q.QuestOccurrences != null ? q.QuestOccurrences.Select(qo => new QuestOccurrence
-                {
-                    Id = qo.Id,
-                    QuestId = qo.QuestId,
-                    OccurrenceStart = qo.OccurrenceStart,
-                    OccurrenceEnd = qo.OccurrenceEnd,
-                    WasCompleted = qo.WasCompleted,
-                }).ToList()
-                : new List<QuestOccurrence>(),
-
-                Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
-                {
-                    QuestId = q.Id,
-                    QuestLabelId = ql.QuestLabelId,
-                    QuestLabel = new QuestLabel
-                    {
-                        Id = ql.QuestLabelId,
-                        AccountId = q.AccountId,
-                        Value = ql.QuestLabel.Value,
-                        BackgroundColor = ql.QuestLabel.BackgroundColor,
-                        UpdatedAt = ql.QuestLabel.UpdatedAt,
-                        CreatedAt = ql.QuestLabel.CreatedAt
-                    }
-                }).ToList(),
-
-                SeasonalQuest_Season = q.SeasonalQuest_Season != null
-                    ? new SeasonalQuest_Season
-                    {
-                        Id = q.SeasonalQuest_Season.Id,
-                        QuestId = q.Id,
-                        Season = q.SeasonalQuest_Season.Season
-                    }
-                    : null,
-
-                MonthlyQuest_Days = q.MonthlyQuest_Days != null
-                    ? new MonthlyQuest_Days
-                    {
-                        Id = q.MonthlyQuest_Days.Id,
-                        QuestId = q.Id,
-                        StartDay = q.MonthlyQuest_Days.StartDay,
-                        EndDay = q.MonthlyQuest_Days.EndDay
-                    }
-                    : null,
-
-                WeeklyQuest_Days = q.WeeklyQuest_Days != null
-                    ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
-                    {
-                        Id = wd.Id,
-                        QuestId = q.Id,
-                        Weekday = wd.Weekday
-                    }).ToList()
-                    : new List<WeeklyQuest_Day>()
-            }).AsNoTracking();
+            return await _context.Quests
+                .Where(q => q.IsCompleted &&
+                       (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow &&
+                       (q.NextResetAt.HasValue && q.NextResetAt <= DateTime.UtcNow))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

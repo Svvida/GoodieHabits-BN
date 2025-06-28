@@ -1,22 +1,18 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class UserProfileRepository : IUserProfileRepository
+    public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
     {
-        private readonly AppDbContext _context;
+        public UserProfileRepository(AppDbContext context) : base(context) { }
 
-        public UserProfileRepository(AppDbContext context)
+        public async Task<bool> DoesNicknameExistAsync(string nickname, int accountId, CancellationToken cancellationToken = default)
         {
-            _context = context;
-        }
-
-        public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
-        {
-            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname, cancellationToken)
+            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname && u.AccountId != accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -27,10 +23,23 @@ namespace Infrastructure.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task UpdateAsync(UserProfile userProfile, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<UserProfile>> GetProfilesByAccountIdsAsync(IEnumerable<int> accountIds, CancellationToken cancellationToken = default)
         {
-            _context.UserProfiles.Update(userProfile);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.UserProfiles
+                .Where(u => accountIds.Contains(u.AccountId))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<UserProfile?> GetUserProfileWithGoalsAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .AsNoTracking()
+                .Include(u => u.Account)
+                    .ThenInclude(a => a.UserGoals)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

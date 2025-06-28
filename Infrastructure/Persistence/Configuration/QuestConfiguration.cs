@@ -59,8 +59,12 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(dq => dq.UpdatedAt)
+            builder.Property(q => q.UpdatedAt)
                 .IsRequired(false);
+
+            builder.Property(q => q.WasEverCompleted)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             builder.HasOne(q => q.Account)
                 .WithMany(a => a.Quests)

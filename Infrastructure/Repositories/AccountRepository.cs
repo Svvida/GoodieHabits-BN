@@ -21,6 +21,12 @@ namespace Infrastructure.Repositories
             return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false)
                 ?? null;
         }
+        public async Task<Account?> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken).ConfigureAwait(false);
+        }
 
         public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclue, CancellationToken cancellationToken = default)
         {
@@ -30,6 +36,17 @@ namespace Infrastructure.Repositories
         public async Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default)
         {
             return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Email == email, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<Account?> GetAccountToWipeoutDataAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Where(a => a.Id == accountId)
+                .Include(a => a.Profile)
+                    .ThenInclude(p => p.UserProfile_Badges)
+                .Include(a => a.Quests)
+                .Include(a => a.Labels)
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

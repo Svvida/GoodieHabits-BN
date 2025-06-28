@@ -181,6 +181,11 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("WasEverCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
@@ -396,13 +401,13 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("EndsAt");
 
                     b.HasIndex("QuestId");
 
                     b.HasIndex("AccountId", "IsAchieved", "IsExpired");
+
+                    b.HasIndex("AccountId", "IsExpired", "QuestId");
 
                     b.ToTable("UserGoals", (string)null);
                 });
@@ -430,11 +435,6 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("CompletedExistingQuests")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.Property<int>("CompletedGoals")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -449,6 +449,16 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CurrentlyCompletedExistingQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("EverCompletedExistingQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("ExistingQuests")
                         .ValueGeneratedOnAdd()

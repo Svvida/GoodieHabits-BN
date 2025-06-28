@@ -1,5 +1,6 @@
 ﻿using Application.Services.Quests;
 using Domain.Enum;
+using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Tests.Factories;
@@ -11,12 +12,14 @@ namespace Tests.Services
         private readonly QuestResetService _questResetService;
         private readonly Mock<ILogger<QuestResetService>> _loggerMock;
         private readonly Mock<NodaTime.IClock> _clockMock;
+        private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
         public QuestResetServiceTests()
         {
             _loggerMock = new Mock<ILogger<QuestResetService>>();
             _clockMock = new Mock<NodaTime.IClock>();
-            _questResetService = new QuestResetService(_loggerMock.Object, _clockMock.Object);
+            _unitOfWorkMock = new Mock<IUnitOfWork>();
+            _questResetService = new QuestResetService(_loggerMock.Object, _clockMock.Object, _unitOfWorkMock.Object);
         }
 
         [Fact]
