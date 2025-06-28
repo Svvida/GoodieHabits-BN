@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasOne(ql => ql.Account)
                 .WithMany(a => a.Labels)
                 .HasForeignKey(ql => ql.AccountId)
-                .OnDelete(DeleteBehavior.NoAction); // Perform manual delete in repository when deleting account
+                .OnDelete(DeleteBehavior.SetNull); // Perform manual delete in repository when deleting account
         }
     }
 }

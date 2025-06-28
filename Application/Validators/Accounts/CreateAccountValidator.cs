@@ -1,5 +1,6 @@
 ﻿using Application.Dtos.Accounts;
 using Application.Validators.Helpers;
+using Application.ValidatorsExtensions;
 using FluentValidation;
 
 namespace Application.Validators.Accounts
@@ -9,11 +10,7 @@ namespace Application.Validators.Accounts
         public CreateAccountValidator()
         {
             RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters long")
-                .MaximumLength(50).WithMessage("Password must not exceed 50 characters")
-                .Matches("^[a-zA-Z0-9_#@!-]*$")
-                .WithMessage("Password must contain only letters, numbers, and the following special characters: _ @ # -");
+                .Password();
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")

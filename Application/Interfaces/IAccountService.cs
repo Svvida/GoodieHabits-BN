@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 
 namespace Application.Interfaces
 {
@@ -9,5 +10,6 @@ namespace Application.Interfaces
         Task ChangePasswordAsync(int accountId, ChangePasswordDto resetPasswordDto, CancellationToken cancellationToken = default);
         Task DeleteAccountAsync(int accountId, DeleteAccountDto deleteAccountDto, CancellationToken cancellationToken = default);
         Task UpdateTimeZoneIfChangedAsync(int accountId, string? timeZone, CancellationToken cancellationToken = default);
+        Task WipeoutAccountDataAsync(PasswordConfirmationDto authRequestDto, CancellationToken cancellationToken = default);
     }
 }
