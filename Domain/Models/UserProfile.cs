@@ -31,5 +31,24 @@ namespace Domain.Models
             Id = id;
             AccountId = accountId;
         }
+
+        public void WipeoutData()
+        {
+            Nickname = null;
+            Avatar = null;
+            Bio = null;
+            TotalXp = 0;
+            CompletedQuests = 0;
+            TotalQuests = 0;
+            ExistingQuests = 0;
+            CurrentlyCompletedExistingQuests = 0;
+            EverCompletedExistingQuests = 0;
+            CompletedGoals = 0;
+            ExpiredGoals = 0;
+            TotalGoals = 0;
+            ActiveGoals = 0;
+
+            UserProfile_Badges.Clear();
+        }
     }
 }
