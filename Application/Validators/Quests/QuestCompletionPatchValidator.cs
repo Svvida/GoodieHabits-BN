@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Application.Validators.Quests
 {
-    public class BaseQuestCompletionPatchValidator<T> : AbstractValidator<T> where T : BaseQuestCompletionPatchDto
+    public class QuestCompletionPatchValidator<T> : AbstractValidator<T> where T : QuestCompletionPatchDto
     {
-        public BaseQuestCompletionPatchValidator()
+        public QuestCompletionPatchValidator()
         {
             RuleFor(x => x.IsCompleted)
                 .Must(x => x == false || true)

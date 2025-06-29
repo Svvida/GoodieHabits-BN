@@ -144,7 +144,7 @@ public class Startup
         // Register Validators
         services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
         services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
-        services.AddValidatorsFromAssemblyContaining<BaseQuestCompletionPatchValidator<BaseQuestCompletionPatchDto>>();
+        services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
         services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
         services.AddValidatorsFromAssemblyContaining<UpdateAccountValidator>();
         services.AddValidatorsFromAssemblyContaining<LoginValidator>();

@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests.WeeklyQuest;
+﻿using Application.Dtos.Quests;
+using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
 using Domain;
 using Domain.Enum;
@@ -70,7 +71,7 @@ namespace MyLambdaApi.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> PatchQuestCompletion(
             int id,
-            [FromBody] WeeklyQuestCompletionPatchDto patchDto,
+            [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;

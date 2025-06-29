@@ -2,9 +2,11 @@
 using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
+using Application.Interfaces.Quests;
 using Domain;
 using Domain.Enum;
 using Domain.Exceptions;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,11 +19,19 @@ namespace Api.Controllers
     {
         private readonly IUserGoalService _userGoalService;
         private readonly ILogger<UserGoalController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IQuestService _questService;
 
-        public UserGoalController(IUserGoalService userGoalService, ILogger<UserGoalController> logger)
+        public UserGoalController(
+            IUserGoalService userGoalService,
+            ILogger<UserGoalController> logger,
+            IUnitOfWork unitOfWork,
+            IQuestService questService)
         {
             _userGoalService = userGoalService;
             _logger = logger;
+            _unitOfWork = unitOfWork;
+            _questService = questService;
         }
 
         [HttpPost]
@@ -68,6 +78,30 @@ namespace Api.Controllers
                 });
             }
             return Ok(result);
+        }
+
+        [HttpPatch]
+        [Route("{id}/complete")]
+        [ServiceFilter(typeof(QuestAuthorizationFilter))]
+        public async Task<IActionResult> CompleteUserGoal(int id, QuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
+        {
+            var quest = await _unitOfWork.Quests.GetByIdAsync(id, cancellationToken);
+
+            if (quest is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Quest not found",
+                    Detail = $"Quest with ID {id} was not found."
+                });
+            }
+
+            patchDto.Id = id;
+
+            await _questService.UpdateQuestCompletionAsync(patchDto, quest.QuestType, cancellationToken);
+
+            return Ok();
         }
     }
 }

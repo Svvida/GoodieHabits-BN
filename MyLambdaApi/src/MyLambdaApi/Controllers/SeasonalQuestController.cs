@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests.SeasonalQuest;
+﻿using Application.Dtos.Quests;
+using Application.Dtos.Quests.SeasonalQuest;
 using Application.Interfaces.Quests;
 using Domain;
 using Domain.Enum;
@@ -71,7 +72,7 @@ namespace MyLambdaApi.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> PatchQuestCompletion(
             int id,
-            [FromBody] SeasonalQuestCompletionPatchDto patchDto,
+            [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;

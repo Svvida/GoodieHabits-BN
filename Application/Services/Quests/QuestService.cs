@@ -202,7 +202,7 @@ namespace Application.Services.Quests
 
         }
 
-        public async Task UpdateQuestCompletionAsync(BaseQuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task UpdateQuestCompletionAsync(QuestCompletionPatchDto patchDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var existingQuest = await GetAndValidateQuestAsync(patchDto.Id, questType, cancellationToken);
 
@@ -330,7 +330,7 @@ namespace Application.Services.Quests
 
         private async Task<QuestCompletionContext> BuildCompletionContextAsync(
             Quest quest,
-            BaseQuestCompletionPatchDto patchDto,
+            QuestCompletionPatchDto patchDto,
             Instant nowUtc,
             CancellationToken cancellationToken)
         {
