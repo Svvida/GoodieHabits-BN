@@ -186,7 +186,7 @@ namespace Api
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<BaseQuestCompletionPatchValidator<BaseQuestCompletionPatchDto>>();
+            builder.Services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<UpdateAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();

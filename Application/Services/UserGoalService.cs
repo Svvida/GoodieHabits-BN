@@ -89,7 +89,7 @@ namespace Application.Services
             quest.Account.Profile.ActiveGoals++;
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogDebug("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, quest.Account.Profile);
+            //_logger.LogDebug("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, quest.Account.Profile);
         }
 
         public async Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)

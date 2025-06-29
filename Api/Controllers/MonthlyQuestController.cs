@@ -1,4 +1,5 @@
 ﻿using Api.Filters;
+using Application.Dtos.Quests;
 using Application.Dtos.Quests.MonthlyQuest;
 using Application.Interfaces.Quests;
 using Domain;
@@ -70,7 +71,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetMonthlyQuestDto>> PatchQuestCompletion(
             int id,
-            [FromBody] MonthlyQuestCompletionPatchDto patchDto,
+            [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;
