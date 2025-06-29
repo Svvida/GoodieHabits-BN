@@ -18,8 +18,8 @@ namespace Application.MappingProfiles
 
             CreateMap<UserProfile, QuestStatsDto>()
                 .ForMember(dest => dest.CurrentTotal, opt => opt.MapFrom(src => src.ExistingQuests))
-                .ForMember(dest => dest.Completed, opt => opt.MapFrom(src => src.EverCompletedExistingQuests))
-                .ForMember(dest => dest.InProgress, opt => opt.MapFrom(src => Math.Max(src.ExistingQuests - src.EverCompletedExistingQuests, 0)));
+                .ForMember(dest => dest.Completed, opt => opt.MapFrom(src => src.CurrentlyCompletedExistingQuests))
+                .ForMember(dest => dest.InProgress, opt => opt.MapFrom(src => Math.Max(src.ExistingQuests - src.CurrentlyCompletedExistingQuests, 0)));
 
             CreateMap<UserProfile, GoalStatsDto>()
                 .AfterMap<SetUserProfileGoalsAction>();
