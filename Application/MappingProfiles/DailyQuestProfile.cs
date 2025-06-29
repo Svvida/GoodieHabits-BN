@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Quests.DailyQuest;
+﻿using Application.Dtos.Quests;
+using Application.Dtos.Quests.DailyQuest;
 using Application.Helpers;
 using AutoMapper;
 using Domain.Enum;
@@ -26,7 +27,7 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
-            CreateMap<DailyQuestCompletionPatchDto, Quest>()
+            CreateMap<QuestCompletionPatchDto, Quest>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Update DTO -> Entity (Convert String -> Enum)

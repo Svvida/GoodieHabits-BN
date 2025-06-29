@@ -1,4 +1,5 @@
 ﻿using Api.Filters;
+using Application.Dtos.Quests;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
 using Domain;
@@ -71,7 +72,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<ActionResult<GetWeeklyQuestDto>> PatchQuestCompletion(
             int id,
-            [FromBody] WeeklyQuestCompletionPatchDto patchDto,
+            [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
             patchDto.Id = id;

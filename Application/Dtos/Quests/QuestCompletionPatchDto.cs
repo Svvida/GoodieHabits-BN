@@ -2,7 +2,7 @@
 
 namespace Application.Dtos.Quests
 {
-    public abstract class BaseQuestCompletionPatchDto
+    public class QuestCompletionPatchDto
     {
         [JsonIgnore]
         public int Id { get; set; }
