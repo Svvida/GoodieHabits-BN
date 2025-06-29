@@ -79,12 +79,12 @@ namespace Application.Services
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteAccountAsync(int accountId, DeleteAccountDto deleteAccountDto, CancellationToken cancellationToken = default)
+        public async Task DeleteAccountAsync(int accountId, PasswordConfirmationDto passwordConfirmationDto, CancellationToken cancellationToken = default)
         {
             var accountForAuth = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found");
 
-            var result = _passwordHasher.VerifyHashedPassword(accountForAuth, accountForAuth.HashPassword, deleteAccountDto.Password);
+            var result = _passwordHasher.VerifyHashedPassword(accountForAuth, accountForAuth.HashPassword, passwordConfirmationDto.Password);
             if (result != PasswordVerificationResult.Success)
                 throw new UnauthorizedException("Invalid password");
 

@@ -193,8 +193,8 @@ namespace Api
             builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<DeleteAccountValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<PasswordConfirmationValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 

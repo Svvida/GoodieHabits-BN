@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 using Application.Services;
 using AutoMapper;
 using Domain.Exceptions;
@@ -302,9 +303,10 @@ namespace Tests.Services
             const int accountId = 1;
             const string correctOldPasswordHash = "hashed_old_password";
             var account = AccountFactory.CreateAccount(accountId, "test@email.com", correctOldPasswordHash);
-            var deleteAccountDto = new DeleteAccountDto
+            var deleteAccountDto = new PasswordConfirmationDto
             {
-                Password = "wrongOldPassword"
+                Password = "wrongOldPassword",
+                ConfirmPassword = "wrongOldPassword"
             };
 
             _unitOfWorkMock
@@ -334,9 +336,10 @@ namespace Tests.Services
             const int accountId = 1;
             const string correctOldPasswordHash = "hashed_old_password";
             var account = AccountFactory.CreateAccount(accountId, "test@email.com", correctOldPasswordHash);
-            var deleteAccountDto = new DeleteAccountDto
+            var deleteAccountDto = new PasswordConfirmationDto
             {
-                Password = "correctOldPassword"
+                Password = "correctOldPassword",
+                ConfirmPassword = "correctOldPassword"
             };
 
             _unitOfWorkMock
