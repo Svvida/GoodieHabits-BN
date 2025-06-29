@@ -135,7 +135,6 @@ public class Startup
         services.AddScoped<IUserGoalService, UserGoalService>();
         services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
         services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-        services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
         services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
         services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
         services.AddScoped<IStatsService, StatsService>();
