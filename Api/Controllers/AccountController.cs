@@ -70,13 +70,13 @@ namespace Api.Controllers
 
         [HttpDelete("accounts/me")]
         public async Task<IActionResult> DeleteAccount(
-            DeleteAccountDto deleteAccountDto,
+            PasswordConfirmationDto passwordConfirmationDto,
             CancellationToken cancellationToken = default)
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
-            await _accountService.DeleteAccountAsync(accountId, deleteAccountDto, cancellationToken);
+            await _accountService.DeleteAccountAsync(accountId, passwordConfirmationDto, cancellationToken);
             return NoContent();
         }
 

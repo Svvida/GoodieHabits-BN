@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Accounts;
+using Application.Dtos.Auth;
 using Application.Interfaces;
 using Domain;
 using Domain.Exceptions;
@@ -69,7 +70,7 @@ namespace MyLambdaApi.Controllers
 
         [HttpDelete("accounts/me")]
         public async Task<IActionResult> DeleteAccount(
-            DeleteAccountDto deleteAccountDto,
+            PasswordConfirmationDto deleteAccountDto,
             CancellationToken cancellationToken = default)
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;

@@ -4,7 +4,7 @@ using FluentValidation;
 
 namespace Application.Validators.Accounts
 {
-    internal class PasswordConfirmationValidator : AbstractValidator<PasswordConfirmationDto>
+    public class PasswordConfirmationValidator : AbstractValidator<PasswordConfirmationDto>
     {
         public PasswordConfirmationValidator()
         {
