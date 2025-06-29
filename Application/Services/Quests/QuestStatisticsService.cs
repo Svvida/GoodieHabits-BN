@@ -37,7 +37,7 @@ namespace Application.Services.Quests
 
             foreach (var quest in repeatableQuests)
             {
-                await ProcessStatisticsForQuestAsync(quest, cancellationToken);
+                await ProcessStatisticsForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
             }
 
             return await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -177,7 +177,6 @@ namespace Api
             builder.Services.AddScoped<IUserGoalService, UserGoalService>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-            builder.Services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
             builder.Services.AddScoped<IStatsService, StatsService>();
