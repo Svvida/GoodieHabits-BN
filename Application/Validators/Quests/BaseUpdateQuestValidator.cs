@@ -40,9 +40,6 @@ namespace Application.Validators.Quests
             RuleFor(x => x.Difficulty)
                 .IsEnumName(typeof(DifficultyEnum), caseSensitive: true).When(x => x.Difficulty != null)
                 .WithMessage("{PropertyName} must be a valid difficulty type: 'Easy', 'Medium', 'Hard', 'Impossible'.");
-
-            RuleFor(x => x.Labels)
-                .NotNull().WithMessage("{PropertyName} is required");
         }
     }
 }
