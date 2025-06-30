@@ -14,6 +14,7 @@ namespace Application.MappingProfiles
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<Quest, GetMonthlyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty.ToString()))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
                 .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels))
                 .ForMember(dest => dest.StartDay, opt => opt.MapFrom(src => src.MonthlyQuest_Days!.StartDay))
@@ -31,7 +32,8 @@ namespace Application.MappingProfiles
                     StartDay = src.StartDay,
                     EndDay = src.EndDay
                 }))
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForMember(dest => dest.Difficulty, opt => opt.ConvertUsing(new NullableEnumConverter<DifficultyEnum>(), src => src.Difficulty));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<QuestCompletionPatchDto, Quest>()
@@ -40,6 +42,7 @@ namespace Application.MappingProfiles
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateMonthlyQuestDto, Quest>()
                 .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForMember(dest => dest.Difficulty, opt => opt.ConvertUsing(new NullableEnumConverter<DifficultyEnum>(), src => src.Difficulty))
                 .ForPath(dest => dest.MonthlyQuest_Days!.StartDay, opt => opt.MapFrom(src => src.StartDay))
                 .ForPath(dest => dest.MonthlyQuest_Days!.EndDay, opt => opt.MapFrom(src => src.EndDay));
         }

@@ -11,6 +11,7 @@ namespace Application.Dtos.Quests
         public DateTime? EndDate { get; set; } = null;
         public string? Emoji { get; set; } = null;
         public string? Priority { get; set; } = null;
+        public string? Difficulty { get; set; } = null;
         public HashSet<int> Labels { get; set; } = [];
         [JsonIgnore]
         public int AccountId { get; set; }

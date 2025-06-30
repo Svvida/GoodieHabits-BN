@@ -35,6 +35,10 @@ namespace Application.Validators.Quests
             RuleFor(x => x.Priority)
                 .IsEnumName(typeof(PriorityEnum), caseSensitive: true).When(x => x.Priority != null)
                 .WithMessage("{PropertyName} must be a valid priority type: 'Low', 'Medium', 'High'.");
+
+            RuleFor(x => x.Difficulty)
+                .IsEnumName(typeof(DifficultyEnum), caseSensitive: true).When(x => x.Difficulty != null)
+                .WithMessage("{PropertyName} must be a valid difficulty type: 'Easy', 'Medium', 'Hard', 'Impossible'.");
         }
     }
 }

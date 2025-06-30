@@ -14,6 +14,7 @@ namespace Application.MappingProfiles
             // Entity -> DTO (Convert Enum -> String for Response)
             CreateMap<Quest, GetDailyQuestDto>()
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty.ToString()))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.QuestType))
                 .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Quest_QuestLabels))
                 .ForMember(dest => dest.Statistics, opt => opt.MapFrom(src => src.Statistics));
@@ -24,7 +25,8 @@ namespace Application.MappingProfiles
                 {
                     QuestLabelId = ql
                 }).ToList()))
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForMember(dest => dest.Difficulty, opt => opt.ConvertUsing(new NullableEnumConverter<DifficultyEnum>(), src => src.Difficulty));
 
             // Patch DTO -> Entity (Convert String -> Enum, Ignore Nulls)
             CreateMap<QuestCompletionPatchDto, Quest>()
@@ -32,7 +34,8 @@ namespace Application.MappingProfiles
 
             // Update DTO -> Entity (Convert String -> Enum)
             CreateMap<UpdateDailyQuestDto, Quest>()
-                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority));
+                .ForMember(dest => dest.Priority, opt => opt.ConvertUsing(new NullableEnumConverter<PriorityEnum>(), src => src.Priority))
+                .ForMember(dest => dest.Difficulty, opt => opt.ConvertUsing(new NullableEnumConverter<DifficultyEnum>(), src => src.Difficulty));
         }
     }
 }
