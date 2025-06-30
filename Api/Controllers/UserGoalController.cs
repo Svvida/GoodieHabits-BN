@@ -70,12 +70,7 @@ namespace Api.Controllers
 
             if (result == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Goal not found",
-                    Detail = $"Goal of type {goaltype} was not found for the user."
-                });
+                return NoContent();
             }
             return Ok(result);
         }
