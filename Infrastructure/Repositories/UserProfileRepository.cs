@@ -15,6 +15,11 @@ namespace Infrastructure.Repositories
             return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname && u.AccountId != accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+        public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         public async Task<UserProfile?> GetByAccountIdAsync(int accountId, CancellationToken cancellationToken = default)
         {
