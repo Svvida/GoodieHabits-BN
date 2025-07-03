@@ -211,6 +211,12 @@ namespace Application.Services.Quests
                 return;
             }
 
+            if (patchDto.IsCompleted == false && existingQuest.UserGoal is not null)
+            {
+                _logger.LogError("Cannot uncomplete a quest that is active goals. Quest ID: {QuestId}", existingQuest.Id);
+                throw new ConflictException("Cannot uncomplete a quest that is active goals.");
+            }
+
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
 
             var completionContext = await BuildCompletionContextAsync(existingQuest, patchDto, nowUtc, cancellationToken);
