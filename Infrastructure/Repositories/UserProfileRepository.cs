@@ -46,5 +46,14 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<IEnumerable<UserProfile>> GetTenProfilesWithMostXpAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .OrderByDescending(u => u.TotalXp)
+                .Take(10)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

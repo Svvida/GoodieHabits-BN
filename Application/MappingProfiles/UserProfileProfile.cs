@@ -1,4 +1,5 @@
-﻿using Application.Dtos.UserProfile;
+﻿using Application.Dtos.Leaderboard;
+using Application.Dtos.UserProfile;
 using Application.Dtos.UserProfileStats;
 using Application.MappingActions;
 using AutoMapper;
@@ -29,6 +30,10 @@ namespace Application.MappingProfiles
 
             CreateMap<UserProfile, GetUserProfileInfoDto>()
                 .ForMember(dest => dest.Badges, opt => opt.MapFrom(src => src.UserProfile_Badges));
+
+            // Entity -> Leaderboard item
+            CreateMap<UserProfile, LeaderboardItemDto>()
+                .ForMember(dest => dest.Xp, opt => opt.MapFrom(src => src.TotalXp));
         }
     }
 }
