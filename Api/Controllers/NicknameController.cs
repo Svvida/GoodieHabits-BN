@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     [Authorize]
     public class NicknameController : ControllerBase
     {
@@ -16,7 +16,7 @@ namespace Api.Controllers
             _nicknameGeneratorService = nicknameGeneratorService;
         }
 
-        [HttpGet("random")]
+        [HttpGet("nickname/random")]
         public async Task<ActionResult<string>> GenerateUniqueNickname(CancellationToken cancellationToken = default)
         {
 
