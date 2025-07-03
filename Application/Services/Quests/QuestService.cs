@@ -49,6 +49,8 @@ namespace Application.Services.Quests
             if (quest is null)
                 return null;
 
+            _logger.LogInformation("Quest ScheduledTime: {quest.ScheduledTime}", quest.ScheduledTime);
+
             return MapToDto(quest);
         }
 

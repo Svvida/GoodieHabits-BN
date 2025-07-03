@@ -106,6 +106,7 @@ namespace Api
                 {
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                     options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
+                    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
                 });
 
             // Add Swagger for API Documentation
