@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.Dtos.UserProfile;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,12 +18,14 @@ namespace Api.Controllers
         }
 
         [HttpGet("nickname/random")]
-        public async Task<ActionResult<string>> GenerateUniqueNickname(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetNicknameDto>> GenerateUniqueNickname(CancellationToken cancellationToken = default)
         {
+            var randomNickname = await _nicknameGeneratorService.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false);
 
-            var randomNickname = await _nicknameGeneratorService.GenerateUniqueNicknameAsync(cancellationToken);
-
-            return Ok(randomNickname);
+            return new GetNicknameDto
+            {
+                Nickname = randomNickname
+            };
         }
     }
 }
