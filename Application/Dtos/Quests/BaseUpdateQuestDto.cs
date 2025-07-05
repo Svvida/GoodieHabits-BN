@@ -12,7 +12,9 @@ namespace Application.Dtos.Quests
         public DateTime? EndDate { get; set; }
         public string? Emoji { get; set; }
         public string? Priority { get; set; }
-        public HashSet<int> Labels { get; set; } = null!;
+        public string? Difficulty { get; set; }
+        public TimeOnly? ScheduledTime { get; set; }
+        public HashSet<int> Labels { get; set; } = [];
 
         [JsonIgnore]
         public int AccountId { get; set; }

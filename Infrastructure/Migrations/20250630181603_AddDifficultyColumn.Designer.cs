@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630181603_AddDifficultyColumn")]
+    partial class AddDifficultyColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,9 +175,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("QuestType")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<TimeOnly?>("ScheduledTime")
-                        .HasColumnType("time");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
@@ -477,9 +477,8 @@ namespace Infrastructure.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<string>("Nickname")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("TotalGoals")
                         .ValueGeneratedOnAdd()
@@ -505,7 +504,8 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("Nickname")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Nickname] IS NOT NULL");
 
                     b.ToTable("UserProfiles", (string)null);
                 });

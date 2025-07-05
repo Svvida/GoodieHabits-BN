@@ -19,6 +19,8 @@ namespace Domain.Models
         public DateTime? LastCompletedAt { get; set; } = null;
         public DateTime? NextResetAt { get; set; } = null;
         public bool WasEverCompleted { get; set; } = false;
+        public DifficultyEnum? Difficulty { get; set; } = null;
+        public TimeOnly? ScheduledTime { get; set; } = null;
 
         public Account Account { get; set; } = null!;
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = [];

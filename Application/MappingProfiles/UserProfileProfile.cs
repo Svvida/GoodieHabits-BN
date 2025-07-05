@@ -1,4 +1,5 @@
-﻿using Application.Dtos.UserProfile;
+﻿using Application.Dtos.Leaderboard;
+using Application.Dtos.UserProfile;
 using Application.Dtos.UserProfileStats;
 using Application.MappingActions;
 using AutoMapper;
@@ -18,8 +19,8 @@ namespace Application.MappingProfiles
 
             CreateMap<UserProfile, QuestStatsDto>()
                 .ForMember(dest => dest.CurrentTotal, opt => opt.MapFrom(src => src.ExistingQuests))
-                .ForMember(dest => dest.Completed, opt => opt.MapFrom(src => src.EverCompletedExistingQuests))
-                .ForMember(dest => dest.InProgress, opt => opt.MapFrom(src => Math.Max(src.ExistingQuests - src.EverCompletedExistingQuests, 0)));
+                .ForMember(dest => dest.Completed, opt => opt.MapFrom(src => src.CurrentlyCompletedExistingQuests))
+                .ForMember(dest => dest.InProgress, opt => opt.MapFrom(src => Math.Max(src.ExistingQuests - src.CurrentlyCompletedExistingQuests, 0)));
 
             CreateMap<UserProfile, GoalStatsDto>()
                 .AfterMap<SetUserProfileGoalsAction>();
@@ -29,6 +30,10 @@ namespace Application.MappingProfiles
 
             CreateMap<UserProfile, GetUserProfileInfoDto>()
                 .ForMember(dest => dest.Badges, opt => opt.MapFrom(src => src.UserProfile_Badges));
+
+            // Entity -> Leaderboard item
+            CreateMap<UserProfile, LeaderboardItemDto>()
+                .ForMember(dest => dest.Xp, opt => opt.MapFrom(src => src.TotalXp));
         }
     }
 }

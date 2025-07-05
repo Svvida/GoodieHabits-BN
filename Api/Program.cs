@@ -106,6 +106,7 @@ namespace Api
                 {
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                     options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
+                    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
                 });
 
             // Add Swagger for API Documentation
@@ -177,11 +178,12 @@ namespace Api
             builder.Services.AddScoped<IUserGoalService, UserGoalService>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-            builder.Services.AddScoped<IQuestRewardCalculator, QuestRewardCalculator>();
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
             builder.Services.AddScoped<IStatsService, StatsService>();
             builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
+            builder.Services.AddScoped<INicknameGeneratorService, NicknameGeneratorService>();
+            builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();

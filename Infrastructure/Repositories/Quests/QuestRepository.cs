@@ -56,6 +56,8 @@ namespace Infrastructure.Repositories.Quests
                     Title = q.Title,
                     Description = q.Description,
                     Priority = q.Priority,
+                    Difficulty = q.Difficulty,
+                    ScheduledTime = q.ScheduledTime,
                     IsCompleted = q.IsCompleted,
                     Emoji = q.Emoji,
                     StartDate = q.StartDate,

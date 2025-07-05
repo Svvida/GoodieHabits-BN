@@ -15,6 +15,11 @@ namespace Infrastructure.Repositories
             return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname && u.AccountId != accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+        public async Task<bool> DoesNicknameExistAsync(string nickname, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         public async Task<UserProfile?> GetByAccountIdAsync(int accountId, CancellationToken cancellationToken = default)
         {
@@ -39,6 +44,15 @@ namespace Infrastructure.Repositories
                     .ThenInclude(a => a.UserGoals)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<UserProfile>> GetTenProfilesWithMostXpAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .OrderByDescending(u => u.TotalXp)
+                .Take(10)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
     }

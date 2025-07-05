@@ -23,6 +23,7 @@ namespace Application.Services
         private readonly IMapper _mapper;
         private readonly ITokenGenerator _tokenGenerator;
         private readonly ITokenValidator _tokenValidator;
+        private readonly INicknameGeneratorService _nicknameGeneratorService;
 
         public AuthService(
             IOptions<JwtSettings> jwtSettings,
@@ -30,7 +31,8 @@ namespace Application.Services
             IPasswordHasher<Account> passwordHasher,
             IMapper mapper,
             ITokenGenerator tokenGenerator,
-            ITokenValidator tokenValidator)
+            ITokenValidator tokenValidator,
+            INicknameGeneratorService nicknameGeneratorService)
         {
             _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
             _unitOfWork = unitOfWork;
@@ -38,6 +40,7 @@ namespace Application.Services
             _mapper = mapper;
             _tokenGenerator = tokenGenerator;
             _tokenValidator = tokenValidator;
+            _nicknameGeneratorService = nicknameGeneratorService;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken cancellationToken = default)
@@ -75,6 +78,8 @@ namespace Application.Services
             var accountEntity = _mapper.Map<Account>(createDto);
 
             accountEntity.HashPassword = _passwordHasher.HashPassword(accountEntity, createDto.Password);
+
+            accountEntity.Profile.Nickname = await _nicknameGeneratorService.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false);
 
             await _unitOfWork.Accounts.AddAsync(accountEntity, cancellationToken).ConfigureAwait(false);
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

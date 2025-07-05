@@ -12,7 +12,7 @@ namespace Application.MappingActions
 
             destination.CurrentTotal = source.ActiveGoals;
             destination.Completed = goals.Count(g => !g.IsExpired && g.IsAchieved);
-            destination.InProgress = source.ActiveGoals - destination.Completed;
+            destination.InProgress = Math.Max(source.ActiveGoals - destination.Completed, 0);
         }
     }
 }

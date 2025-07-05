@@ -19,8 +19,8 @@ namespace Application.Validators.Accounts
                 .Must(input => Checkers.IsEmail(input)).WithMessage("{PropertyName} must be a valid email address");
 
             RuleFor(x => x.Nickname)
-                .Length(3, 16).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.")
-                .When(x => !string.IsNullOrEmpty(x.Nickname));
+                .NotEmpty().WithMessage("{PropertyName} is required")
+                .Length(3, 30).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.");
 
             RuleFor(x => x.Bio)
                 .MaximumLength(30).WithMessage("{PropertyName} cannot exceed {MaxLength} characters")

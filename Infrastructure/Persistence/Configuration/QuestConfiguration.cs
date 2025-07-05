@@ -66,6 +66,12 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(false);
 
+            builder.Property(q => q.Difficulty)
+                .IsRequired(false);
+
+            builder.Property(q => q.ScheduledTime)
+                .IsRequired(false);
+
             builder.HasOne(q => q.Account)
                 .WithMany(a => a.Quests)
                 .HasForeignKey(q => q.AccountId)

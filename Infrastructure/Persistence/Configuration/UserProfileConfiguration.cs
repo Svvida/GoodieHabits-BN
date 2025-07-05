@@ -15,8 +15,8 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(p => p.Nickname).IsUnique();
 
             builder.Property(p => p.Nickname)
-                .IsRequired(false)
-                .HasMaxLength(16);
+                .IsRequired(true)
+                .HasMaxLength(30);
 
             builder.Property(p => p.Avatar)
                 .IsRequired(false);
