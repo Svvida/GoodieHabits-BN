@@ -34,7 +34,6 @@ namespace Domain.Models
 
         public void WipeoutData()
         {
-            Nickname = null;
             Avatar = null;
             Bio = null;
             TotalXp = 0;
