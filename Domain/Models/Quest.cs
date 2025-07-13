@@ -70,7 +70,7 @@ namespace Domain.Models
             };
         }
 
-        public void Complete(DateTime completionTime, IQuestResetService questResetService, bool wasCompletedToday)
+        public void Complete(DateTime completionTime, IQuestResetService questResetService, bool shouldAssignRewards)
         {
             IsCompleted = true;
             LastCompletedAt = completionTime;
@@ -93,23 +93,23 @@ namespace Domain.Models
             }
 
             int goalsCompleted = 0;
+            int xpGained = 0;
             // We don't have to check if UserGoal is expired/achieved here, because we fetch only active goals in the repository
-            if (UserGoal is not null)
+            if (UserGoal?.Count > 0)
             {
                 foreach (var goal in UserGoal)
                 {
                     goal.IsAchieved = true;
                     goal.AchievedAt = completionTime;
+                    xpGained += goal.XpBonus;
                     goalsCompleted++;
                 }
             }
 
-            int xpGained = 0;
-            // If goal is completed we assign bonus XP plus base XP of 10
-            if (wasCompletedToday)
-                xpGained = UserGoal?.Sum(g => g.XpBonus + 10) ?? 10;
+            if (shouldAssignRewards)
+                xpGained += 10;
 
-            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, goalsCompleted, isFirstTimeCompleted, wasCompletedToday));
+            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, goalsCompleted, isFirstTimeCompleted, shouldAssignRewards));
         }
 
         public void Uncomplete()
