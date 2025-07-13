@@ -1,10 +1,11 @@
 ﻿using Api.Filters;
+using Api.Helpers;
+using Application.Commands;
 using Application.Dtos.Quests;
 using Application.Dtos.Quests.MonthlyQuest;
 using Application.Interfaces.Quests;
-using Domain;
 using Domain.Enum;
-using Domain.Exceptions;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,13 @@ namespace Api.Controllers
     public class MonthlyQuestController : ControllerBase
     {
         private readonly IQuestService _questService;
+        private readonly ISender _sender;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Monthly;
 
-        public MonthlyQuestController(IQuestService questService)
+        public MonthlyQuestController(IQuestService questService, ISender sender)
         {
             _questService = questService;
+            _sender = sender;
         }
 
         [HttpGet("{id}")]
@@ -44,9 +47,7 @@ namespace Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetMonthlyQuestDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var quests = await _questService.GetAllUserQuestsByTypeAsync(accountId, QuestType, cancellationToken);
             return Ok(quests);
@@ -57,11 +58,7 @@ namespace Api.Controllers
             [FromBody] CreateMonthlyQuestDto createDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            createDto.AccountId = accountId;
+            createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
 
             var createdQuest = await _questService.CreateUserQuestAsync(createDto, QuestType, cancellationToken);
             return CreatedAtAction(nameof(GetUserQuestById), new { id = createdQuest.Id }, createdQuest);
@@ -74,8 +71,11 @@ namespace Api.Controllers
             [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
+            var command = new UpdateQuestCompletionCommand(
+                id,
+                patchDto.IsCompleted,
+                QuestType);
+            await _sender.Send(command, cancellationToken);
             return Ok();
         }
 
@@ -86,11 +86,8 @@ namespace Api.Controllers
             [FromBody] UpdateMonthlyQuestDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                return Unauthorized("Invalid access token: missing account identifier.");
+            updateDto.AccountId = JwtHelpers.GetCurrentUserId(User);
 
-            updateDto.AccountId = accountId;
             updateDto.Id = id;
             var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, QuestType, cancellationToken);
             return Ok(updatedQuest);
@@ -100,9 +97,7 @@ namespace Api.Controllers
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                return Unauthorized("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             await _questService.DeleteQuestAsync(id, QuestType, accountId, cancellationToken);
             return NoContent();

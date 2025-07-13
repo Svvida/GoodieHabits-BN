@@ -7,8 +7,10 @@ using Api.Middlewares;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
+using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
+using Application.MappingActions;
 using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
@@ -200,8 +202,26 @@ namespace Api
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
+            // Register Resolvers
+            builder.Services.AddTransient<ProfileGoalsResolver>();
+            builder.Services.AddTransient<ExtendedGoalsResolver>();
+
+            // Register MappingActions
+            builder.Services.AddTransient<SetUserLevelAction>();
+
             // Register AutoMapper profiles
-            builder.Services.AddAutoMapper(typeof(AccountProfile).Assembly); // Automatically register all profiles in the assembly
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
+                cfg.AddMaps(typeof(AccountProfile).Assembly);
+            });
+
+            // Register MediatR
+            builder.Services.AddMediatR(cfg =>
+            {
+                cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
+                cfg.RegisterServicesFromAssemblyContaining<AccountProfile>();
+            });
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>

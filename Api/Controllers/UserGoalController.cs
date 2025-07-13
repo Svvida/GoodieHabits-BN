@@ -1,12 +1,13 @@
 ﻿using Api.Filters;
+using Api.Helpers;
+using Application.Commands;
 using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
-using Domain;
 using Domain.Enum;
-using Domain.Exceptions;
 using Domain.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,17 +22,20 @@ namespace Api.Controllers
         private readonly ILogger<UserGoalController> _logger;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IQuestService _questService;
+        private readonly ISender _sender;
 
         public UserGoalController(
             IUserGoalService userGoalService,
             ILogger<UserGoalController> logger,
             IUnitOfWork unitOfWork,
-            IQuestService questService)
+            IQuestService questService,
+            ISender sender)
         {
             _userGoalService = userGoalService;
             _logger = logger;
             _unitOfWork = unitOfWork;
             _questService = questService;
+            _sender = sender;
         }
 
         [HttpPost]
@@ -59,9 +63,7 @@ namespace Api.Controllers
                 return BadRequest($"Invalid goal type: {goaltype}. Valid values are Daily, Weekly, Monthly, Yearly.");
             }
 
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var result = await _userGoalService.GetUserActiveGoalByTypeAsync(
                 accountId,
@@ -92,10 +94,11 @@ namespace Api.Controllers
                 });
             }
 
-            patchDto.Id = id;
-
-            await _questService.UpdateQuestCompletionAsync(patchDto, quest.QuestType, cancellationToken);
-
+            var command = new UpdateQuestCompletionCommand(
+                id,
+                patchDto.IsCompleted,
+                quest.QuestType);
+            await _sender.Send(command, cancellationToken);
             return Ok();
         }
     }

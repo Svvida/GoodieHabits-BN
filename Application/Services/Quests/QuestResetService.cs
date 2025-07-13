@@ -1,5 +1,4 @@
-﻿using Application.Interfaces.Quests;
-using Domain.Enum;
+﻿using Domain.Enum;
 using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.Extensions.Logging;

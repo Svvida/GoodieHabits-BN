@@ -1,8 +1,7 @@
 ﻿using Api.Filters;
+using Api.Helpers;
 using Application.Dtos.Labels;
 using Application.Interfaces;
-using Domain;
-using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,9 +22,7 @@ namespace Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetQuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             return Ok(await _questLabelService.GetUserLabelsAsync(accountId, cancellationToken));
         }
@@ -33,11 +30,7 @@ namespace Api.Controllers
         [HttpPost]
         public async Task<ActionResult<int>> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            createDto.AccountId = accountId;
+            createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
 
             int questLabel = await _questLabelService.CreateLabelAsync(createDto, cancellationToken);
 

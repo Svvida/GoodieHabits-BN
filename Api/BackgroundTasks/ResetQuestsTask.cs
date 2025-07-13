@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.Quests;
+﻿using Domain.Interfaces;
 
 namespace Api.BackgroundTasks
 {

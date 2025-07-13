@@ -1,9 +1,11 @@
-﻿using Application.Dtos.Quests;
+﻿using Application.Commands;
+using Application.Dtos.Quests;
 using Application.Dtos.Quests.DailyQuest;
 using Application.Interfaces.Quests;
 using Domain;
 using Domain.Enum;
 using Domain.Exceptions;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyLambdaApi.Filters;
@@ -16,12 +18,14 @@ namespace MyLambdaApi.Controllers
     public class DailyQuestController : ControllerBase
     {
         private readonly IQuestService _questService;
+        private readonly ISender _sender;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Daily;
 
         public DailyQuestController(
-            IQuestService questService)
+            IQuestService questService, ISender sender)
         {
             _questService = questService;
+            _sender = sender;
         }
 
         [HttpGet("{id}")]
@@ -76,9 +80,12 @@ namespace MyLambdaApi.Controllers
             [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return NoContent();
+            var command = new UpdateQuestCompletionCommand(
+                id,
+                patchDto.IsCompleted,
+                QuestType);
+            await _sender.Send(command, cancellationToken);
+            return Ok();
         }
 
         [HttpPut("{id}")]

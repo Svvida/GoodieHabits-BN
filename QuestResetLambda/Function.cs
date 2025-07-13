@@ -1,5 +1,4 @@
 using Amazon.Lambda.Core;
-using Application.Interfaces.Quests;
 using Application.Services.Quests;
 using Domain.Interfaces;
 using Infrastructure.Persistence;

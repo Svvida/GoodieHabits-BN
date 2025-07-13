@@ -1,6 +1,8 @@
 ﻿using Domain.Common;
 using Domain.Enum;
+using Domain.Events;
 using Domain.Exceptions;
+using Domain.Interfaces;
 
 namespace Domain.Models
 {
@@ -66,6 +68,71 @@ namespace Domain.Models
                 QuestTypeEnum.Monthly => true,
                 _ => false
             };
+        }
+
+        public void Complete(DateTime completionTime, IQuestResetService questResetService, bool wasCompletedToday)
+        {
+            IsCompleted = true;
+            LastCompletedAt = completionTime;
+
+            bool isFirstTimeCompleted = false;
+            if (!WasEverCompleted)
+            {
+                WasEverCompleted = true;
+                isFirstTimeCompleted = true;
+            }
+
+            if (IsRepeatable())
+            {
+                NextResetAt = questResetService.GetNextResetTimeUtc(this);
+                foreach (var occurrence in QuestOccurrences)
+                {
+                    occurrence.WasCompleted = true;
+                    occurrence.CompletedAt = completionTime;
+                }
+            }
+
+            int goalsCompleted = 0;
+            // We don't have to check if UserGoal is expired/achieved here, because we fetch only active goals in the repository
+            if (UserGoal is not null)
+            {
+                foreach (var goal in UserGoal)
+                {
+                    goal.IsAchieved = true;
+                    goal.AchievedAt = completionTime;
+                    goalsCompleted++;
+                }
+            }
+
+            int xpGained = 0;
+            // If goal is completed we assign bonus XP plus base XP of 10
+            if (wasCompletedToday)
+                xpGained = UserGoal?.Sum(g => g.XpBonus + 10) ?? 10;
+
+            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, goalsCompleted, isFirstTimeCompleted, wasCompletedToday));
+        }
+
+        public void Uncomplete()
+        {
+            IsCompleted = false;
+
+            if (IsRepeatable())
+            {
+                foreach (var occurrence in QuestOccurrences)
+                {
+                    occurrence.WasCompleted = false;
+                }
+            }
+
+            // We don't reset goals since handler prevent uncompleting if quest is active goal
+
+            AddDomainEvent(new QuestUncompletedEvent(AccountId));
+        }
+
+        public void AddOccurence(QuestOccurrence occurrence)
+        {
+            if (QuestOccurrences.All(o => o.Id != occurrence.Id))
+                QuestOccurrences.Add(occurrence);
         }
     }
 }
