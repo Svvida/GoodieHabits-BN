@@ -23,7 +23,7 @@ namespace Application.CommandsHandlers
             var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
 
-            userProfile.ApplyQuestCompletionRewards(notification.XpAwarded, notification.GoalsCompletedCount, notification.IsFirstTimeCompleted, notification.WasCompletedToday);
+            userProfile.ApplyQuestCompletionRewards(notification.XpAwarded, notification.GoalsCompletedCount, notification.IsFirstTimeCompleted, notification.ShouldAssignRewards);
         }
 
         public async Task Handle(DomainEventNotification<QuestUncompletedEvent> wrappedNotification, CancellationToken cancellationToken = default)

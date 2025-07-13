@@ -46,7 +46,7 @@ namespace Application.CommandsHandlers
                 return Unit.Value;
             }
             _logger.LogDebug("I'm in handler.");
-            if (!command.IsCompleted && quest.UserGoal.Count > 0)
+            if (!command.IsCompleted && quest.UserGoal?.Count > 0)
                 throw new ConflictException("Cannot uncomplete a quest that is an active goal");
 
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
@@ -109,6 +109,7 @@ namespace Application.CommandsHandlers
             return quest;
         }
 
+        // Check if quest was already completed today
         private bool ShouldAssignRewards(Quest quest, Instant nowUtc)
         {
             if (!quest.LastCompletedAt.HasValue)

@@ -5,5 +5,5 @@
         int XpAwarded,
         int GoalsCompletedCount,
         bool IsFirstTimeCompleted,
-        bool WasCompletedToday);
+        bool ShouldAssignRewards);
 }
