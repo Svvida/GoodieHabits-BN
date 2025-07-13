@@ -5,7 +5,6 @@ using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
-using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
 using Application.Validators.Accounts;
@@ -156,7 +155,18 @@ public class Startup
         services.AddFluentValidationClientsideAdapters();
 
         // Register AutoMapper profiles
-        services.AddAutoMapper(typeof(AccountProfile).Assembly); // Automatically register all profiles in the assembly
+        //var profileAssembly = typeof(AccountProfile).Assembly;
+
+        //services.AddAutoMapper(cfg =>
+        //{
+        //    cfg.LicenseKey = services..Configuration["AutomapperKey"] ?? string.Empty;
+        //}, profileAssembly);
+
+        //// Register MediatR
+        //builder.Services.AddMediatR(cfg =>
+        //{
+        //    cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
+        //});
 
         // Configure EF Core with SQL Server
         services.AddDbContext<AppDbContext>(options =>

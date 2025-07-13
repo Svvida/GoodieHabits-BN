@@ -1,8 +1,7 @@
-﻿using Application.Dtos.Stats;
+﻿using Api.Helpers;
+using Application.Dtos.Stats;
 using Application.Dtos.UserProfileStats;
 using Application.Interfaces;
-using Domain;
-using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,9 +22,7 @@ namespace Api.Controllers
         [HttpGet("profile")]
         public async Task<ActionResult<GetUserProfileStatsDto>> GetUserProfileStats(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var profileStats = await _statsService.GetUserProfileStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
 
@@ -35,9 +32,7 @@ namespace Api.Controllers
         [HttpGet("extended")]
         public async Task<ActionResult<GetUserExtendedStatsDto>> GetUserExtendedStats(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var extendedStats = await _statsService.GetUserExtendedStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
 

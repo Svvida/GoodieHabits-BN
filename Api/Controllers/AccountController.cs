@@ -1,8 +1,7 @@
-﻿using Application.Dtos.Accounts;
+﻿using Api.Helpers;
+using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
-using Domain;
-using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,9 +24,7 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ProblemDetails))]
         public async Task<ActionResult<GetAccountDto>> GetAccount()
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var account = await _accountService.GetAccountWithProfileInfoAsync(accountId);
             if (account is null)
@@ -47,9 +44,7 @@ namespace Api.Controllers
             UpdateAccountDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
             return NoContent();
@@ -60,9 +55,7 @@ namespace Api.Controllers
             ChangePasswordDto changePasswordDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
             await _accountService.ChangePasswordAsync(accountId, changePasswordDto, cancellationToken);
             return NoContent();
@@ -73,9 +66,7 @@ namespace Api.Controllers
             PasswordConfirmationDto passwordConfirmationDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var accountId = JwtHelpers.GetCurrentUserId(User);
             await _accountService.DeleteAccountAsync(accountId, passwordConfirmationDto, cancellationToken);
             return NoContent();
         }
@@ -85,11 +76,7 @@ namespace Api.Controllers
             PasswordConfirmationDto authRequestDto,
             CancellationToken cancellationToken = default)
         {
-            var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            authRequestDto.AccountId = accountId;
+            authRequestDto.AccountId = JwtHelpers.GetCurrentUserId(User);
             await _accountService.WipeoutAccountDataAsync(authRequestDto, cancellationToken);
             return NoContent();
         }

@@ -50,5 +50,21 @@ namespace Domain.Models
 
             UserProfile_Badges.Clear();
         }
+
+        public void ApplyQuestCompletionRewards(int xpAwarded, int goalsCompleted, bool isFirstTimeCompleted, bool wasCompletedToday)
+        {
+            if (!wasCompletedToday)
+                CompletedQuests++;
+            if (isFirstTimeCompleted)
+                EverCompletedExistingQuests++;
+            CurrentlyCompletedExistingQuests++;
+            CompletedGoals += goalsCompleted;
+            TotalXp += xpAwarded;
+        }
+
+        public void RevertQuestCompletion()
+        {
+            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
+        }
     }
 }
