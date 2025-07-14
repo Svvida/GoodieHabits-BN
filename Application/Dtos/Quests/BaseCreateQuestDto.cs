@@ -1,8 +1,19 @@
 ﻿using System.Text.Json.Serialization;
+using Application.Dtos.Quests.DailyQuest;
+using Application.Dtos.Quests.MonthlyQuest;
+using Application.Dtos.Quests.OneTimeQuest;
+using Application.Dtos.Quests.SeasonalQuest;
+using Application.Dtos.Quests.WeeklyQuest;
 using Domain.Enum;
 
 namespace Application.Dtos.Quests
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "_dtoType")]
+    [JsonDerivedType(typeof(CreateOneTimeQuestDto), "CreateOneTimeQuestDto")]
+    [JsonDerivedType(typeof(CreateDailyQuestDto), "CreateDailyQuestDto")]
+    [JsonDerivedType(typeof(CreateWeeklyQuestDto), "CreateWeeklyQuestDto")]
+    [JsonDerivedType(typeof(CreateMonthlyQuestDto), "CreateMonthlyQuestDto")]
+    [JsonDerivedType(typeof(CreateSeasonalQuestDto), "CreateSeasonalQuestDto")]
     public abstract class BaseCreateQuestDto
     {
         public string Title { get; set; } = null!;

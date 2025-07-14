@@ -45,8 +45,6 @@ namespace Application.Services.Quests
             if (quest is null)
                 return null;
 
-            _logger.LogInformation("Quest ScheduledTime: {quest.ScheduledTime}", quest.ScheduledTime);
-
             return MapToDto(quest);
         }
 
@@ -223,7 +221,7 @@ namespace Application.Services.Quests
             return quests.Select(MapToDto);
         }
 
-        public async Task DeleteQuestAsync(int questId, QuestTypeEnum questType, int accountId, CancellationToken cancellationToken = default)
+        public async Task DeleteQuestAsync(int questId, int accountId, CancellationToken cancellationToken = default)
         {
             var questToDelete = await _unitOfWork.Quests.GetByIdAsync(questId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {questId} not found");
