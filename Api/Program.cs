@@ -4,6 +4,7 @@ using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
+using Api.ModelBinders;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
@@ -103,7 +104,10 @@ namespace Api
             //});
 
             //Add Controllers
-            builder.Services.AddControllers()
+            builder.Services.AddControllers(options =>
+                {
+                    options.ModelBinderProviders.Insert(0, new QuestTypeModelBinderProvider());
+                })
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
