@@ -19,7 +19,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -117,7 +116,6 @@ public class Startup
                     }
                 });
         });
-        services.AddFluentValidationRulesToSwagger();
 
         // Register Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();

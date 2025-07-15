@@ -7,7 +7,6 @@ using Api.Middlewares;
 using Api.ModelBinders;
 using Application.Configurations;
 using Application.Configurations.Leveling;
-using Application.Dtos.Quests;
 using Application.Helpers;
 using Application.Interfaces;
 using Application.Interfaces.Quests;
@@ -16,10 +15,6 @@ using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
 using Application.Validators.Accounts;
-using Application.Validators.Auth;
-using Application.Validators.QuestLabels;
-using Application.Validators.Quests;
-using Application.Validators.UserGoal;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
@@ -27,7 +22,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -167,7 +161,6 @@ namespace Api
                     }
                 });
             });
-            builder.Services.AddFluentValidationRulesToSwagger();
 
             // Register Repositories
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -192,17 +185,7 @@ namespace Api
             builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 
             // Register Validators
-            builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<UpdateAccountValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<PasswordConfirmationValidator>();
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
