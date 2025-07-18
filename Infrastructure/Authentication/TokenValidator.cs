@@ -42,7 +42,7 @@ namespace Infrastructure.Authentication
             }
             catch (Exception)
             {
-                throw new InvalidArgumentException("Invalid refresh token");
+                throw;
             }
 
             return principal ?? throw new UnauthorizedException("Invalid refresh token");
