@@ -4,7 +4,6 @@ using Application.Commands;
 using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
-using Application.Interfaces.Quests;
 using Domain.Enum;
 using Domain.Interfaces;
 using MediatR;
@@ -21,20 +20,17 @@ namespace Api.Controllers
         private readonly IUserGoalService _userGoalService;
         private readonly ILogger<UserGoalController> _logger;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IQuestService _questService;
         private readonly ISender _sender;
 
         public UserGoalController(
             IUserGoalService userGoalService,
             ILogger<UserGoalController> logger,
             IUnitOfWork unitOfWork,
-            IQuestService questService,
             ISender sender)
         {
             _userGoalService = userGoalService;
             _logger = logger;
             _unitOfWork = unitOfWork;
-            _questService = questService;
             _sender = sender;
         }
 
@@ -78,7 +74,7 @@ namespace Api.Controllers
         }
 
         [HttpPatch]
-        [Route("{id}/complete")]
+        [Route("{id}/completion")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> CompleteUserGoal(int id, QuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
         {
