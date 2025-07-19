@@ -16,7 +16,7 @@ namespace Application.Services.Quests
                 QuestTypeEnum.Daily => GenerateDailyWindows(fromUtc, toUtc, userZone),
                 QuestTypeEnum.Weekly => GenerateWeeklyWindows(quest, fromUtc, toUtc, userZone),
                 QuestTypeEnum.Monthly => GenerateMonthlyWindows(quest, fromUtc, toUtc, userZone),
-                _ => new List<TimeWindow>()
+                _ => []
             };
         }
 
