@@ -134,14 +134,17 @@ namespace Application.CommandsHandlers
         private async Task<QuestOccurrence?> GetOrCreateQuestOccurrenceAsync(Quest quest, DateTime nowUtc, CancellationToken cancellationToken)
         {
             var currentOccurrence = await _unitOfWork.QuestOccurrences.GetCurrentOccurrenceForQuestAsync(quest.Id, nowUtc, cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug("Current occurrence for quest {QuestId} at {NowUtc}: {Start} {End}", quest.Id, nowUtc, currentOccurrence?.OccurrenceStart, currentOccurrence?.OccurrenceEnd);
             if (currentOccurrence is null)
             {
                 var missingOccurences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
                 currentOccurrence = missingOccurences.FirstOrDefault(o => o.OccurrenceStart <= nowUtc && o.OccurrenceEnd >= nowUtc);
+                _logger.LogDebug("Current occurrence for quest {QuestId} at {NowUtc}: {Start} {End}", quest.Id, nowUtc, currentOccurrence?.OccurrenceStart, currentOccurrence?.OccurrenceEnd);
             }
             if (currentOccurrence is null)
             {
                 currentOccurrence = await _unitOfWork.QuestOccurrences.GetLastOccurrenceForCompletionAsync(quest.Id, nowUtc, cancellationToken).ConfigureAwait(false);
+                _logger.LogDebug("Current occurrence for quest {QuestId} at {NowUtc}: {Start} {End}", quest.Id, nowUtc, currentOccurrence?.OccurrenceStart, currentOccurrence?.OccurrenceEnd);
                 if (currentOccurrence is null)
                     return null;
 
