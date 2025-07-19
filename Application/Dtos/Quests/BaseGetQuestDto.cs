@@ -27,6 +27,7 @@ namespace Application.Dtos.Quests
         public string? Type { get; set; }
         public string? Difficulty { get; set; }
         public TimeOnly? ScheduledTime { get; set; }
+        public DateTime? LastCompletedAt { get; set; }
         public ICollection<GetQuestLabelDto> Labels { get; set; } = [];
     }
 }
