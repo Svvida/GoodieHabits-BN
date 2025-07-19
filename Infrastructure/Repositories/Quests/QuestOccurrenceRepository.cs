@@ -36,6 +36,7 @@ namespace Infrastructure.Repositories.Quests
         public async Task<QuestOccurrence?> GetLastOccurrenceForCompletionAsync(int questId, DateTime now, CancellationToken cancellationToken = default)
         {
             return await _context.QuestOccurrences
+                .OrderByDescending(q => q.OccurrenceEnd)
                 .FirstOrDefaultAsync(q =>
                     q.QuestId == questId &&
                     q.OccurrenceEnd <= now,
