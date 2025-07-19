@@ -7,6 +7,5 @@
         public int OccurrenceCount { get; set; }
         public int CurrentStreak { get; set; }
         public int LongestStreak { get; set; }
-        public DateTime? LastCompletedAt { get; set; } // Nullable to handle quests that have never been completed
     }
 }
