@@ -74,6 +74,7 @@ namespace Application.Services.Quests
             var quest = _mapper.Map<Quest>(createDto);
             _logger.LogDebug("Quest created after mapping: {@quest}", quest);
 
+            quest.SetCreatedAt(DateTime.UtcNow);
             quest.Account = account;
 
             if (quest.IsRepeatable())
