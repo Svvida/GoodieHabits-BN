@@ -5,6 +5,7 @@ using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
+using Application.Common.Swagger;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Helpers;
@@ -107,6 +108,7 @@ namespace Api
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                     options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
                     options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
             // Add Swagger for API Documentation
@@ -160,6 +162,11 @@ namespace Api
                         Array.Empty<string>()
                     }
                 });
+
+                options.EnableAnnotations();
+
+                options.OperationFilter<PolymorphicRequestBodyFilter>();
+                options.OperationFilter<PolymorphicResponseFilter>();
             });
 
             // Register Repositories
