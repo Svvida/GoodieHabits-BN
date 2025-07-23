@@ -63,7 +63,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{questType}")]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetAllUserQuestsByType(
+        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetQuestsByType(
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
@@ -194,11 +194,14 @@ namespace Api.Controllers
         }
 
         [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetTodayQuests(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetActiveQuests(CancellationToken cancellationToken = default)
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            var quests = await _questService.GetActiveQuestsAsync(accountId, cancellationToken);
+            var query = new GetActiveQuestsQuery(accountId, cancellationToken);
+
+            var quests = await _sender.Send(query, cancellationToken);
+
             return Ok(quests);
         }
 
