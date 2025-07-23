@@ -69,7 +69,9 @@ namespace Api.Controllers
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            var quests = await _questService.GetAllUserQuestsByTypeAsync(accountId, questType, cancellationToken);
+            var query = new GetQuestsByTypeQuery(accountId, questType);
+
+            var quests = await _sender.Send(query, cancellationToken);
             return Ok(quests);
         }
 
