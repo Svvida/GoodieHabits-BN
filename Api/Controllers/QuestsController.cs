@@ -182,9 +182,9 @@ namespace Api.Controllers
             int id,
             CancellationToken cancellationToken)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            var command = new DeleteQuestCommand(id);
 
-            await _questService.DeleteQuestAsync(id, accountId, cancellationToken);
+            await _sender.Send(command, cancellationToken);
 
             return NoContent();
         }

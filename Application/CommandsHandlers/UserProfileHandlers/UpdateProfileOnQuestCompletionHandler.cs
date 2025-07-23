@@ -4,7 +4,7 @@ using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;
 
-namespace Application.CommandsHandlers
+namespace Application.CommandsHandlers.UserProfileHandlers
 {
     public class UpdateProfileOnQuestCompletionHandler
         : INotificationHandler<DomainEventNotification<QuestCompletedEvent>>,

@@ -67,5 +67,19 @@ namespace Domain.Models
         {
             CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
         }
+
+        public void UpdateAfterQuestDeletion(
+            bool isQuestCompleted,
+            bool isQuestEverCompleted,
+            bool isQuestActiveGoal)
+        {
+            ExistingQuests = Math.Max(ExistingQuests - 1, 0);
+            if (isQuestCompleted)
+                CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
+            if (isQuestEverCompleted)
+                EverCompletedExistingQuests = Math.Max(EverCompletedExistingQuests - 1, 0);
+            if (isQuestActiveGoal)
+                ActiveGoals = Math.Max(ActiveGoals - 1, 0);
+        }
     }
 }

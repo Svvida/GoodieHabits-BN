@@ -222,36 +222,6 @@ namespace Application.Services.Quests
             return quests.Select(MapToDto);
         }
 
-        public async Task DeleteQuestAsync(int questId, int accountId, CancellationToken cancellationToken = default)
-        {
-            var questToDelete = await _unitOfWork.Quests.GetByIdAsync(questId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with ID: {questId} not found");
-
-            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
-
-            questToDelete.Account = account;
-
-            if (questToDelete.IsCompleted)
-                questToDelete.Account.Profile.CurrentlyCompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.CurrentlyCompletedExistingQuests - 1);
-
-            if (questToDelete.WasEverCompleted)
-                questToDelete.Account.Profile.EverCompletedExistingQuests = Math.Max(0, questToDelete.Account.Profile.EverCompletedExistingQuests - 1);
-
-            if (await _unitOfWork.UserGoals.IsQuestActiveGoalAsync(questId, cancellationToken).ConfigureAwait(false))
-            {
-                _logger.LogInformation("Deleting quest with ID: {questId} that is active goal", questId);
-                questToDelete.Account.Profile.ActiveGoals = Math.Max(0, questToDelete.Account.Profile.ActiveGoals - 1);
-            }
-
-            _unitOfWork.Quests.Delete(questToDelete);
-            _logger.LogInformation("Deleted quest with ID: {QuestId}", questId);
-
-            questToDelete.Account.Profile.ExistingQuests = Math.Max(0, questToDelete.Account.Profile.ExistingQuests - 1);
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-
         public async Task<IEnumerable<BaseGetQuestDto>> GetQuestEligibleForGoalAsync(int accountId, CancellationToken cancellationToken = default)
         {
             DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();

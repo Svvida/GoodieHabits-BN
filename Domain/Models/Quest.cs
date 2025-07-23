@@ -134,5 +134,10 @@ namespace Domain.Models
             if (QuestOccurrences.All(o => o.Id != occurrence.Id))
                 QuestOccurrences.Add(occurrence);
         }
+
+        public void Delete()
+        {
+            AddDomainEvent(new QuestDeletedEvent(Id, AccountId, IsCompleted, WasEverCompleted));
+        }
     }
 }
