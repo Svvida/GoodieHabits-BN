@@ -190,6 +190,7 @@ namespace Api
             builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
             builder.Services.AddScoped<INicknameGeneratorService, NicknameGeneratorService>();
             builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+            builder.Services.AddScoped<IQuestMappingService, QuestMappingService>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();

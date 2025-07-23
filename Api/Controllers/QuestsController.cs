@@ -10,6 +10,7 @@ using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
+using Application.Quests.Queries;
 using Domain.Enum;
 using Domain.Exceptions;
 using FluentValidation;
@@ -45,9 +46,10 @@ namespace Api.Controllers
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var quest = await _questService.GetUserQuestByIdAsync(id, questType, cancellationToken);
+            var query = new GetQuestByIdQuery(id, questType);
+            var questDto = await _sender.Send(query, cancellationToken);
 
-            if (quest is null)
+            if (questDto is null)
             {
                 return NotFound(new ProblemDetails
                 {
@@ -57,7 +59,7 @@ namespace Api.Controllers
                 });
             }
 
-            return Ok(quest);
+            return Ok(questDto);
         }
 
         [HttpGet("{questType}")]
