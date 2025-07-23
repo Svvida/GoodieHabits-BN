@@ -38,12 +38,6 @@ namespace Application.Services.Quests
             _questOccurrenceGenerator = questOccurrenceGenerator;
         }
 
-        public async Task<IEnumerable<BaseGetQuestDto>> GetAllUserQuestsByTypeAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
-        {
-            var quests = await _unitOfWork.Quests.GetQuestsByTypeForDisplayAsync(accountId, questType, cancellationToken)
-                .ConfigureAwait(false);
-            return quests.Select(MapToDto);
-        }
         public async Task<BaseGetQuestDto> CreateUserQuestAsync(BaseCreateQuestDto createDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(createDto.AccountId, cancellationToken).ConfigureAwait(false)
