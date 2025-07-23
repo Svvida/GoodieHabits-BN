@@ -4,7 +4,6 @@ using Application.Dtos.Quests.MonthlyQuest;
 using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
-using Application.Helpers;
 using Application.Interfaces.Quests;
 using AutoMapper;
 using Domain.Enum;
@@ -178,32 +177,6 @@ namespace Application.Services.Quests
 
             return MapToDto(existingQuest);
 
-        }
-
-        public async Task<IEnumerable<BaseGetQuestDto>> GetActiveQuestsAsync(
-            int accountId, CancellationToken cancellationToken = default)
-        {
-            var account = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID: {accountId} not found");
-
-            DateTimeZone? userTimezone = DateTimeZoneProviders.Tzdb[account.TimeZone]
-                ?? throw new InvalidArgumentException($"Invalid timezone: {account.TimeZone}");
-
-            Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
-            LocalDateTime nowLocal = nowUtc.InZone(userTimezone).LocalDateTime;
-
-            DateTime todayStart = nowLocal.Date.AtStartOfDayInZone(userTimezone).ToDateTimeUtc();
-            DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
-            _logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
-                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
-
-            SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
-
-            var quests = await _unitOfWork.Quests.GetActiveQuestsForDisplayAsync(accountId, todayStart, todayEnd, currentSeason, cancellationToken)
-                .ConfigureAwait(false);
-
-            return quests.Select(MapToDto);
         }
 
         public async Task<IEnumerable<BaseGetQuestDto>> GetQuestEligibleForGoalAsync(int accountId, CancellationToken cancellationToken = default)
