@@ -179,15 +179,6 @@ namespace Application.Services.Quests
 
         }
 
-        public async Task<IEnumerable<BaseGetQuestDto>> GetQuestEligibleForGoalAsync(int accountId, CancellationToken cancellationToken = default)
-        {
-            DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-
-            var quests = await _unitOfWork.Quests.GetQuestEligibleForGoalAsync(accountId, nowUtc, cancellationToken).ConfigureAwait(false);
-
-            return quests.Select(MapToDto);
-        }
-
         private BaseGetQuestDto MapToDto(Quest quest)
         {
             return quest.QuestType switch
