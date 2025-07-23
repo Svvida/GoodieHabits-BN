@@ -92,14 +92,14 @@ namespace Application.Services
             var labelsToDelete = await _unitOfWork.QuestLabels.GetUserLabelsAsync(accountId, false, cancellationToken).ConfigureAwait(false);
             if (labelsToDelete.Any())
             {
-                _unitOfWork.QuestLabels.DeleteRange(labelsToDelete);
+                _unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
                 await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
 
             var accountToDelete = await _unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID: {accountId} not found after label deletion.");
 
-            _unitOfWork.Accounts.Delete(accountToDelete);
+            _unitOfWork.Accounts.Remove(accountToDelete);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -144,7 +144,7 @@ namespace Application.Services
             account.Quests.Clear();
             // Clear labels
             var labelsToDelete = account.Labels;
-            _unitOfWork.QuestLabels.DeleteRange(labelsToDelete);
+            _unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
 
             var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

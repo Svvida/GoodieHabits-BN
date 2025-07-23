@@ -41,12 +41,12 @@ namespace Infrastructure.Repositories.Common
             await _context.Set<T>().AddRangeAsync(entities, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Delete(T entity)
+        public void Remove(T entity)
         {
             _context.Set<T>().Remove(entity);
         }
 
-        public void DeleteRange(IEnumerable<T> entities)
+        public void RemoveRange(IEnumerable<T> entities)
         {
             _context.Set<T>().RemoveRange(entities);
         }

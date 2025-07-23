@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 
-namespace Application.CommandsHandlers
+namespace Application.CommandsHandlers.QuestHandlers
 {
     public class UpdateQuestCompletionCommandHandler : IRequestHandler<UpdateQuestCompletionCommand, Unit>
     {
@@ -75,7 +75,7 @@ namespace Application.CommandsHandlers
 
             foreach (var domainEvent in quest.DomainEvents)
             {
-                var notification = CreateDomainEventNotification(domainEvent);
+                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
                 await _publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
             }
             quest.ClearDomainEvents();
@@ -152,12 +152,6 @@ namespace Application.CommandsHandlers
                     return null;
             }
             return currentOccurrence;
-        }
-
-        private static INotification CreateDomainEventNotification(object domainEvent)
-        {
-            var genericType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
-            return (INotification)Activator.CreateInstance(genericType, domainEvent)!;
         }
     }
 }

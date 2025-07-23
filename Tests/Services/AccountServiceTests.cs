@@ -325,7 +325,7 @@ namespace Tests.Services
                 .WithMessage("Invalid password");
 
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
-            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Remove(account), Times.Never);
             _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(CancellationToken.None), Times.Never);
         }
 
@@ -355,7 +355,7 @@ namespace Tests.Services
 
             // Assert
             await act.Should().NotThrowAsync();
-            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Remove(account), Times.Once);
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
 
             _unitOfWorkMock.Verify();
