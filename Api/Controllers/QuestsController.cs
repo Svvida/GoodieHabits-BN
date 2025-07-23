@@ -209,7 +209,8 @@ namespace Api.Controllers
         public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetQuestsEligibleForGoal(CancellationToken cancellationToken = default)
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
-            var quests = await _questService.GetQuestEligibleForGoalAsync(accountId, cancellationToken);
+            var query = new GetQuestsEligibleForGoalQuery(accountId, cancellationToken);
+            var quests = await _sender.Send(query, cancellationToken);
             return Ok(quests);
         }
     }
