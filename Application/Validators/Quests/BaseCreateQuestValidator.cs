@@ -1,14 +1,18 @@
 ﻿using Application.Dtos.Quests;
 using Application.Validators.Helpers;
 using Domain.Enum;
+using Domain.Interfaces;
 using FluentValidation;
 
 namespace Application.Validators.Quests
 {
     public class BaseCreateQuestValidator<T> : AbstractValidator<T> where T : BaseCreateQuestDto
     {
-        public BaseCreateQuestValidator()
+        private readonly IUnitOfWork _unitOfWork;
+        public BaseCreateQuestValidator(IUnitOfWork unitOfWork)
         {
+            _unitOfWork = unitOfWork;
+
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("{PropertyName} is required")
                 .Length(1, 100).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.");
@@ -39,6 +43,19 @@ namespace Application.Validators.Quests
             RuleFor(x => x.Difficulty)
                 .IsEnumName(typeof(DifficultyEnum), caseSensitive: true).When(x => x.Difficulty != null)
                 .WithMessage("{PropertyName} must be a valid difficulty type: 'Easy', 'Medium', 'Hard', 'Impossible'.");
+
+            RuleFor(x => x.Labels)
+                .MustAsync(async (dto, labels, cancellationToken) =>
+            {
+                var accountId = dto.AccountId;
+
+                var labelsCount = await _unitOfWork.QuestLabels
+                    .CountOwnedLabelsAsync(labels, accountId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return labelsCount == labels.Count;
+            }).WithMessage("One or more provided labels do not exist or do not belong to the user.")
+              .When(x => x.Labels is not null && x.Labels.Count != 0);
         }
     }
 }

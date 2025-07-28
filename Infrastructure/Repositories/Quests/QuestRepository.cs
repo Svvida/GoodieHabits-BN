@@ -49,76 +49,11 @@ namespace Infrastructure.Repositories.Quests
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         (q.SeasonalQuest_Season!.Season == currentSeason))
                 )
-                .Select(q => new Quest
-                {
-                    Id = q.Id,
-                    QuestType = q.QuestType,
-                    Title = q.Title,
-                    Description = q.Description,
-                    Priority = q.Priority,
-                    Difficulty = q.Difficulty,
-                    ScheduledTime = q.ScheduledTime,
-                    IsCompleted = q.IsCompleted,
-                    Emoji = q.Emoji,
-                    StartDate = q.StartDate,
-                    EndDate = q.EndDate,
-                    LastCompletedAt = q.LastCompletedAt,
-                    Statistics = q.Statistics != null
-                            ? new QuestStatistics
-                            {
-                                Id = q.Statistics.Id,
-                                QuestId = q.Id,
-                                OccurrenceCount = q.Statistics.OccurrenceCount,
-                                CompletionCount = q.Statistics.CompletionCount,
-                                FailureCount = q.Statistics.FailureCount,
-                                CurrentStreak = q.Statistics.CurrentStreak,
-                                LongestStreak = q.Statistics.LongestStreak,
-                                LastCompletedAt = q.Statistics.LastCompletedAt
-                            }
-                            : null,
-                    Quest_QuestLabels = q.Quest_QuestLabels.Select(ql => new Quest_QuestLabel
-                    {
-                        QuestId = q.Id,
-                        QuestLabelId = ql.QuestLabelId,
-                        QuestLabel = new QuestLabel
-                        {
-                            Id = ql.QuestLabelId,
-                            AccountId = q.AccountId,
-                            Value = ql.QuestLabel.Value,
-                            BackgroundColor = ql.QuestLabel.BackgroundColor,
-                            UpdatedAt = ql.QuestLabel.UpdatedAt,
-                            CreatedAt = ql.QuestLabel.CreatedAt
-                        }
-                    }).ToList(),
-
-                    SeasonalQuest_Season = q.SeasonalQuest_Season != null
-                            ? new SeasonalQuest_Season
-                            {
-                                Id = q.SeasonalQuest_Season.Id,
-                                QuestId = q.Id,
-                                Season = q.SeasonalQuest_Season.Season
-                            }
-                            : null,
-
-                    MonthlyQuest_Days = q.MonthlyQuest_Days != null
-                            ? new MonthlyQuest_Days
-                            {
-                                Id = q.MonthlyQuest_Days.Id,
-                                QuestId = q.Id,
-                                StartDay = q.MonthlyQuest_Days.StartDay,
-                                EndDay = q.MonthlyQuest_Days.EndDay
-                            }
-                            : null,
-
-                    WeeklyQuest_Days = q.WeeklyQuest_Days != null
-                            ? q.WeeklyQuest_Days.Select(wd => new WeeklyQuest_Day
-                            {
-                                Id = wd.Id,
-                                QuestId = q.Id,
-                                Weekday = wd.Weekday
-                            }).ToList()
-                            : new List<WeeklyQuest_Day>()
-                })
+                .Include(q => q.WeeklyQuest_Days)
+                .Include(q => q.MonthlyQuest_Days)
+                .Include(q => q.SeasonalQuest_Season)
+                .Include(q => q.Quest_QuestLabels)
+                    .ThenInclude(ql => ql.QuestLabel)
                 .AsNoTracking();
 
             return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);

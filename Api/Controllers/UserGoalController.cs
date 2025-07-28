@@ -1,9 +1,9 @@
 ﻿using Api.Filters;
 using Api.Helpers;
-using Application.Commands;
 using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
+using Application.Quests.Commands.UpdateQuestCompletion;
 using Domain.Enum;
 using Domain.Interfaces;
 using MediatR;

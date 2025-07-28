@@ -81,5 +81,11 @@ namespace Domain.Models
             if (isQuestActiveGoal)
                 ActiveGoals = Math.Max(ActiveGoals - 1, 0);
         }
+
+        public void UpdateAfterQuestCreation()
+        {
+            ExistingQuests++;
+            TotalQuests++;
+        }
     }
 }

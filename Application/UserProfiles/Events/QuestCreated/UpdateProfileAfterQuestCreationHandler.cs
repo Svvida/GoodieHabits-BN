@@ -1,0 +1,24 @@
+﻿using Application.Common;
+using Domain.Events;
+using Domain.Exceptions;
+using Domain.Interfaces;
+using MediatR;
+
+namespace Application.UserProfiles.Events.QuestCreated
+{
+    public class UpdateProfileAfterQuestCreationHandler(IUnitOfWork unitOfWork)
+        : INotificationHandler<DomainEventNotification<QuestCreatedEvent>>
+    {
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+        public async Task Handle(DomainEventNotification<QuestCreatedEvent> wrappedNotification, CancellationToken cancellationToken = default)
+        {
+            var notification = wrappedNotification.DomainEvent;
+
+            var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
+                ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
+
+            userProfile.UpdateAfterQuestCreation();
+        }
+    }
+}

@@ -1,5 +1,4 @@
-﻿using Application.Commands;
-using Application.Common;
+﻿using Application.Common;
 using Application.Interfaces.Quests;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -9,7 +8,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 
-namespace Application.CommandsHandlers.QuestHandlers
+namespace Application.Quests.Commands.UpdateQuestCompletion
 {
     public class UpdateQuestCompletionCommandHandler : IRequestHandler<UpdateQuestCompletionCommand, Unit>
     {
@@ -56,7 +55,7 @@ namespace Application.CommandsHandlers.QuestHandlers
                 var currentOccurrence = await GetOrCreateQuestOccurrenceAsync(quest, nowUtc.ToDateTimeUtc(), cancellationToken).ConfigureAwait(false);
                 if (currentOccurrence is not null)
                 {
-                    quest.AddOccurence(currentOccurrence);
+                    quest.AddOccurrence(currentOccurrence);
                 }
                 else
                 {

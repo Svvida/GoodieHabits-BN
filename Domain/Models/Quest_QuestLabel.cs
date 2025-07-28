@@ -14,5 +14,10 @@
             QuestId = questId;
             QuestLabelId = questLabelId;
         }
+        public Quest_QuestLabel(Quest quest, int labelId)
+        {
+            Quest = quest;
+            QuestLabelId = labelId;
+        }
     }
 }

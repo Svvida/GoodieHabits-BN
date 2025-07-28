@@ -1,7 +1,7 @@
 ﻿using Domain.Enum;
 using MediatR;
 
-namespace Application.Commands
+namespace Application.Quests.Commands.UpdateQuestCompletion
 {
     public record UpdateQuestCompletionCommand(
         int QuestId,
