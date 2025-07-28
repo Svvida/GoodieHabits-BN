@@ -1,10 +1,9 @@
-﻿using Application.Commands;
-using Application.Common;
+﻿using Application.Common;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;
 
-namespace Application.CommandsHandlers.QuestHandlers
+namespace Application.Quests.Commands.DeleteQuest
 {
     public class DeleteQuestCommandHandler : IRequestHandler<DeleteQuestCommand, Unit>
     {

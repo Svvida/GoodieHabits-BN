@@ -10,19 +10,19 @@ namespace Domain.Models
     {
         public int Id { get; set; }
         public int AccountId { get; set; }
-        public QuestTypeEnum QuestType { get; set; }
-        public required string Title { get; set; }
-        public string? Description { get; set; } = null;
-        public PriorityEnum? Priority { get; set; } = null;
+        public QuestTypeEnum QuestType { get; private set; }
+        public string Title { get; private set; } = null!;
+        public string? Description { get; private set; } = null;
+        public PriorityEnum? Priority { get; private set; } = null;
         public bool IsCompleted { get; set; } = false;
-        public string? Emoji { get; set; } = null;
-        public DateTime? StartDate { get; set; } = null;
-        public DateTime? EndDate { get; set; } = null;
+        public string? Emoji { get; private set; } = null;
+        public DateTime? StartDate { get; private set; } = null;
+        public DateTime? EndDate { get; private set; } = null;
         public DateTime? LastCompletedAt { get; set; } = null;
         public DateTime? NextResetAt { get; set; } = null;
         public bool WasEverCompleted { get; set; } = false;
-        public DifficultyEnum? Difficulty { get; set; } = null;
-        public TimeOnly? ScheduledTime { get; set; } = null;
+        public DifficultyEnum? Difficulty { get; private set; } = null;
+        public TimeOnly? ScheduledTime { get; private set; } = null;
 
         public Account Account { get; set; } = null!;
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = [];
@@ -33,13 +33,98 @@ namespace Domain.Models
         public QuestStatistics? Statistics { get; set; } = null;
         public ICollection<QuestOccurrence> QuestOccurrences { get; set; } = [];
 
-        public Quest() { }
-        public Quest(int id, int accountId, QuestTypeEnum questType, string title)
+        // EF Core constructor
+        protected Quest() { }
+        private Quest(
+            string title,
+            Account account,
+            QuestTypeEnum questType,
+            string? description = null,
+            PriorityEnum? priority = null,
+            string? emoji = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            DifficultyEnum? difficulty = null,
+            TimeOnly? scheduledTime = null,
+            HashSet<int>? labelIds = null)
         {
-            Id = id;
-            AccountId = accountId;
+            Title = title ?? throw new InvalidArgumentException("Quest title cannot be null or empty.");
+            Account = account ?? throw new InvalidArgumentException("Account cannot be null.");
+            AccountId = account.Id;
             QuestType = questType;
-            Title = title;
+            Description = description;
+            Priority = priority;
+            Emoji = emoji;
+            Difficulty = difficulty;
+            ScheduledTime = scheduledTime;
+
+            // Validate date logic
+            if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+                throw new InvalidArgumentException("Start date cannot be after the end date.");
+
+            StartDate = startDate;
+            EndDate = endDate;
+
+            SetLabels(labelIds);
+
+            SetCreatedAt(DateTime.UtcNow);
+
+            if (IsRepeatable())
+            {
+                Statistics = new QuestStatistics
+                {
+                    Quest = this
+                };
+            }
+
+            // Raise domain event for quest creation
+            AddDomainEvent(new QuestCreatedEvent(AccountId, title, questType));
+        }
+
+        public static Quest Create(
+            string title,
+            Account account,
+            QuestTypeEnum questType,
+            string? description = null,
+            PriorityEnum? priority = null,
+            string? emoji = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            DifficultyEnum? difficulty = null,
+            TimeOnly? scheduledTime = null,
+            HashSet<int>? labelIds = null)
+        {
+            return new Quest(title, account, questType, description, priority, emoji,
+                           startDate, endDate, difficulty, scheduledTime, labelIds);
+        }
+
+        public void UpdateDescription(string? description)
+        {
+            Description = description;
+        }
+
+        public void UpdatePriority(PriorityEnum? priority)
+        {
+            Priority = priority;
+        }
+
+        public void UpdateEmoji(string? emoji)
+        {
+            Emoji = emoji;
+        }
+
+        public void UpdateDifficulty(DifficultyEnum? difficulty)
+        {
+            Difficulty = difficulty;
+        }
+
+        public void UpdateScheduledTime(TimeOnly? scheduledTime)
+        {
+            ScheduledTime = scheduledTime;
+        }
+        public void SetNextResetAt(IQuestResetService questResetService)
+        {
+            NextResetAt = questResetService.GetNextResetTimeUtc(this);
         }
 
         public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate)
@@ -129,10 +214,45 @@ namespace Domain.Models
             AddDomainEvent(new QuestUncompletedEvent(AccountId));
         }
 
-        public void AddOccurence(QuestOccurrence occurrence)
+        public void AddOccurrence(QuestOccurrence occurrence)
         {
-            if (QuestOccurrences.All(o => o.Id != occurrence.Id))
+            if (QuestOccurrences.All(o => o.OccurrenceStart != occurrence.OccurrenceStart && o.OccurrenceEnd != occurrence.OccurrenceEnd))
                 QuestOccurrences.Add(occurrence);
+        }
+        public void AddOccurrences(IEnumerable<QuestOccurrence> occurrences)
+        {
+            foreach (var occurrence in occurrences)
+            {
+                if (QuestOccurrences.All(o => o.OccurrenceStart != occurrence.OccurrenceStart && o.OccurrenceEnd != occurrence.OccurrenceEnd))
+                    QuestOccurrences.Add(occurrence);
+            }
+        }
+
+        public void SetLabels(HashSet<int>? labelIds)
+        {
+            Quest_QuestLabels = (labelIds is null || labelIds.Count == 0)
+                ? []
+                : [.. labelIds.Select(labelId => new Quest_QuestLabel(this, labelId))];
+        }
+
+        public void SetWeekdays(IEnumerable<WeekdayEnum> weekdays)
+        {
+            if (weekdays is null || !weekdays.Any())
+                throw new InvalidArgumentException("At least one weekday must be provided.");
+
+            WeeklyQuest_Days = [.. weekdays
+                .Distinct()
+                .Select(w => new WeeklyQuest_Day(w))];
+        }
+
+        public void SetMonthlyDays(int startDay, int endDay)
+        {
+            MonthlyQuest_Days = new MonthlyQuest_Days(startDay, endDay);
+        }
+
+        public void SetSeason(SeasonEnum season)
+        {
+            SeasonalQuest_Season = new SeasonalQuest_Season(season);
         }
 
         public void Delete()

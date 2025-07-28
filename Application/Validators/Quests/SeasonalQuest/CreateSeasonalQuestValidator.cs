@@ -1,13 +1,14 @@
 ﻿using Application.Dtos.Quests.SeasonalQuest;
 using Application.Helpers;
 using Domain.Enum;
+using Domain.Interfaces;
 using FluentValidation;
 
 namespace Application.Validators.Quests.SeasonalQuest
 {
     public class CreateSeasonalQuestValidator : BaseCreateQuestValidator<CreateSeasonalQuestDto>
     {
-        public CreateSeasonalQuestValidator()
+        public CreateSeasonalQuestValidator(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
             RuleFor(x => x.Season)
                 .NotEmpty()

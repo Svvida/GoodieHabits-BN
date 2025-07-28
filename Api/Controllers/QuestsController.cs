@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Api.Filters;
 using Api.Helpers;
-using Application.Commands;
 using Application.Common;
 using Application.Dtos.Quests;
 using Application.Dtos.Quests.DailyQuest;
@@ -10,6 +9,9 @@ using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
+using Application.Quests.Commands.CreateQuest;
+using Application.Quests.Commands.DeleteQuest;
+using Application.Quests.Commands.UpdateQuestCompletion;
 using Application.Quests.Queries;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -101,7 +103,7 @@ namespace Api.Controllers
             if (validator is not null)
             {
                 var validationContext = new ValidationContext<object>(createDto);
-                var validationResult = await validator.ValidateAsync(validationContext);
+                var validationResult = await validator.ValidateAsync(validationContext, cancellationToken);
 
                 if (!validationResult.IsValid)
                 {
@@ -110,8 +112,11 @@ namespace Api.Controllers
             }
 
             createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
+            createDto.QuestType = questType;
 
-            var createdQuest = await _questService.CreateUserQuestAsync(createDto, questType, cancellationToken);
+            var command = new CreateQuestCommand(createDto, cancellationToken);
+
+            var createdQuest = await _sender.Send(command, cancellationToken);
 
             var routeValues = new
             {

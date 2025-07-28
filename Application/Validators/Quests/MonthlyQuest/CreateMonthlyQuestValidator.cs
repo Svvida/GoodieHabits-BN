@@ -1,11 +1,12 @@
 ﻿using Application.Dtos.Quests.MonthlyQuest;
+using Domain.Interfaces;
 using FluentValidation;
 
 namespace Application.Validators.Quests.MonthlyQuest
 {
     public class CreateMonthlyQuestValidator : BaseCreateQuestValidator<CreateMonthlyQuestDto>
     {
-        public CreateMonthlyQuestValidator()
+        public CreateMonthlyQuestValidator(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
             RuleFor(x => x.StartDay)
                 .NotNull()

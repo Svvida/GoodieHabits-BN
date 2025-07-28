@@ -13,9 +13,8 @@ namespace Domain.Models
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = null!;
 
         public QuestLabel() { }
-        public QuestLabel(int id, int accountId, string value, string backgroundColor)
+        public QuestLabel(int accountId, string value, string backgroundColor)
         {
-            Id = id;
             AccountId = accountId;
             Value = value;
             BackgroundColor = backgroundColor;

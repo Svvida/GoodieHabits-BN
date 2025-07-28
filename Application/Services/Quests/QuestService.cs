@@ -37,46 +37,6 @@ namespace Application.Services.Quests
             _questOccurrenceGenerator = questOccurrenceGenerator;
         }
 
-        public async Task<BaseGetQuestDto> CreateUserQuestAsync(BaseCreateQuestDto createDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
-        {
-            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(createDto.AccountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID: {createDto.AccountId} not found");
-
-            // Check if the account is owner of the labels
-            if (createDto.Labels.Count > 0)
-            {
-                int ownedCount = await _unitOfWork.QuestLabels.CountOwnedLabelsAsync(createDto.Labels, createDto.AccountId, cancellationToken).ConfigureAwait(false);
-
-                if (ownedCount != createDto.Labels.Count)
-                {
-                    _logger.LogWarning("User {AccountId} tried to create a quest with labels they do not own.", createDto.AccountId);
-                    throw new ForbiddenException("One or more provided labels do not exist or do not belong to the user.");
-                }
-            }
-
-            var quest = _mapper.Map<Quest>(createDto);
-            _logger.LogDebug("Quest created after mapping: {@quest}", quest);
-
-            quest.SetCreatedAt(DateTime.UtcNow);
-            quest.Account = account;
-
-            if (quest.IsRepeatable())
-            {
-                quest.Statistics = new QuestStatistics();
-                quest.NextResetAt = _questResetService.GetNextResetTimeUtc(quest);
-                quest.QuestOccurrences = await _questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
-            }
-
-            await _unitOfWork.Quests.AddAsync(quest, cancellationToken);
-
-            quest.Account.Profile.TotalQuests++;
-            quest.Account.Profile.ExistingQuests++;
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            return MapToDto(quest);
-        }
-
         public async Task<BaseGetQuestDto> UpdateUserQuestAsync(BaseUpdateQuestDto updateDto, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             // Check if the account is owner of the labels

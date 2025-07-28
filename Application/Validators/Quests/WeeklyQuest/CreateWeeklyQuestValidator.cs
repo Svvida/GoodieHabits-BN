@@ -1,12 +1,13 @@
 ﻿using Application.Dtos.Quests.WeeklyQuest;
 using Domain.Enum;
+using Domain.Interfaces;
 using FluentValidation;
 
 namespace Application.Validators.Quests.WeeklyQuest
 {
     public class CreateWeeklyQuestValidator : BaseCreateQuestValidator<CreateWeeklyQuestDto>
     {
-        public CreateWeeklyQuestValidator()
+        public CreateWeeklyQuestValidator(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
             RuleFor(x => x.Weekdays)
                 .NotEmpty().WithMessage("{PropertyName} is required.");

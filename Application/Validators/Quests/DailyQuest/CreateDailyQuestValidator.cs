@@ -1,9 +1,10 @@
 ﻿using Application.Dtos.Quests.DailyQuest;
+using Domain.Interfaces;
 
 namespace Application.Validators.Quests.DailyQuest
 {
     public class CreateDailyQuestValidator : BaseCreateQuestValidator<CreateDailyQuestDto>
     {
-        public CreateDailyQuestValidator() { }
+        public CreateDailyQuestValidator(IUnitOfWork unitOfWork) : base(unitOfWork) { }
     }
 }
