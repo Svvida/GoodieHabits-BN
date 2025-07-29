@@ -11,6 +11,7 @@ using Application.Dtos.Quests.WeeklyQuest;
 using Application.Interfaces.Quests;
 using Application.Quests.Commands.CreateQuest;
 using Application.Quests.Commands.DeleteQuest;
+using Application.Quests.Commands.UpdateQuest;
 using Application.Quests.Commands.UpdateQuestCompletion;
 using Application.Quests.Queries;
 using Domain.Enum;
@@ -181,7 +182,10 @@ namespace Api.Controllers
 
             updateDto.AccountId = JwtHelpers.GetCurrentUserId(User);
             updateDto.Id = id;
-            var updatedQuest = await _questService.UpdateUserQuestAsync(updateDto, questType, cancellationToken);
+            updateDto.QuestType = questType;
+
+            var command = new UpdateQuestCommand(updateDto, cancellationToken);
+            var updatedQuest = await _sender.Send(command, cancellationToken);
             return Ok(updatedQuest);
         }
 

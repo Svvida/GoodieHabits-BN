@@ -16,7 +16,7 @@ namespace Application.Quests.Commands.DeleteQuest
             _publisher = publisher;
         }
 
-        public async Task<Unit> Handle(DeleteQuestCommand command, CancellationToken cancellationToken = default)
+        public async Task<Unit> Handle(DeleteQuestCommand command, CancellationToken cancellationToken)
         {
             var quest = await _unitOfWork.Quests.GetByIdAsync(command.QuestId, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {command.QuestId} not found.");
