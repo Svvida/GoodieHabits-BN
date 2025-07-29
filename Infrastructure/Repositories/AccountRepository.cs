@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
             return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false)
                 ?? null;
         }
-        public async Task<Account?> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<Account?> GetAccountWithProfileAsync(int accountId, CancellationToken cancellationToken = default)
         {
             return await _context.Accounts
                 .Include(a => a.Profile)

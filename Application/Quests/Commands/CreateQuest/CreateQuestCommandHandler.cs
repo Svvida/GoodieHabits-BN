@@ -28,7 +28,7 @@ namespace Application.Quests.Commands.CreateQuest
         {
             var createDto = command.CreateDto;
 
-            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(createDto.AccountId, cancellationToken)
+            var account = await _unitOfWork.Accounts.GetAccountWithProfileAsync(createDto.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Account with ID: {createDto.AccountId} not found.");
 
             var quest = Quest.Create(

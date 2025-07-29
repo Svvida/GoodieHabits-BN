@@ -3,7 +3,7 @@ using Application.Interfaces.Quests;
 using Domain.Interfaces;
 using MediatR;
 
-namespace Application.Quests.Queries
+namespace Application.Quests.Queries.GetQuestById
 {
     public class GetQuestByIdQueryHandler(IUnitOfWork unitOfWork, IQuestMappingService questMappingService) : IRequestHandler<GetQuestByIdQuery, BaseGetQuestDto?>
     {

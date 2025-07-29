@@ -8,7 +8,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 
-namespace Application.Quests.Queries
+namespace Application.Quests.Queries.GetActiveQuests
 {
     public class GetActiveQuestsQueryHandler(
         IUnitOfWork unitOfWork,

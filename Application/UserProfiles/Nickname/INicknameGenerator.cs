@@ -1,6 +1,6 @@
-﻿namespace Application.Interfaces
+﻿namespace Application.UserProfiles.Nickname
 {
-    public interface INicknameGeneratorService
+    public interface INicknameGenerator
     {
         Task<string> GenerateUniqueNicknameAsync(CancellationToken cancellationToken = default);
     }
