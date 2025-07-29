@@ -4,6 +4,7 @@ using Application.Dtos.Quests.MonthlyQuest;
 using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
+using Domain.Enum;
 
 namespace Application.Dtos.Quests
 {
@@ -29,5 +30,7 @@ namespace Application.Dtos.Quests
 
         [JsonIgnore]
         public int AccountId { get; set; }
+        [JsonIgnore]
+        public virtual QuestTypeEnum QuestType { get; set; }
     }
 }
