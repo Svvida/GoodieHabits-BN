@@ -1,7 +1,9 @@
 ﻿using Api.Helpers;
+using Application.Accounts.Queries.GetWithProfile;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,29 +15,23 @@ namespace Api.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
+        private readonly ISender _sender;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountService accountService, ISender sender)
         {
             _accountService = accountService;
+            _sender = sender;
         }
 
         [HttpGet("accounts/me")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAccountDto))]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ProblemDetails))]
-        public async Task<ActionResult<GetAccountDto>> GetAccount()
+        public async Task<ActionResult<GetAccountWithProfileDto>> GetAccount(CancellationToken cancellationToken = default)
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            var account = await _accountService.GetAccountWithProfileInfoAsync(accountId);
-            if (account is null)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Account not found",
-                    Detail = $"Account with ID {accountId} was not found"
-                });
-            }
+            var query = new GetAccountWithProfileQuery(accountId);
+
+            var account = await _sender.Send(query, cancellationToken);
+
             return Ok(account);
         }
 

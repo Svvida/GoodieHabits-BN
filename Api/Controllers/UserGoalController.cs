@@ -4,6 +4,7 @@ using Application.Dtos.Quests;
 using Application.Dtos.UserGoal;
 using Application.Interfaces;
 using Application.Quests.Commands.UpdateQuestCompletion;
+using Application.UserGoals.Queries.GetActiveGoalByType;
 using Domain.Enum;
 using Domain.Interfaces;
 using MediatR;
@@ -61,15 +62,15 @@ namespace Api.Controllers
 
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            var result = await _userGoalService.GetUserActiveGoalByTypeAsync(
+            var query = new GetActiveGoalByTypeQuery(
                 accountId,
-                goalTypeEnum,
-                cancellationToken);
+                goalTypeEnum);
 
-            if (result == null)
-            {
+            var result = await _sender.Send(query, cancellationToken);
+
+            if (result is null)
                 return NoContent();
-            }
+
             return Ok(result);
         }
 

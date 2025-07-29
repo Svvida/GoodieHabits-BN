@@ -2,7 +2,7 @@
 
 namespace Application.Dtos.Accounts
 {
-    public class GetAccountDto
+    public class GetAccountWithProfileDto
     {
         public string? Login { get; set; }
         public required string Email { get; set; }

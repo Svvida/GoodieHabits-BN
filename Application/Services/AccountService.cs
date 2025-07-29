@@ -30,16 +30,9 @@ namespace Application.Services
             _logger = logger;
         }
 
-        public async Task<GetAccountDto> GetAccountWithProfileInfoAsync(int accountId, CancellationToken cancellationToken = default)
-        {
-            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID {accountId} was not found");
-            return _mapper.Map<GetAccountDto>(account);
-        }
-
         public async Task UpdateAccountAsync(int accountId, UpdateAccountDto patchDto, CancellationToken cancellationToken = default)
         {
-            var account = await _unitOfWork.Accounts.GetAccountWithProfileInfoAsync(accountId, cancellationToken).ConfigureAwait(false)
+            var account = await _unitOfWork.Accounts.GetAccountWithProfileAsync(accountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {accountId} was not found");
 
             if (patchDto.Login is not null && !patchDto.Login.Equals(account.Login, StringComparison.OrdinalIgnoreCase))

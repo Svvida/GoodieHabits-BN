@@ -1,15 +1,14 @@
 ﻿using Application.Helpers;
-using Application.Interfaces;
 using Domain.Interfaces;
 
-namespace Application.Services
+namespace Application.UserProfiles.Nickname
 {
-    public class NicknameGeneratorService : INicknameGeneratorService
+    public class NicknameGenerator : INicknameGenerator
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly Random _random = new();
 
-        public NicknameGeneratorService(IUnitOfWork unitOfWork)
+        public NicknameGenerator(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
@@ -20,9 +19,7 @@ namespace Application.Services
             {
                 var nickname = GenerateRandomNickname();
                 if (!await _unitOfWork.UserProfiles.DoesNicknameExistAsync(nickname, cancellationToken).ConfigureAwait(false))
-                {
                     return nickname;
-                }
             }
 
             return string.Concat(GenerateRandomNickname(), Guid.NewGuid().ToString("N").AsSpan(0, 6)); // Fallback if all attempts fail

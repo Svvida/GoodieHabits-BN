@@ -9,7 +9,7 @@ namespace Application.MappingProfiles
         public AccountProfile()
         {
             // Entity -> DTO
-            CreateMap<Account, GetAccountDto>()
+            CreateMap<Account, GetAccountWithProfileDto>()
                 .ForMember(dest => dest.JoinDate, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.Profile, opt => opt.MapFrom(src => src.Profile));
 

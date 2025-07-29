@@ -1,10 +1,4 @@
-﻿using Application.Dtos.Quests;
-using Application.Dtos.Quests.DailyQuest;
-using Application.Dtos.Quests.MonthlyQuest;
-using Application.Dtos.Quests.OneTimeQuest;
-using Application.Dtos.Quests.SeasonalQuest;
-using Application.Dtos.Quests.WeeklyQuest;
-using Application.Dtos.UserGoal;
+﻿using Application.Dtos.UserGoal;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enum;
@@ -90,24 +84,6 @@ namespace Application.Services
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             //_logger.LogDebug("User profile for account ID {quest.AccountId} updated. Updated profile goals: {@userProfile}.", quest.AccountId, quest.Account.Profile);
-        }
-
-        public async Task<BaseGetQuestDto?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
-        {
-            var userGoal = await _unitOfWork.UserGoals.GetUserActiveGoalByTypeAsync(accountId, goalType, cancellationToken).ConfigureAwait(false);
-            if (userGoal == null)
-                return null;
-            var quest = await _unitOfWork.Quests.GetQuestByIdAsync(userGoal.QuestId, userGoal.Quest.QuestType, true, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Quest with ID {userGoal.QuestId} not found");
-            return quest.QuestType switch
-            {
-                QuestTypeEnum.OneTime => _mapper.Map<GetOneTimeQuestDto>(quest),
-                QuestTypeEnum.Daily => _mapper.Map<GetDailyQuestDto>(quest),
-                QuestTypeEnum.Weekly => _mapper.Map<GetWeeklyQuestDto>(quest),
-                QuestTypeEnum.Monthly => _mapper.Map<GetMonthlyQuestDto>(quest),
-                QuestTypeEnum.Seasonal => _mapper.Map<GetSeasonalQuestDto>(quest),
-                _ => throw new InvalidArgumentException("Invalid quest type")
-            };
         }
 
         private static DateTime CalculateGoalEndTime(GoalTypeEnum goalType, DateTimeZone userTimeZone)

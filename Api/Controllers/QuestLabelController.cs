@@ -2,6 +2,8 @@
 using Api.Helpers;
 using Application.Dtos.Labels;
 using Application.Interfaces;
+using Application.QuestLabels.Queries.GetUserLabels;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +15,12 @@ namespace Api.Controllers
     public class QuestLabelController : ControllerBase
     {
         private readonly IQuestLabelService _questLabelService;
+        private readonly ISender _sender;
 
-        public QuestLabelController(IQuestLabelService questLabelService)
+        public QuestLabelController(IQuestLabelService questLabelService, ISender sender)
         {
             _questLabelService = questLabelService;
+            _sender = sender;
         }
 
         [HttpGet]
@@ -24,7 +28,9 @@ namespace Api.Controllers
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            return Ok(await _questLabelService.GetUserLabelsAsync(accountId, cancellationToken));
+            var query = new GetUserLabelsQuery(accountId);
+
+            return Ok(await _sender.Send(query, cancellationToken));
         }
 
         [HttpPost]

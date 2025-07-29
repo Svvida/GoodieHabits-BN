@@ -19,13 +19,6 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<GetQuestLabelDto>> GetUserLabelsAsync(int accountId, CancellationToken cancellationToken = default)
-        {
-            var labels = await _unitOfWork.QuestLabels.GetUserLabelsAsync(accountId, true, cancellationToken).ConfigureAwait(false);
-
-            return _mapper.Map<IEnumerable<GetQuestLabelDto>>(labels);
-        }
-
         public async Task<int> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
         {
             if (await _unitOfWork.QuestLabels.GetLabelByValueAsync(createDto.Value, createDto.AccountId, cancellationToken).ConfigureAwait(false) != null)

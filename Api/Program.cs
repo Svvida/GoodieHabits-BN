@@ -15,6 +15,7 @@ using Application.MappingActions;
 using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
+using Application.UserProfiles.Nickname;
 using Application.Validators.Accounts;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
@@ -186,10 +187,8 @@ namespace Api
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
-            builder.Services.AddScoped<IStatsService, StatsService>();
             builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
-            builder.Services.AddScoped<INicknameGeneratorService, NicknameGeneratorService>();
-            builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+            builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
             builder.Services.AddScoped<IQuestMappingService, QuestMappingService>();
 
             // Register Validators

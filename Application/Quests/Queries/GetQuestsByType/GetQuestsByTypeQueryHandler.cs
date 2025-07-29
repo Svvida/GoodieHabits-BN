@@ -3,7 +3,7 @@ using Application.Interfaces.Quests;
 using Domain.Interfaces;
 using MediatR;
 
-namespace Application.Quests.Queries
+namespace Application.Quests.Queries.GetQuestsByType
 {
     public class GetQuestsByTypeQueryHandler(IUnitOfWork unitOfWork, IQuestMappingService questMapper)
         : IRequestHandler<GetQuestsByTypeQuery, IEnumerable<BaseGetQuestDto>>

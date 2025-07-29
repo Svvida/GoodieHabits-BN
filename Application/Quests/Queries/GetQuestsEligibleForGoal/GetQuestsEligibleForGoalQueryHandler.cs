@@ -4,7 +4,7 @@ using Domain.Interfaces;
 using MediatR;
 using NodaTime;
 
-namespace Application.Quests.Queries
+namespace Application.Quests.Queries.GetQuestsEligibleForGoal
 {
     public class GetQuestsEligibleForGoalQueryHandler(IUnitOfWork unitOfWork,
         IQuestMappingService questMapper) : IRequestHandler<GetQuestsEligibleForGoalQuery, IEnumerable<BaseGetQuestDto>>

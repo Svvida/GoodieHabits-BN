@@ -4,6 +4,7 @@ using Application.Configurations;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
+using Application.UserProfiles.Nickname;
 using AutoMapper;
 using Domain;
 using Domain.Exceptions;
@@ -23,7 +24,7 @@ namespace Application.Services
         private readonly IMapper _mapper;
         private readonly ITokenGenerator _tokenGenerator;
         private readonly ITokenValidator _tokenValidator;
-        private readonly INicknameGeneratorService _nicknameGeneratorService;
+        private readonly INicknameGenerator _nicknameGeneratorService;
 
         public AuthService(
             IOptions<JwtSettings> jwtSettings,
@@ -32,7 +33,7 @@ namespace Application.Services
             IMapper mapper,
             ITokenGenerator tokenGenerator,
             ITokenValidator tokenValidator,
-            INicknameGeneratorService nicknameGeneratorService)
+            INicknameGenerator nicknameGeneratorService)
         {
             _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
             _unitOfWork = unitOfWork;

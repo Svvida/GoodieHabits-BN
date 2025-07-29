@@ -21,9 +21,9 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet("accounts/me")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAccountDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAccountWithProfileDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ProblemDetails))]
-        public async Task<ActionResult<GetAccountDto>> GetAccount()
+        public async Task<ActionResult<GetAccountWithProfileDto>> GetAccount()
         {
             var accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
