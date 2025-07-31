@@ -1,10 +1,10 @@
 ﻿using System.Text.Json.Serialization;
-using Application.Dtos.Labels;
 using Application.Dtos.Quests.DailyQuest;
 using Application.Dtos.Quests.MonthlyQuest;
 using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
+using Application.QuestLabels.Queries.GetUserLabels;
 
 namespace Application.Dtos.Quests
 {

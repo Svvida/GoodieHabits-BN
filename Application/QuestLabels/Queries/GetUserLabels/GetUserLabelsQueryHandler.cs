@@ -1,5 +1,4 @@
-﻿using Application.Dtos.Labels;
-using AutoMapper;
+﻿using AutoMapper;
 using Domain.Interfaces;
 using MediatR;
 

@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos.Labels
+﻿namespace Application.QuestLabels.Queries.GetUserLabels
 {
     public class GetQuestLabelDto
     {

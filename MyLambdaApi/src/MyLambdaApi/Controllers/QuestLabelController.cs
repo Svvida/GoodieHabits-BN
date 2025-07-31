@@ -1,5 +1,7 @@
-﻿using Application.Dtos.Labels;
-using Application.Interfaces;
+﻿using Application.Interfaces;
+using Application.QuestLabels.Commands.CreateQuestLabel;
+using Application.QuestLabels.Commands.PatchQuestLabel;
+using Application.QuestLabels.Queries.GetUserLabels;
 using Domain;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;

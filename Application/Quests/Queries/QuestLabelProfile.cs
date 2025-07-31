@@ -1,8 +1,8 @@
-﻿using Application.Dtos.Labels;
+﻿using Application.QuestLabels.Queries.GetUserLabels;
 using AutoMapper;
 using Domain.Models;
 
-namespace Application.MappingProfiles
+namespace Application.Quests.Queries
 {
     public class QuestLabelProfile : Profile
     {
@@ -15,13 +15,6 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.QuestLabel.Id))
                 .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.QuestLabel.Value))
                 .ForMember(dest => dest.BackgroundColor, opt => opt.MapFrom(src => src.QuestLabel.BackgroundColor));
-
-            // Create DTO -> Entity
-            CreateMap<CreateQuestLabelDto, QuestLabel>();
-
-            // Patch DTO -> Entity
-            CreateMap<PatchQuestLabelDto, QuestLabel>()
-                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

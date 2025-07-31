@@ -5,6 +5,7 @@ using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
+using Application.Common.Behaviors;
 using Application.Common.Swagger;
 using Application.Configurations;
 using Application.Configurations.Leveling;
@@ -24,6 +25,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -178,7 +180,6 @@ namespace Api
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
-            builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
@@ -216,6 +217,9 @@ namespace Api
                 cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
                 cfg.RegisterServicesFromAssemblyContaining<AccountProfile>();
             });
+
+            // Register Pipeline Behaviour
+            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>

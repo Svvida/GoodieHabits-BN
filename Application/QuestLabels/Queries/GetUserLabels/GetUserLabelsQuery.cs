@@ -1,5 +1,4 @@
-﻿using Application.Dtos.Labels;
-using MediatR;
+﻿using MediatR;
 
 namespace Application.QuestLabels.Queries.GetUserLabels
 {

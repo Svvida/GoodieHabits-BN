@@ -8,7 +8,6 @@ using Application.Dtos.Quests.MonthlyQuest;
 using Application.Dtos.Quests.OneTimeQuest;
 using Application.Dtos.Quests.SeasonalQuest;
 using Application.Dtos.Quests.WeeklyQuest;
-using Application.Interfaces.Quests;
 using Application.Quests.Commands.CreateQuest;
 using Application.Quests.Commands.DeleteQuest;
 using Application.Quests.Commands.UpdateQuest;
@@ -29,21 +28,12 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/quests")]
     [Authorize]
-    public class QuestsController : ControllerBase
+    public class QuestsController(
+        ISender sender,
+        IServiceProvider serviceProvider) : ControllerBase
     {
-        private readonly IQuestService _questService;
-        private readonly ISender _sender;
-        private readonly IServiceProvider _serviceProvider;
-
-        public QuestsController(
-            IQuestService questService,
-            ISender sender,
-            IServiceProvider serviceProvider)
-        {
-            _questService = questService;
-            _sender = sender;
-            _serviceProvider = serviceProvider;
-        }
+        private readonly ISender _sender = sender;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
 
         [HttpGet("{questType}/{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
