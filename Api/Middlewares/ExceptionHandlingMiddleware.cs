@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Application.Common.Exceptions;
+using Domain.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Middlewares
@@ -21,6 +22,21 @@ namespace Api.Middlewares
             try
             {
                 await _next(context);
+            }
+            catch (ValidationException ex) // Catch all validation exceptions{
+            {
+                _logger.LogDebug("Validation failed: {Message}", ex.Message);
+                context.Response.StatusCode = ex.StatusCode;
+
+                var response = new
+                {
+                    title = ex.Message,
+                    statusCode = ex.StatusCode,
+                    errors = ex.Errors
+                };
+
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(response);
             }
             catch (AppException ex) // Catch known exceptions
             {

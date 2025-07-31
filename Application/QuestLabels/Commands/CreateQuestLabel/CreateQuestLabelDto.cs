@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Application.Dtos.Labels
+namespace Application.QuestLabels.Commands.CreateQuestLabel
 {
     public class CreateQuestLabelDto
     {

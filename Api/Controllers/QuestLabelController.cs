@@ -1,7 +1,8 @@
 ﻿using Api.Filters;
 using Api.Helpers;
-using Application.Dtos.Labels;
-using Application.Interfaces;
+using Application.QuestLabels.Commands.CreateQuestLabel;
+using Application.QuestLabels.Commands.DeleteQuestLabel;
+using Application.QuestLabels.Commands.PatchQuestLabel;
 using Application.QuestLabels.Queries.GetUserLabels;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -12,16 +13,9 @@ namespace Api.Controllers
     [ApiController]
     [Authorize]
     [Route("api/quest-labels")]
-    public class QuestLabelController : ControllerBase
+    public class QuestLabelController(ISender sender) : ControllerBase
     {
-        private readonly IQuestLabelService _questLabelService;
-        private readonly ISender _sender;
-
-        public QuestLabelController(IQuestLabelService questLabelService, ISender sender)
-        {
-            _questLabelService = questLabelService;
-            _sender = sender;
-        }
+        private readonly ISender _sender = sender;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetQuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
@@ -34,28 +28,35 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetQuestLabelDto>> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
         {
             createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
 
-            int questLabel = await _questLabelService.CreateLabelAsync(createDto, cancellationToken);
+            var command = new CreateQuestLabelCommand(createDto);
+
+            var questLabel = await _sender.Send(command, cancellationToken);
 
             return Ok(questLabel);
         }
 
         [HttpPatch("{id}")]
         [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<IActionResult> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetQuestLabelDto>> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
-            await _questLabelService.PatchLabelAsync(id, patchDto, cancellationToken);
-            return Ok();
+            patchDto.Id = id;
+            patchDto.AccountId = JwtHelpers.GetCurrentUserId(User);
+
+            var command = new PatchQuestLabelCommand(patchDto);
+            var label = await _sender.Send(command, cancellationToken);
+            return Ok(label);
         }
 
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
         public async Task<IActionResult> DeleteLabelAsync(int id, CancellationToken cancellationToken = default)
         {
-            await _questLabelService.DeleteLabelAsync(id, cancellationToken);
+            var command = new DeleteQuestLabelCommand(id);
+            await _sender.Send(command, cancellationToken);
             return Ok();
         }
     }
