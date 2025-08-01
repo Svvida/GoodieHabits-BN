@@ -183,7 +183,6 @@ namespace Api
             builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
             builder.Services.AddScoped<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
-            builder.Services.AddScoped<IUserGoalService, UserGoalService>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
@@ -194,7 +193,7 @@ namespace Api
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
-            builder.Services.AddFluentValidationAutoValidation();
+            //builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
             // Register Resolvers

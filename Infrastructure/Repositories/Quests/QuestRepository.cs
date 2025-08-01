@@ -233,5 +233,14 @@ namespace Infrastructure.Repositories.Quests
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<Quest?> GetQuestWithAccountAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Quests
+                .Include(q => q.Account)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Id == questId && q.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

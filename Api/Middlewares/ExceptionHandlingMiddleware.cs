@@ -26,7 +26,7 @@ namespace Api.Middlewares
             catch (ValidationException ex) // Catch all validation exceptions{
             {
                 _logger.LogDebug("Validation failed: {Message}", ex.Message);
-                context.Response.StatusCode = ex.StatusCode;
+                context.Response.StatusCode = 400;
 
                 var response = new
                 {

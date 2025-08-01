@@ -1,4 +1,4 @@
-﻿namespace Domain.Events
+﻿namespace Domain.Events.Quests
 {
     public record QuestDeletedEvent(
         int QuestId,

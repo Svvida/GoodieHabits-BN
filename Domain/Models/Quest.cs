@@ -1,6 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enum;
-using Domain.Events;
+using Domain.Events.Quests;
 using Domain.Exceptions;
 using Domain.Interfaces;
 
@@ -184,8 +184,7 @@ namespace Domain.Models
             {
                 foreach (var goal in UserGoal)
                 {
-                    goal.IsAchieved = true;
-                    goal.AchievedAt = completionTime;
+                    goal.MarkAsAchieved(completionTime);
                     xpGained += goal.XpBonus;
                     goalsCompleted++;
                 }

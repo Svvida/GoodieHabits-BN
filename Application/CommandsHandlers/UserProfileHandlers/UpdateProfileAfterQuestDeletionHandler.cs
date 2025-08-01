@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Domain.Events;
+using Domain.Events.Quests;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;

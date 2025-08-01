@@ -18,7 +18,6 @@ namespace Infrastructure.Repositories
                 (ug =>
                 ug.AccountId == accountId &&
                 ug.GoalType == goalType &&
-                !ug.IsAchieved &&
                 !ug.IsExpired, cancellationToken).ConfigureAwait(false);
         }
 

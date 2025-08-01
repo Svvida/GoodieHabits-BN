@@ -59,8 +59,9 @@ namespace Domain.Models
             }
             if (isFirstTimeCompleted)
                 EverCompletedExistingQuests++;
+            if (goalsCompleted > 0)
+                CompletedGoals += goalsCompleted;
             CurrentlyCompletedExistingQuests++;
-            CompletedGoals += goalsCompleted;
         }
 
         public void RevertQuestCompletion()
@@ -86,6 +87,12 @@ namespace Domain.Models
         {
             ExistingQuests++;
             TotalQuests++;
+        }
+
+        public void UpdateAfterUserGoalCreation()
+        {
+            ActiveGoals++;
+            TotalGoals++;
         }
     }
 }

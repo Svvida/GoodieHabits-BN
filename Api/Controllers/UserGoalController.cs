@@ -1,9 +1,8 @@
 ﻿using Api.Filters;
 using Api.Helpers;
 using Application.Dtos.Quests;
-using Application.Dtos.UserGoal;
-using Application.Interfaces;
 using Application.Quests.Commands.UpdateQuestCompletion;
+using Application.UserGoals.Commands.CreateUserGoal;
 using Application.UserGoals.Queries.GetActiveGoalByType;
 using Domain.Enum;
 using Domain.Interfaces;
@@ -16,35 +15,24 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/goals")]
     [Authorize]
-    public class UserGoalController : ControllerBase
+    public class UserGoalController(
+        IUnitOfWork unitOfWork,
+        ISender sender) : ControllerBase
     {
-        private readonly IUserGoalService _userGoalService;
-        private readonly ILogger<UserGoalController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ISender _sender;
-
-        public UserGoalController(
-            IUserGoalService userGoalService,
-            ILogger<UserGoalController> logger,
-            IUnitOfWork unitOfWork,
-            ISender sender)
-        {
-            _userGoalService = userGoalService;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _sender = sender;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly ISender _sender = sender;
 
         [HttpPost]
         [Route("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> CreateUserGoal(
             int id,
-            [FromBody] CreateUserGoalDto createUserGoalDto,
+            [FromBody] CreateUserGoalCommand command,
             CancellationToken cancellationToken = default)
         {
-            createUserGoalDto.QuestId = id;
-            await _userGoalService.CreateUserGoalAsync(createUserGoalDto, cancellationToken);
+            command.QuestId = id;
+            command.AccountId = JwtHelpers.GetCurrentUserId(User);
+            await _sender.Send(command, cancellationToken);
 
             return Ok();
         }
