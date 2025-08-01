@@ -12,7 +12,7 @@ namespace Application.Statistics.Queries.GetUserExtendedStats
         private readonly IMapper _mapper = mapper;
         public async Task<GetUserExtendedStatsDto> Handle(GetUserExtendedStatsQuery request, CancellationToken cancellationToken)
         {
-            var profile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
+            var profile = await _unitOfWork.UserProfiles.GetUserProfileWithGoalsAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"User profile with ID {request.AccountId} not found.");
 
             return _mapper.Map<GetUserExtendedStatsDto>(profile);

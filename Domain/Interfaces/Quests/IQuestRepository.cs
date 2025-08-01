@@ -17,5 +17,6 @@ namespace Domain.Interfaces.Quests
         Task<bool> IsQuestOwnedByUserAsync(int questId, int accountId, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetQuestsEligibleForResetAsync(CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestWithAccountAsync(int questId, int accountId, CancellationToken cancellationToken = default);
     }
 }
