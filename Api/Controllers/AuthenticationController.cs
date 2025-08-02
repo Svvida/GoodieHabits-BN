@@ -1,4 +1,4 @@
-﻿using Application.Accounts.Commands.UpdateTimeZoneIfChanged;
+﻿using Application.Auth.RefreshAccessToken;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
@@ -37,16 +37,15 @@ namespace Api.Controllers
         [HttpPost]
         [Route("auth/refresh-token")]
         public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
-            [FromBody] RefreshRequestDto refreshRequestDto,
+            [FromBody] RefreshAccessTokenRequest request,
             CancellationToken cancellationToken = default)
         {
-            var refreshResponse = await authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken, cancellationToken);
-
             var timeZone = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
-            var command = new UpdateTimeZoneIfChangedCommand(refreshResponse.AccountId, timeZone);
-            await sender.Send(command, cancellationToken);
 
-            return Ok(refreshResponse);
+            var command = new RefreshAccessTokenCommand(request.RefreshToken, timeZone);
+            var accessToken = await sender.Send(command, cancellationToken);
+
+            return Ok(accessToken);
         }
     }
 }

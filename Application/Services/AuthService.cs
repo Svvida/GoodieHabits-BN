@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using System.Text.RegularExpressions;
-using Application.Configurations;
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
@@ -12,13 +11,11 @@ using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace Application.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly JwtSettings _jwtSettings;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IMapper _mapper;
@@ -27,7 +24,6 @@ namespace Application.Services
         private readonly INicknameGenerator _nicknameGeneratorService;
 
         public AuthService(
-            IOptions<JwtSettings> jwtSettings,
             IUnitOfWork unitOfWork,
             IPasswordHasher<Account> passwordHasher,
             IMapper mapper,
@@ -35,7 +31,6 @@ namespace Application.Services
             ITokenValidator tokenValidator,
             INicknameGenerator nicknameGeneratorService)
         {
-            _jwtSettings = jwtSettings.Value ?? throw new InvalidArgumentException($"{nameof(jwtSettings)} is missing in configuration.");
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             _mapper = mapper;
@@ -65,8 +60,8 @@ namespace Application.Services
 
             var response = new AuthResponseDto
             {
-                AccessToken = GenerateJwtToken(account),
-                RefreshToken = GenerateRefreshToken(account)
+                AccessToken = _tokenGenerator.GenerateAccessToken(account),
+                RefreshToken = _tokenGenerator.GenerateRefreshToken(account)
             };
             return response;
         }
@@ -87,14 +82,14 @@ namespace Application.Services
 
             return new AuthResponseDto
             {
-                AccessToken = GenerateJwtToken(accountEntity),
-                RefreshToken = GenerateRefreshToken(accountEntity)
+                AccessToken = _tokenGenerator.GenerateAccessToken(accountEntity),
+                RefreshToken = _tokenGenerator.GenerateRefreshToken(accountEntity)
             };
         }
 
         public async Task<RefreshResponseDto> RefreshAccessTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
-            ClaimsPrincipal principal = _tokenValidator.ValidateRefreshToken(refreshToken, _jwtSettings.Issuer, _jwtSettings.RefreshToken.Key);
+            ClaimsPrincipal principal = _tokenValidator.ValidateRefreshToken(refreshToken);
 
             var accountId = principal.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountId))
@@ -105,31 +100,10 @@ namespace Application.Services
 
             return new RefreshResponseDto
             {
-                AccessToken = GenerateJwtToken(account),
-                AccountId = account.Id
+                AccessToken = _tokenGenerator.GenerateAccessToken(account),
             };
         }
 
-        private string GenerateJwtToken(Account account)
-        {
-            return _tokenGenerator.GenerateJwtToken(
-                account,
-                _jwtSettings.Issuer,
-                _jwtSettings.Audience,
-                _jwtSettings.AccessToken.Key,
-                _jwtSettings.AccessToken.ExpirationMinutes
-                );
-        }
-
-        private string GenerateRefreshToken(Account account)
-        {
-            return _tokenGenerator.GenerateRefreshToken(
-                account,
-                _jwtSettings.Issuer,
-                _jwtSettings.RefreshToken.Key,
-                _jwtSettings.RefreshToken.ExpirationDays
-                );
-        }
         private static bool IsEmail(string login) =>
             Regex.IsMatch(login, @"^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
     }

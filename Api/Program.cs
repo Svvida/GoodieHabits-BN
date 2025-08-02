@@ -7,7 +7,6 @@ using Api.Middlewares;
 using Api.ModelBinders;
 using Application.Common.Behaviors;
 using Application.Common.Swagger;
-using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Helpers;
 using Application.Interfaces;
@@ -179,8 +178,8 @@ namespace Api
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
-            builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
-            builder.Services.AddScoped<ITokenValidator, TokenValidator>();
+            builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
+            builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelingService, LevelingService>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
