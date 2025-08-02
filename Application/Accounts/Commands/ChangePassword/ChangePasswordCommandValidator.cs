@@ -1,12 +1,12 @@
-﻿using Application.Dtos.Accounts;
-using Application.ValidatorsExtensions;
+﻿using Application.Accounts.Commands.ChangePassword;
+using Application.Common.ValidatorsExtensions;
 using FluentValidation;
 
 namespace Application.Validators.Accounts
 {
-    public class ChangePasswordValidator : AbstractValidator<ChangePasswordDto>
+    public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCommand>
     {
-        public ChangePasswordValidator()
+        public ChangePasswordCommandValidator()
         {
             RuleFor(x => x.OldPassword)
                 .Password();

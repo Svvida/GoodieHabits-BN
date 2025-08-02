@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Exceptions;
 
 namespace Domain.Models
 {
@@ -26,10 +27,9 @@ namespace Domain.Models
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];
 
         public UserProfile() { }
-        public UserProfile(int id, int accountId)
+        public UserProfile(Account account)
         {
-            Id = id;
-            AccountId = accountId;
+            Account = account ?? throw new InvalidArgumentException("Account cannot be null.");
         }
 
         public void WipeoutData()
@@ -93,6 +93,20 @@ namespace Domain.Models
         {
             ActiveGoals++;
             TotalGoals++;
+        }
+
+        public void UpdateNickname(string nickname)
+        {
+            if (string.IsNullOrWhiteSpace(nickname))
+                throw new InvalidArgumentException("Nickname cannot be null or whitespace.");
+            Nickname = nickname;
+        }
+
+        public void UpdateBio(string? bio)
+        {
+            if (bio != null && bio.Length > 30)
+                throw new InvalidArgumentException("Bio cannot exceed 30 characters.");
+            Bio = bio;
         }
     }
 }

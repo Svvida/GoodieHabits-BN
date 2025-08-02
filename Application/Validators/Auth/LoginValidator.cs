@@ -1,6 +1,6 @@
-﻿using Application.Dtos.Auth;
+﻿using Application.Common.ValidatorsExtensions;
+using Application.Dtos.Auth;
 using Application.Validators.Helpers;
-using Application.ValidatorsExtensions;
 using FluentValidation;
 
 namespace Application.Validators.Auth

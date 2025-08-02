@@ -1,12 +1,11 @@
 ﻿using Application.Common.ValidatorsExtensions;
-using Application.Dtos.Auth;
 using FluentValidation;
 
-namespace Application.Validators.Accounts
+namespace Application.Accounts.Commands.WipeoutData
 {
-    public class PasswordConfirmationValidator : AbstractValidator<PasswordConfirmationDto>
+    public class WipeoutDataCommandValidator : AbstractValidator<WipeoutDataCommand>
     {
-        public PasswordConfirmationValidator()
+        public WipeoutDataCommandValidator()
         {
             RuleFor(x => x.Password)
                 .Password();

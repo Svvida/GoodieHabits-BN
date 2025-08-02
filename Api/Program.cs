@@ -176,7 +176,6 @@ namespace Api
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();

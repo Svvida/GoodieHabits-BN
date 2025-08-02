@@ -1,8 +1,10 @@
 ﻿using Api.Helpers;
+using Application.Accounts.Commands.ChangePassword;
+using Application.Accounts.Commands.DeleteAccount;
+using Application.Accounts.Commands.UpdateAccount;
+using Application.Accounts.Commands.WipeoutData;
 using Application.Accounts.Queries.GetWithProfile;
 using Application.Dtos.Accounts;
-using Application.Dtos.Auth;
-using Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,68 +14,55 @@ namespace Api.Controllers
     [ApiController]
     [Route("api")]
     [Authorize]
-    public class AccountController : ControllerBase
+    public class AccountController(ISender sender) : ControllerBase
     {
-        private readonly IAccountService _accountService;
-        private readonly ISender _sender;
-
-        public AccountController(IAccountService accountService, ISender sender)
-        {
-            _accountService = accountService;
-            _sender = sender;
-        }
-
         [HttpGet("accounts/me")]
-        public async Task<ActionResult<GetAccountWithProfileDto>> GetAccount(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetAccountWithProfileDto?>> GetAccount(CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
-
-            var query = new GetAccountWithProfileQuery(accountId);
-
-            var account = await _sender.Send(query, cancellationToken);
-
+            var query = new GetAccountWithProfileQuery(JwtHelpers.GetCurrentUserId(User));
+            var account = await sender.Send(query, cancellationToken);
             return Ok(account);
         }
 
         [HttpPut("accounts/me")]
         public async Task<IActionResult> UpdateAccount(
-            UpdateAccountDto patchDto,
+            UpdateAccountCommand command,
             CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            command.AccountId = JwtHelpers.GetCurrentUserId(User);
 
-            await _accountService.UpdateAccountAsync(accountId, patchDto, cancellationToken);
+            await sender.Send(command, cancellationToken);
             return NoContent();
         }
 
         [HttpPut("accounts/me/password")]
         public async Task<IActionResult> ChangePassword(
-            ChangePasswordDto changePasswordDto,
+            ChangePasswordCommand command,
             CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            command.AccountId = JwtHelpers.GetCurrentUserId(User);
 
-            await _accountService.ChangePasswordAsync(accountId, changePasswordDto, cancellationToken);
+            await sender.Send(command, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("accounts/me")]
         public async Task<IActionResult> DeleteAccount(
-            PasswordConfirmationDto passwordConfirmationDto,
+            DeleteAccountCommand command,
             CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
-            await _accountService.DeleteAccountAsync(accountId, passwordConfirmationDto, cancellationToken);
+            command.AccountId = JwtHelpers.GetCurrentUserId(User);
+            await sender.Send(command, cancellationToken);
             return NoContent();
         }
 
         [HttpPost("accounts/me/wipeout-data")]
         public async Task<IActionResult> WipeoutAccountData(
-            PasswordConfirmationDto authRequestDto,
+            WipeoutDataCommand command,
             CancellationToken cancellationToken = default)
         {
-            authRequestDto.AccountId = JwtHelpers.GetCurrentUserId(User);
-            await _accountService.WipeoutAccountDataAsync(authRequestDto, cancellationToken);
+            command.AccountId = JwtHelpers.GetCurrentUserId(User);
+            await sender.Send(command, cancellationToken);
             return NoContent();
         }
     }

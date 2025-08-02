@@ -78,7 +78,7 @@ namespace Application.Services
 
             var accountEntity = _mapper.Map<Account>(createDto);
 
-            accountEntity.HashPassword = _passwordHasher.HashPassword(accountEntity, createDto.Password);
+            accountEntity.UpdateHashPassword(_passwordHasher.HashPassword(accountEntity, createDto.Password));
 
             accountEntity.Profile.Nickname = await _nicknameGeneratorService.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false);
 

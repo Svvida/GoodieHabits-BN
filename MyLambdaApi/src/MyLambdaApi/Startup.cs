@@ -146,7 +146,7 @@ public class Startup
         services.AddValidatorsFromAssemblyContaining<LoginValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
         services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
-        services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
+        services.AddValidatorsFromAssemblyContaining<ChangePasswordCommandValidator>();
         services.AddValidatorsFromAssemblyContaining<PasswordConfirmationValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
         services.AddFluentValidationAutoValidation();
