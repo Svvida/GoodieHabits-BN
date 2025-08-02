@@ -1,12 +1,11 @@
 ﻿using Application.Common.ValidatorsExtensions;
-using Application.Dtos.Auth;
 using FluentValidation;
 
-namespace Application.Validators.Accounts
+namespace Application.Accounts.Commands.DeleteAccount
 {
-    public class PasswordConfirmationValidator : AbstractValidator<PasswordConfirmationDto>
+    public class DeleteAccountCommandValidator : AbstractValidator<DeleteAccountCommand>
     {
-        public PasswordConfirmationValidator()
+        public DeleteAccountCommandValidator()
         {
             RuleFor(x => x.Password)
                 .Password();
