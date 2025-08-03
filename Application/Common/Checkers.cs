@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Ganss.Xss;
 
-namespace Application.Validators.Helpers
+namespace Application.Common
 {
     internal static class Checkers
     {
@@ -46,9 +46,7 @@ namespace Application.Validators.Helpers
             sanitizer.RemovingTag += (sender, args) =>
             {
                 if (args.Tag.TagName == "input" && (args.Tag.Parent == null || args.Tag.Parent.NodeName != "label"))
-                {
                     args.Cancel = true; // Remove <input> if not inside <label>
-                }
             };
 
             // Prevent JavaScript-based XSS in href attributes

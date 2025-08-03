@@ -1,6 +1,6 @@
-﻿using Application.Common.ValidatorsExtensions;
+﻿using Application.Common;
+using Application.Common.ValidatorsExtensions;
 using Application.Dtos.Accounts;
-using Application.Validators.Helpers;
 using FluentValidation;
 
 namespace Application.Validators.Accounts

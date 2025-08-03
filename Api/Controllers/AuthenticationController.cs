@@ -1,7 +1,8 @@
-﻿using Application.Auth.RefreshAccessToken;
-using Application.Dtos.Accounts;
+﻿using Application.Auth.Login;
+using Application.Auth.RefreshAccessToken;
+using Application.Auth.Register;
 using Application.Dtos.Auth;
-using Application.Interfaces;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,28 +11,30 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api")]
-    public class AuthenticationController(IAuthService authService, ISender sender) : ControllerBase
+    public class AuthenticationController(ISender sender, IMapper mapper) : ControllerBase
     {
         [HttpPost]
         [Route("auth/login")]
         [AllowAnonymous]
-        public async Task<ActionResult<AuthResponseDto>> Login(
-            [FromBody] LoginDto loginDto,
+        public async Task<ActionResult<LoginResponseDto>> Login(
+            [FromBody] LoginRequest request,
             CancellationToken cancellationToken = default)
         {
-            var authResponse = await authService.LoginAsync(loginDto, cancellationToken);
-            return Ok(authResponse);
+            var command = mapper.Map<LoginCommand>(request);
+            var loginResponse = await sender.Send(command, cancellationToken);
+            return Ok(loginResponse);
         }
-
 
         [HttpPost]
         [Route("register")]
         public async Task<ActionResult<AuthResponseDto>> CreateAccount(
-            [FromBody] CreateAccountDto createDto,
+            [FromBody] RegisterRequest request,
             CancellationToken cancellationToken = default)
         {
-            var authResponse = await authService.RegisterAsync(createDto, cancellationToken);
-            return Created(nameof(CreateAccount), authResponse);
+            var timeZoneId = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
+            var command = mapper.Map<RegisterCommand>(request) with { TimeZoneId = timeZoneId };
+            var registerResponse = await sender.Send(command, cancellationToken);
+            return Created(nameof(CreateAccount), registerResponse);
         }
 
         [HttpPost]

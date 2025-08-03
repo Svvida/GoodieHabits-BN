@@ -1,5 +1,5 @@
-﻿using Application.Dtos.Accounts;
-using Application.Validators.Helpers;
+﻿using Application.Common;
+using Application.Dtos.Accounts;
 using FluentValidation;
 
 namespace Application.Validators.Accounts
