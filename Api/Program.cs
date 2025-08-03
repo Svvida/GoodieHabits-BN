@@ -176,7 +176,6 @@ namespace Api
 
             // Register Services
             builder.Services.AddScoped<IQuestService, QuestService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
             builder.Services.AddSingleton<ITokenValidator, TokenValidator>();

@@ -1,5 +1,5 @@
-﻿using Application.Dtos.Quests;
-using Application.Validators.Helpers;
+﻿using Application.Common;
+using Application.Dtos.Quests;
 using Domain.Enum;
 using FluentValidation;
 
