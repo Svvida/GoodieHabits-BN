@@ -1,9 +1,9 @@
-﻿using Api.Filters;
-using Api.Helpers;
-using Application.Dtos.Quests;
-using Application.Quests.Commands.UpdateQuestCompletion;
-using Application.UserGoals.Commands.CreateUserGoal;
-using Application.UserGoals.Queries.GetActiveGoalByType;
+﻿using Api.Helpers;
+using Application.Quests.Dtos;
+using Application.Quests.UpdateQuestCompletion;
+using Application.UserGoals.CreateUserGoal;
+using Application.UserGoals.GetActiveGoalByType;
+using AutoMapper;
 using Domain.Enum;
 using Domain.Interfaces;
 using MediatR;
@@ -17,29 +17,23 @@ namespace Api.Controllers
     [Authorize]
     public class UserGoalController(
         IUnitOfWork unitOfWork,
-        ISender sender) : ControllerBase
+        ISender sender,
+        IMapper mapper) : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly ISender _sender = sender;
 
         [HttpPost]
-        [Route("{id}")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> CreateUserGoal(
-            int id,
-            [FromBody] CreateUserGoalCommand command,
+            [FromBody] CreateUserGoalRequest request,
             CancellationToken cancellationToken = default)
         {
-            command.QuestId = id;
-            command.AccountId = JwtHelpers.GetCurrentUserId(User);
-            await _sender.Send(command, cancellationToken);
-
+            var command = mapper.Map<CreateUserGoalCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            await sender.Send(command, cancellationToken);
             return Ok();
         }
 
         [HttpGet]
         [Route("active/{goaltype}")]
-        public async Task<ActionResult<BaseGetQuestDto>> GetActiveGoal(
+        public async Task<ActionResult<QuestDetailsDto>> GetActiveGoal(
             [FromRoute] string goaltype,
             CancellationToken cancellationToken = default)
         {
@@ -54,7 +48,7 @@ namespace Api.Controllers
                 accountId,
                 goalTypeEnum);
 
-            var result = await _sender.Send(query, cancellationToken);
+            var result = await sender.Send(query, cancellationToken);
 
             if (result is null)
                 return NoContent();
@@ -64,12 +58,12 @@ namespace Api.Controllers
 
         [HttpPatch]
         [Route("{id}/completion")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> CompleteUserGoal(int id, QuestCompletionPatchDto patchDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> CompleteUserGoal(int id, [FromBody] UpdateQuestCompletionRequest request, CancellationToken cancellationToken = default)
         {
-            var quest = await _unitOfWork.Quests.GetByIdAsync(id, cancellationToken);
+            var quest = await unitOfWork.Quests.GetByIdAsync(id, cancellationToken);
+            var accountId = JwtHelpers.GetCurrentUserId(User);
 
-            if (quest is null)
+            if (quest is null || quest.AccountId != accountId)
             {
                 return NotFound(new ProblemDetails
                 {
@@ -79,11 +73,14 @@ namespace Api.Controllers
                 });
             }
 
-            var command = new UpdateQuestCompletionCommand(
-                id,
-                patchDto.IsCompleted,
-                quest.QuestType);
-            await _sender.Send(command, cancellationToken);
+            var command = mapper.Map<UpdateQuestCompletionCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = accountId,
+                QuestType = quest.QuestType
+            };
+
+            await sender.Send(command, cancellationToken);
             return Ok();
         }
     }

@@ -1,7 +1,6 @@
 ﻿using Application.Auth.Login;
 using Application.Auth.RefreshAccessToken;
 using Application.Auth.Register;
-using Application.Dtos.Auth;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +15,7 @@ namespace Api.Controllers
         [HttpPost]
         [Route("auth/login")]
         [AllowAnonymous]
-        public async Task<ActionResult<LoginResponseDto>> Login(
+        public async Task<ActionResult<LoginResponse>> Login(
             [FromBody] LoginRequest request,
             CancellationToken cancellationToken = default)
         {
@@ -27,7 +26,7 @@ namespace Api.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<ActionResult<AuthResponseDto>> CreateAccount(
+        public async Task<ActionResult<RegisterResponse>> CreateAccount(
             [FromBody] RegisterRequest request,
             CancellationToken cancellationToken = default)
         {
@@ -39,15 +38,13 @@ namespace Api.Controllers
 
         [HttpPost]
         [Route("auth/refresh-token")]
-        public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
+        public async Task<ActionResult<RefreshAccessTokenResponse>> RefreshToken(
             [FromBody] RefreshAccessTokenRequest request,
             CancellationToken cancellationToken = default)
         {
-            var timeZone = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
-
-            var command = new RefreshAccessTokenCommand(request.RefreshToken, timeZone);
+            var timeZoneId = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
+            var command = mapper.Map<RefreshAccessTokenCommand>(request) with { TimeZoneId = timeZoneId };
             var accessToken = await sender.Send(command, cancellationToken);
-
             return Ok(accessToken);
         }
     }

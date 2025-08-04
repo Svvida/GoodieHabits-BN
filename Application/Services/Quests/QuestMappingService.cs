@@ -1,10 +1,5 @@
-﻿using Application.Dtos.Quests;
-using Application.Dtos.Quests.DailyQuest;
-using Application.Dtos.Quests.MonthlyQuest;
-using Application.Dtos.Quests.OneTimeQuest;
-using Application.Dtos.Quests.SeasonalQuest;
-using Application.Dtos.Quests.WeeklyQuest;
-using Application.Interfaces.Quests;
+﻿using Application.Common.Interfaces.Quests;
+using Application.Quests.Dtos;
 using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -12,24 +7,17 @@ using Domain.Models;
 
 namespace Application.Services.Quests
 {
-    public class QuestMappingService : IQuestMappingService
+    public class QuestMappingService(IMapper mapper) : IQuestMappingService
     {
-        private readonly IMapper _mapper;
-
-        public QuestMappingService(IMapper mapper)
-        {
-            _mapper = mapper;
-        }
-
-        public BaseGetQuestDto MapToDto(Quest quest)
+        public QuestDetailsDto MapToDto(Quest quest)
         {
             return quest.QuestType switch
             {
-                QuestTypeEnum.OneTime => _mapper.Map<GetOneTimeQuestDto>(quest),
-                QuestTypeEnum.Daily => _mapper.Map<GetDailyQuestDto>(quest),
-                QuestTypeEnum.Weekly => _mapper.Map<GetWeeklyQuestDto>(quest),
-                QuestTypeEnum.Monthly => _mapper.Map<GetMonthlyQuestDto>(quest),
-                QuestTypeEnum.Seasonal => _mapper.Map<GetSeasonalQuestDto>(quest),
+                QuestTypeEnum.OneTime => mapper.Map<OneTimeQuestDetailsDto>(quest),
+                QuestTypeEnum.Daily => mapper.Map<DailyQuestDetailsDto>(quest),
+                QuestTypeEnum.Weekly => mapper.Map<WeeklyQuestDetailsDto>(quest),
+                QuestTypeEnum.Monthly => mapper.Map<MonthlyQuestDetailsDto>(quest),
+                QuestTypeEnum.Seasonal => mapper.Map<SeasonalQuestDetailsDto>(quest),
                 _ => throw new InvalidArgumentException("Invalid quest type")
             };
         }

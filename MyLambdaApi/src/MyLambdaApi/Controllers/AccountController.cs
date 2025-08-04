@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Accounts;
+﻿using Application.Accounts.Dtos;
+using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
 using Domain;

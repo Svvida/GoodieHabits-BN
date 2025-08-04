@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.Quests;
+﻿using Application.Common.Interfaces.Quests;
 using Application.Models;
 using Domain.Interfaces;
 using Domain.Models;

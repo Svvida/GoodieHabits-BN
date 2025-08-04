@@ -1,24 +1,16 @@
-﻿using System.Text.Json;
-using Api.Filters;
+﻿using Api.Filters;
 using Api.Helpers;
-using Application.Common;
-using Application.Dtos.Quests;
-using Application.Dtos.Quests.DailyQuest;
-using Application.Dtos.Quests.MonthlyQuest;
-using Application.Dtos.Quests.OneTimeQuest;
-using Application.Dtos.Quests.SeasonalQuest;
-using Application.Dtos.Quests.WeeklyQuest;
-using Application.Quests.Commands.CreateQuest;
-using Application.Quests.Commands.DeleteQuest;
-using Application.Quests.Commands.UpdateQuest;
-using Application.Quests.Commands.UpdateQuestCompletion;
-using Application.Quests.Queries.GetActiveQuests;
-using Application.Quests.Queries.GetQuestById;
-using Application.Quests.Queries.GetQuestsByType;
-using Application.Quests.Queries.GetQuestsEligibleForGoal;
+using Application.Quests.CreateQuest;
+using Application.Quests.DeleteQuest;
+using Application.Quests.Dtos;
+using Application.Quests.GetActiveQuests;
+using Application.Quests.GetQuestById;
+using Application.Quests.GetQuestsByType;
+using Application.Quests.GetQuestsEligibleForGoal;
+using Application.Quests.UpdateQuest;
+using Application.Quests.UpdateQuestCompletion;
+using AutoMapper;
 using Domain.Enum;
-using Domain.Exceptions;
-using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,20 +22,17 @@ namespace Api.Controllers
     [Authorize]
     public class QuestsController(
         ISender sender,
-        IServiceProvider serviceProvider) : ControllerBase
+        IMapper mapper) : ControllerBase
     {
-        private readonly ISender _sender = sender;
-        private readonly IServiceProvider _serviceProvider = serviceProvider;
-
+        #region Shared Methods
         [HttpGet("{questType}/{id}")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<ActionResult<BaseGetQuestDto>> GetUserQuestById(
+        public async Task<ActionResult<QuestDetailsDto>> GetUserQuestById(
             int id,
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var query = new GetQuestByIdQuery(id, questType);
-            var questDto = await _sender.Send(query, cancellationToken);
+            var query = new GetQuestByIdQuery(id, questType, JwtHelpers.GetCurrentUserId(User));
+            var questDto = await sender.Send(query, cancellationToken);
 
             if (questDto is null)
             {
@@ -59,7 +48,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{questType}")]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetQuestsByType(
+        public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetQuestsByType(
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
@@ -67,119 +56,8 @@ namespace Api.Controllers
 
             var query = new GetQuestsByTypeQuery(accountId, questType);
 
-            var quests = await _sender.Send(query, cancellationToken);
+            var quests = await sender.Send(query, cancellationToken);
             return Ok(quests);
-        }
-
-        [HttpPost("{questType}")]
-        public async Task<ActionResult<BaseGetQuestDto>> Create(
-            [FromBody] JsonElement dtoAsJson,
-            QuestTypeEnum questType,
-            CancellationToken cancellationToken = default)
-        {
-            BaseCreateQuestDto? createDto = questType switch
-            {
-                QuestTypeEnum.OneTime => dtoAsJson.Deserialize<CreateOneTimeQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Daily => dtoAsJson.Deserialize<CreateDailyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Weekly => dtoAsJson.Deserialize<CreateWeeklyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Monthly => dtoAsJson.Deserialize<CreateMonthlyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Seasonal => dtoAsJson.Deserialize<CreateSeasonalQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                _ => throw new InvalidArgumentException($"Quest type '{questType}' is not supported for creation.")
-            };
-
-            if (createDto is null)
-                return BadRequest("The request body is invalid.");
-
-            var validatorType = typeof(IValidator<>).MakeGenericType(createDto.GetType());
-
-            var validator = _serviceProvider.GetService(validatorType) as IValidator;
-
-            if (validator is not null)
-            {
-                var validationContext = new ValidationContext<object>(createDto);
-                var validationResult = await validator.ValidateAsync(validationContext, cancellationToken);
-
-                if (!validationResult.IsValid)
-                {
-                    return BadRequest(validationResult.Errors);
-                }
-            }
-
-            createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
-            createDto.QuestType = questType;
-
-            var command = new CreateQuestCommand(createDto, cancellationToken);
-
-            var createdQuest = await _sender.Send(command, cancellationToken);
-
-            var routeValues = new
-            {
-                questType = questType.ToString().ToLowerInvariant(),
-                id = createdQuest.Id
-            };
-
-            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
-        }
-
-        [HttpPatch("{questType}/{id}/completion")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<IActionResult> PatchQuestCompletion(
-            int id,
-            QuestTypeEnum questType,
-            [FromBody] QuestCompletionPatchDto patchDto,
-            CancellationToken cancellationToken = default)
-        {
-            var command = new UpdateQuestCompletionCommand(
-                id,
-                patchDto.IsCompleted,
-                questType);
-            await _sender.Send(command, cancellationToken);
-            return Ok();
-        }
-
-        [HttpPut("{questType}/{id}")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<ActionResult<BaseGetQuestDto>> Update(
-            int id,
-            QuestTypeEnum questType,
-            [FromBody] JsonElement dtoAsJson,
-            CancellationToken cancellationToken = default)
-        {
-            BaseUpdateQuestDto? updateDto = questType switch
-            {
-                QuestTypeEnum.OneTime => dtoAsJson.Deserialize<UpdateOneTimeQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Daily => dtoAsJson.Deserialize<UpdateDailyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Weekly => dtoAsJson.Deserialize<UpdateWeeklyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Monthly => dtoAsJson.Deserialize<UpdateMonthlyQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                QuestTypeEnum.Seasonal => dtoAsJson.Deserialize<UpdateSeasonalQuestDto>(JsonSerializerConfig.CaseInsensitveOptions),
-                _ => throw new InvalidArgumentException($"Quest type '{questType}' is not supported for update.")
-            };
-
-            if (updateDto is null)
-                return BadRequest("The request body is invalid.");
-
-            var validatorType = typeof(IValidator<>).MakeGenericType(updateDto.GetType());
-
-            var validator = _serviceProvider.GetService(validatorType) as IValidator;
-
-            if (validator is not null)
-            {
-                var validationContext = new ValidationContext<object>(updateDto);
-                var validationResult = await validator.ValidateAsync(validationContext);
-
-                if (!validationResult.IsValid)
-                {
-                    return BadRequest(validationResult.Errors);
-                }
-            }
-
-            updateDto.AccountId = JwtHelpers.GetCurrentUserId(User);
-            updateDto.Id = id;
-            updateDto.QuestType = questType;
-
-            var command = new UpdateQuestCommand(updateDto, cancellationToken);
-            var updatedQuest = await _sender.Send(command, cancellationToken);
-            return Ok(updatedQuest);
         }
 
         [HttpDelete("{id}")]
@@ -190,30 +68,243 @@ namespace Api.Controllers
         {
             var command = new DeleteQuestCommand(id);
 
-            await _sender.Send(command, cancellationToken);
+            await sender.Send(command, cancellationToken);
 
             return NoContent();
         }
-
         [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetActiveQuests(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetActiveQuests(CancellationToken cancellationToken = default)
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
 
             var query = new GetActiveQuestsQuery(accountId, cancellationToken);
 
-            var quests = await _sender.Send(query, cancellationToken);
+            var quests = await sender.Send(query, cancellationToken);
 
             return Ok(quests);
         }
 
         [HttpGet("eligible-for-goal")]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetQuestsEligibleForGoal(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetQuestsEligibleForGoal(CancellationToken cancellationToken = default)
         {
             var accountId = JwtHelpers.GetCurrentUserId(User);
             var query = new GetQuestsEligibleForGoalQuery(accountId, cancellationToken);
-            var quests = await _sender.Send(query, cancellationToken);
+            var quests = await sender.Send(query, cancellationToken);
             return Ok(quests);
         }
+
+        [HttpPatch("{questType}/{id}/completion")]
+        public async Task<IActionResult> PatchQuestCompletion(
+            int id,
+            QuestTypeEnum questType,
+            [FromBody] UpdateQuestCompletionRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<UpdateQuestCompletionCommand>(request) with
+            {
+                QuestId = id,
+                QuestType = questType,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+            await sender.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        #endregion
+
+        #region OneTime Quests
+        [HttpPost("one-time")]
+        public async Task<ActionResult<OneTimeQuestDetailsDto>> CreateOneTimeQuest(
+            [FromBody] CreateOneTimeQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<CreateOneTimeQuestCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var createdQuest = await sender.Send(command, cancellationToken);
+
+            var routeValues = new
+            {
+                questType = createdQuest.QuestType.ToLowerInvariant(),
+                id = createdQuest.Id
+            };
+
+            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
+        }
+
+        [HttpPut("one-time/{id}")]
+        public async Task<ActionResult<OneTimeQuestDetailsDto>> UpdateOneTimeQuest(
+            int id,
+            [FromBody] UpdateOneTimeQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var updateDto = mapper.Map<UpdateOneTimeQuestCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var updatedQuest = await sender.Send(updateDto, cancellationToken);
+            return Ok(updatedQuest);
+        }
+        #endregion
+
+        #region Daily Quests
+        [HttpPost("daily")]
+        public async Task<ActionResult<DailyQuestDetailsDto>> CreateDailyQuest(
+            [FromBody] CreateDailyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<CreateDailyQuestCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var createdQuest = await sender.Send(command, cancellationToken);
+
+            var routeValues = new
+            {
+                questType = createdQuest.QuestType.ToLowerInvariant(),
+                id = createdQuest.Id
+            };
+
+            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
+        }
+
+        [HttpPut("daily/{id}")]
+        public async Task<ActionResult<DailyQuestDetailsDto>> UpdateDailyQuest(
+            int id,
+            [FromBody] UpdateDailyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var updateDto = mapper.Map<UpdateDailyQuestCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var updatedQuest = await sender.Send(updateDto, cancellationToken);
+            return Ok(updatedQuest);
+        }
+        #endregion
+
+        #region Weekly Quests
+        [HttpPost("weekly")]
+        public async Task<ActionResult<WeeklyQuestDetailsDto>> CreateWeeklyQuest(
+            [FromBody] CreateWeeklyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<CreateWeeklyQuestCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var createdQuest = await sender.Send(command, cancellationToken);
+
+            var routeValues = new
+            {
+                questType = createdQuest.QuestType.ToLowerInvariant(),
+                id = createdQuest.Id
+            };
+
+            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
+        }
+
+        [HttpPut("weekly/{id}")]
+        public async Task<ActionResult<WeeklyQuestDetailsDto>> UpdateWeeklyQuest(
+            int id,
+            [FromBody] UpdateWeeklyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var updateDto = mapper.Map<UpdateWeeklyQuestCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var updatedQuest = await sender.Send(updateDto, cancellationToken);
+            return Ok(updatedQuest);
+        }
+        #endregion
+
+        #region Monthly Quests
+        [HttpPost("monthly")]
+        public async Task<ActionResult<MonthlyQuestDetailsDto>> CreateMonthlyQuest(
+            [FromBody] CreateMonthlyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<CreateMonthlyQuestCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var createdQuest = await sender.Send(command, cancellationToken);
+
+            var routeValues = new
+            {
+                questType = createdQuest.QuestType.ToLowerInvariant(),
+                id = createdQuest.Id
+            };
+
+            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
+        }
+
+        [HttpPut("monthly/{id}")]
+        public async Task<ActionResult<MonthlyQuestDetailsDto>> UpdateMonthlyQuest(
+            int id,
+            [FromBody] UpdateMonthlyQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var updateDto = mapper.Map<UpdateMonthlyQuestCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var updatedQuest = await sender.Send(updateDto, cancellationToken);
+            return Ok(updatedQuest);
+        }
+        #endregion
+
+        #region Seasonal Quests
+        [HttpPost("seasonal")]
+        public async Task<ActionResult<SeasonalQuestDetailsDto>> CreateSeasonalQuest(
+            [FromBody] CreateSeasonalQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<CreateSeasonalQuestCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var createdQuest = await sender.Send(command, cancellationToken);
+
+            var routeValues = new
+            {
+                questType = createdQuest.QuestType.ToLowerInvariant(),
+                id = createdQuest.Id
+            };
+
+            return CreatedAtAction(nameof(GetUserQuestById), routeValues, createdQuest);
+        }
+
+        [HttpPut("seasonal/{id}")]
+        public async Task<ActionResult<SeasonalQuestDetailsDto>> UpdateSeasonalQuest(
+            int id,
+            [FromBody] UpdateSeasonalQuestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var updateDto = mapper.Map<UpdateSeasonalQuestCommand>(request) with
+            {
+                QuestId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+
+            var updatedQuest = await sender.Send(updateDto, cancellationToken);
+            return Ok(updatedQuest);
+        }
+        #endregion
     }
 }

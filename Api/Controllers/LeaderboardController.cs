@@ -1,5 +1,4 @@
-﻿using Application.Dtos.Leaderboard;
-using Application.Leaderboard.GetTopXp;
+﻿using Application.Leaderboard.GetTopXp;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +10,12 @@ namespace Api.Controllers
     [Authorize]
     public class LeaderboardController(ISender sender) : ControllerBase
     {
-        private readonly ISender _sender = sender;
-
         [HttpGet("xp")]
-        public async Task<ActionResult<List<LeaderboardItemDto>>> GetXpLeaderboardAsync(
+        public async Task<ActionResult<GetTopXpResponse>> GetXpLeaderboardAsync(
             CancellationToken cancellationToken = default)
         {
             var query = new GetTopXpQuery();
-            var leaderboardItems = await _sender.Send(query, cancellationToken);
+            var leaderboardItems = await sender.Send(query, cancellationToken);
 
             return Ok(leaderboardItems);
         }

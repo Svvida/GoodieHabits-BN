@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using Application.Dtos.Auth;
 using Domain;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -14,9 +13,9 @@ namespace Application.Auth.RefreshAccessToken
         IUnitOfWork unitOfWork,
         ITokenValidator tokenValidator,
         ITokenGenerator tokenGenerator,
-        ILogger<RefreshAccessTokenCommandHandler> logger) : IRequestHandler<RefreshAccessTokenCommand, RefreshResponseDto>
+        ILogger<RefreshAccessTokenCommandHandler> logger) : IRequestHandler<RefreshAccessTokenCommand, RefreshAccessTokenResponse>
     {
-        public async Task<RefreshResponseDto> Handle(RefreshAccessTokenCommand request, CancellationToken cancellationToken)
+        public async Task<RefreshAccessTokenResponse> Handle(RefreshAccessTokenCommand request, CancellationToken cancellationToken)
         {
             ClaimsPrincipal principal = tokenValidator.ValidateRefreshToken(request.RefreshToken);
 
@@ -48,10 +47,7 @@ namespace Application.Auth.RefreshAccessToken
                 }
             }
 
-            return new RefreshResponseDto
-            {
-                AccessToken = tokenGenerator.GenerateAccessToken(account),
-            };
+            return new RefreshAccessTokenResponse(AccessToken: tokenGenerator.GenerateAccessToken(account));
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using Application.Configurations.Leveling;
-using Application.Interfaces;
+﻿using Application.Common.Interfaces;
+using Application.Configurations.Leveling;
 using Application.Models;
 using Domain.Exceptions;
 using Microsoft.Extensions.Options;
