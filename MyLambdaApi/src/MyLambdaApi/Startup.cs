@@ -1,10 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Application.Accounts.ChangePassword;
+using Application.Common.Interfaces;
+using Application.Common.Interfaces.Quests;
 using Application.Configurations;
 using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
-using Application.Interfaces;
-using Application.Interfaces.Quests;
+using Application.Quests.CreateQuest.Validators;
 using Application.Services;
 using Application.Services.Quests;
 using Application.Validators.Accounts;
@@ -138,7 +140,7 @@ public class Startup
         services.AddScoped<IGoalExpirationService, GoalExpirationService>();
 
         // Register Validators
-        services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
+        services.AddValidatorsFromAssemblyContaining<CreateQuestCommandValidator<BaseCreateQuestDto>>();
         services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
         services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
         services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();

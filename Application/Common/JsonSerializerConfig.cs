@@ -5,7 +5,7 @@ namespace Application.Common
 {
     public static class JsonSerializerConfig
     {
-        public static readonly JsonSerializerOptions CaseInsensitveOptions = new JsonSerializerOptions
+        public static readonly JsonSerializerOptions CaseInsensitveOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             Converters = { new JsonStringEnumConverter() }

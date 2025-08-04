@@ -1,9 +1,9 @@
-﻿using Api.Filters;
-using Api.Helpers;
-using Application.QuestLabels.Commands.CreateQuestLabel;
-using Application.QuestLabels.Commands.DeleteQuestLabel;
-using Application.QuestLabels.Commands.PatchQuestLabel;
-using Application.QuestLabels.Queries.GetUserLabels;
+﻿using Api.Helpers;
+using Application.QuestLabels.CreateQuestLabel;
+using Application.QuestLabels.DeleteQuestLabel;
+using Application.QuestLabels.GetUserLabels;
+using Application.QuestLabels.UpdateQuestLabel;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,51 +13,47 @@ namespace Api.Controllers
     [ApiController]
     [Authorize]
     [Route("api/quest-labels")]
-    public class QuestLabelController(ISender sender) : ControllerBase
+    public class QuestLabelController(ISender sender, IMapper mapper) : ControllerBase
     {
-        private readonly ISender _sender = sender;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetQuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetQuestLabelsResponse>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
-
-            var query = new GetUserLabelsQuery(accountId);
-
-            return Ok(await _sender.Send(query, cancellationToken));
+            var query = new GetUserLabelsQuery(JwtHelpers.GetCurrentUserId(User));
+            return Ok(await sender.Send(query, cancellationToken));
         }
 
         [HttpPost]
-        public async Task<ActionResult<GetQuestLabelDto>> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<CreateQuestLabelResponse>> CreateLabelAsync([FromBody] CreateQuestLabelRequest request, CancellationToken cancellationToken = default)
         {
-            createDto.AccountId = JwtHelpers.GetCurrentUserId(User);
+            var command = mapper.Map<CreateQuestLabelCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
 
-            var command = new CreateQuestLabelCommand(createDto);
-
-            var questLabel = await _sender.Send(command, cancellationToken);
+            var questLabel = await sender.Send(command, cancellationToken);
 
             return Ok(questLabel);
         }
 
-        [HttpPatch("{id}")]
-        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<ActionResult<GetQuestLabelDto>> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<UpdateQuestLabelResponse>> UpdateQuestLabelAsync(int id, [FromBody] UpdateQuestLabelRequest request, CancellationToken cancellationToken = default)
         {
-            patchDto.Id = id;
-            patchDto.AccountId = JwtHelpers.GetCurrentUserId(User);
-
-            var command = new PatchQuestLabelCommand(patchDto);
-            var label = await _sender.Send(command, cancellationToken);
+            var command = mapper.Map<UpdateQuestLabelCommand>(request) with
+            {
+                LabelId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+            var label = await sender.Send(command, cancellationToken);
             return Ok(label);
         }
 
         [HttpDelete("{id}")]
-        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<IActionResult> DeleteLabelAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> DeleteQuestLabelAsync(int id, CancellationToken cancellationToken = default)
         {
-            var command = new DeleteQuestLabelCommand(id);
-            await _sender.Send(command, cancellationToken);
-            return Ok();
+            var command = new DeleteQuestLabelCommand(id, JwtHelpers.GetCurrentUserId(User));
+            await sender.Send(command, cancellationToken);
+            return NoContent();
         }
     }
 }

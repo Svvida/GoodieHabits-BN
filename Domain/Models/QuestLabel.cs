@@ -38,16 +38,18 @@ namespace Domain.Models
             return new QuestLabel(accountId, value, backgroundColor);
         }
 
-        public void UpdateValue(string? value)
+        public void UpdateValue(string value)
         {
-            if (!string.IsNullOrWhiteSpace(value))
-                Value = value;
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidArgumentException("Value cannot be null or whitespace.");
+            Value = value;
         }
 
         public void UpdateBackgroundColor(string? backgroundColor)
         {
-            if (!string.IsNullOrWhiteSpace(backgroundColor))
-                BackgroundColor = backgroundColor;
+            if (string.IsNullOrWhiteSpace(backgroundColor) || backgroundColor.Length != 7)
+                throw new InvalidArgumentException("BackgroundColor must be a valid hex color code.");
+            BackgroundColor = backgroundColor;
         }
     }
 }

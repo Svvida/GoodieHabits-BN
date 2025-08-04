@@ -1,7 +1,8 @@
 ﻿using Application.Commands;
+using Application.Common.Interfaces.Quests;
 using Application.Dtos.Quests;
 using Application.Dtos.Quests.SeasonalQuest;
-using Application.Interfaces.Quests;
+using Application.Quests.Dtos;
 using Domain;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -29,7 +30,7 @@ namespace MyLambdaApi.Controllers
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<ActionResult<GetSeasonalQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<SeasonalQuestDetailsDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _questService.GetUserQuestByIdAsync(id, QuestType, cancellationToken);
 
@@ -47,7 +48,7 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetSeasonalQuestDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<SeasonalQuestDetailsDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))

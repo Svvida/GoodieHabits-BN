@@ -11,9 +11,9 @@ namespace Application.Auth.Register
         IUnitOfWork unitOfWork,
         IPasswordHasher<Account> passwordHasher,
         ITokenGenerator tokenGenerator,
-        INicknameGenerator nicknameGenerator) : IRequestHandler<RegisterCommand, RegisterResponseDto>
+        INicknameGenerator nicknameGenerator) : IRequestHandler<RegisterCommand, RegisterResponse>
     {
-        public async Task<RegisterResponseDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             var hashedPassword = passwordHasher.HashPassword(null!, request.Password);
 
@@ -24,7 +24,7 @@ namespace Application.Auth.Register
             await unitOfWork.Accounts.AddAsync(account, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return new RegisterResponseDto(
+            return new RegisterResponse(
                 AccessToken: tokenGenerator.GenerateAccessToken(account),
                 RefreshToken: tokenGenerator.GenerateRefreshToken(account));
         }

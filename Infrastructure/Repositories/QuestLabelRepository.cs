@@ -49,5 +49,12 @@ namespace Infrastructure.Repositories
                 .CountAsync(ql => labelIds.Contains(ql.Id) && ql.AccountId == accountId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<bool> IsLabelValueUniqueForUser(string value, int accountId, CancellationToken cancellationToken = default)
+        {
+            return !await _context.QuestLabels
+                .AnyAsync(ql => ql.Value == value && ql.AccountId == accountId, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

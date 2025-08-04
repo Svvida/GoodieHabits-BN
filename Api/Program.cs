@@ -5,18 +5,18 @@ using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
+using Application.Accounts.ChangePassword;
+using Application.Auth.Register;
 using Application.Common.Behaviors;
-using Application.Common.Swagger;
+using Application.Common.Interfaces;
+using Application.Common.Interfaces.Quests;
 using Application.Configurations.Leveling;
-using Application.Helpers;
-using Application.Interfaces;
-using Application.Interfaces.Quests;
-using Application.MappingActions;
-using Application.MappingProfiles;
 using Application.Services;
 using Application.Services.Quests;
+using Application.Statistics.GetUserExtendedStats;
+using Application.Statistics.GetUserProfileStats;
+using Application.Statistics.Mappings;
 using Application.UserProfiles.Nickname;
-using Application.Validators.Accounts;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
@@ -166,16 +166,12 @@ namespace Api
                 });
 
                 options.EnableAnnotations();
-
-                options.OperationFilter<PolymorphicRequestBodyFilter>();
-                options.OperationFilter<PolymorphicResponseFilter>();
             });
 
             // Register Repositories
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IQuestService, QuestService>();
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
             builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
@@ -189,13 +185,13 @@ namespace Api
             builder.Services.AddScoped<IQuestMappingService, QuestMappingService>();
 
             // Register Validators
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
             //builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddFluentValidationClientsideAdapters();
 
             // Register Resolvers
-            builder.Services.AddTransient<ProfileGoalsResolver>();
-            builder.Services.AddTransient<ExtendedGoalsResolver>();
+            builder.Services.AddTransient<GetUserProfileGoalsResolver>();
+            builder.Services.AddTransient<GetUserExtendedGoalsResolver>();
 
             // Register MappingActions
             builder.Services.AddTransient<SetUserLevelAction>();
@@ -204,14 +200,14 @@ namespace Api
             builder.Services.AddAutoMapper(cfg =>
             {
                 cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
-                cfg.AddMaps(typeof(AccountProfile).Assembly);
+                cfg.AddMaps(typeof(ChangePasswordMappingProfile).Assembly);
             });
 
             // Register MediatR
             builder.Services.AddMediatR(cfg =>
             {
                 cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
-                cfg.RegisterServicesFromAssemblyContaining<AccountProfile>();
+                cfg.RegisterServicesFromAssemblyContaining<ChangePasswordMappingProfile>();
             });
 
             // Register Pipeline Behaviour

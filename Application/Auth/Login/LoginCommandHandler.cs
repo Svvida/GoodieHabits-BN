@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Auth.Login
 {
-    public class LoginCommandHandler(IUnitOfWork unitOfWork, PasswordHasher<Account> passwordHasher, ITokenGenerator tokenGenerator) : IRequestHandler<LoginCommand, LoginResponseDto>
+    public class LoginCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher, ITokenGenerator tokenGenerator) : IRequestHandler<LoginCommand, LoginResponse>
     {
-        public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             Account? account;
             if (Checkers.IsEmail(request.Login))
@@ -27,11 +27,9 @@ namespace Application.Auth.Login
                 throw new UnauthorizedException("Invalid credentials provided.");
             }
 
-            return new LoginResponseDto
-            {
-                AccessToken = tokenGenerator.GenerateAccessToken(account),
-                RefreshToken = tokenGenerator.GenerateRefreshToken(account),
-            };
+            return new LoginResponse(
+                AccessToken: tokenGenerator.GenerateAccessToken(account),
+                RefreshToken: tokenGenerator.GenerateRefreshToken(account));
         }
     }
 }
