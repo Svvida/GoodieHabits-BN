@@ -177,7 +177,7 @@ namespace Domain.Models
                 }
             }
 
-            int goalsCompleted = 0;
+            bool isGoalCompleted = false;
             int xpGained = 0;
             // We don't have to check if UserGoal is expired/achieved here, because we fetch only active goals in the repository
             if (UserGoal?.Count > 0)
@@ -186,14 +186,15 @@ namespace Domain.Models
                 {
                     goal.MarkAsAchieved(completionTime);
                     xpGained += goal.XpBonus;
-                    goalsCompleted++;
+                    // We are just changing flag since its impossible to complete multiple goals at once but UserGoals is collection
+                    isGoalCompleted = true;
                 }
             }
 
             if (shouldAssignRewards)
                 xpGained += 10;
 
-            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, goalsCompleted, isFirstTimeCompleted, shouldAssignRewards));
+            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards));
         }
 
         public void Uncomplete()

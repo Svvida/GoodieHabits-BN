@@ -1,9 +1,9 @@
 ﻿using Application.Common.Interfaces.Quests;
 using Application.Quests.Dtos;
-using AutoMapper;
 using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Models;
+using MapsterMapper;
 
 namespace Application.Services.Quests
 {

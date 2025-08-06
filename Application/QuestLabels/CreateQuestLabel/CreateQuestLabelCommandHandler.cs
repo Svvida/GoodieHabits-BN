@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Domain.Models;
+using MapsterMapper;
 using MediatR;
 
 namespace Application.QuestLabels.CreateQuestLabel

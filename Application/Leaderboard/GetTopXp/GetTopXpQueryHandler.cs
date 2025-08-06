@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
+using MapsterMapper;
 using MediatR;
 
 namespace Application.Leaderboard.GetTopXp

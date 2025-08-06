@@ -4,7 +4,7 @@ using Application.Accounts.DeleteAccount;
 using Application.Accounts.GetWithProfile;
 using Application.Accounts.UpdateAccount;
 using Application.Accounts.WipeoutData;
-using AutoMapper;
+using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

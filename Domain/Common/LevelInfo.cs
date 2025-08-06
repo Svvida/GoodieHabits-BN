@@ -1,4 +1,4 @@
-﻿namespace Application.Models
+﻿namespace Domain.Common
 {
     public record LevelInfo
     {

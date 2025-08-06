@@ -1,9 +1,10 @@
 ﻿using Api.Helpers;
 using Application.QuestLabels.CreateQuestLabel;
 using Application.QuestLabels.DeleteQuestLabel;
+using Application.QuestLabels.Dtos;
 using Application.QuestLabels.GetUserLabels;
 using Application.QuestLabels.UpdateQuestLabel;
-using AutoMapper;
+using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace Api.Controllers
     {
 
         [HttpGet]
-        public async Task<ActionResult<GetQuestLabelsResponse>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
             var query = new GetUserLabelsQuery(JwtHelpers.GetCurrentUserId(User));
             return Ok(await sender.Send(query, cancellationToken));

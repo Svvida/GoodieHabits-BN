@@ -5,25 +5,22 @@ using Api.Converters;
 using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
-using Application.Accounts.ChangePassword;
 using Application.Auth.Register;
 using Application.Common.Behaviors;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.Quests;
-using Application.Configurations.Leveling;
 using Application.Services;
 using Application.Services.Quests;
-using Application.Statistics.GetUserExtendedStats;
-using Application.Statistics.GetUserProfileStats;
-using Application.Statistics.Mappings;
 using Application.UserProfiles.Nickname;
+using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
+using Mapster;
+using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -88,6 +85,7 @@ namespace Api
 
         private static void ConfigureServices(WebApplicationBuilder builder)
         {
+            var applicationAssembly = typeof(Application.AssemblyReference).Assembly;
             //builder.Services.AddCors(options =>
             //{
             //    options.AddPolicy("SwaggerCors",
@@ -186,28 +184,21 @@ namespace Api
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
-            //builder.Services.AddFluentValidationAutoValidation();
-            builder.Services.AddFluentValidationClientsideAdapters();
 
-            // Register Resolvers
-            builder.Services.AddTransient<GetUserProfileGoalsResolver>();
-            builder.Services.AddTransient<GetUserExtendedGoalsResolver>();
+            // Register Mapster
+            var typeAdapterConfig = new TypeAdapterConfig();
 
-            // Register MappingActions
-            builder.Services.AddTransient<SetUserLevelAction>();
+            typeAdapterConfig.Scan(applicationAssembly); // Scan the current assembly for mappings
 
-            // Register AutoMapper profiles
-            builder.Services.AddAutoMapper(cfg =>
-            {
-                cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
-                cfg.AddMaps(typeof(ChangePasswordMappingProfile).Assembly);
-            });
+            builder.Services.AddSingleton(typeAdapterConfig);
+
+            builder.Services.AddScoped<IMapper, ServiceMapper>();
 
             // Register MediatR
             builder.Services.AddMediatR(cfg =>
             {
                 cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
-                cfg.RegisterServicesFromAssemblyContaining<ChangePasswordMappingProfile>();
+                cfg.RegisterServicesFromAssembly(applicationAssembly);
             });
 
             // Register Pipeline Behaviour

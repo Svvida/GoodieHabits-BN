@@ -1,4 +1,4 @@
-﻿using Application.Models;
+﻿using Domain.Common;
 using Domain.Enum;
 using Domain.Models;
 using NodaTime;

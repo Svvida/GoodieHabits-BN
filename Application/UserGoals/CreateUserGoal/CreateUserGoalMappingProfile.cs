@@ -1,12 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.UserGoals.CreateUserGoal
 {
-    public class CreateUserGoalMappingProfile : Profile
+    public class CreateUserGoalMappingProfile : IRegister
     {
-        public CreateUserGoalMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<CreateUserGoalRequest, CreateUserGoalCommand>();
+            config.NewConfig<CreateUserGoalRequest, CreateUserGoalCommand>();
         }
     }
 }

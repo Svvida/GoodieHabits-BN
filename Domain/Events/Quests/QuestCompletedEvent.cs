@@ -3,7 +3,7 @@
     public record QuestCompletedEvent(
         int AccountId,
         int XpAwarded,
-        int GoalsCompletedCount,
+        bool IsGoalCompleted,
         bool IsFirstTimeCompleted,
         bool ShouldAssignRewards);
 }

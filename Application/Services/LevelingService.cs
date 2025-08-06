@@ -1,6 +1,5 @@
 ﻿using Application.Common.Interfaces;
-using Application.Configurations.Leveling;
-using Application.Models;
+using Domain.Common;
 using Domain.Exceptions;
 using Microsoft.Extensions.Options;
 
@@ -41,6 +40,26 @@ namespace Application.Services
                 NextLevelRequiredXp = nextLevelDef?.RequiredTotalXp, // Null if max level or next level not defined
                 IsMaxLevel = isMaxLevel || nextLevelDef == null
             };
+        }
+
+        public int GetLevelForXp(int totalXp)
+        {
+            LevelInfo levelInfo = CalculateLevelInfo(totalXp);
+            return levelInfo.CurrentLevel;
+        }
+
+        public bool IsMaxLevel(int totalXp)
+        {
+            LevelInfo levelInfo = CalculateLevelInfo(totalXp);
+            return levelInfo.IsMaxLevel;
+        }
+
+        public int GetRequiredXpForNextLevel(int totalXp)
+        {
+            LevelInfo levelInfo = CalculateLevelInfo(totalXp);
+            if (levelInfo.IsMaxLevel)
+                return levelInfo.CurrentLevelRequiredXp; // Return current level requirement if max level
+            return levelInfo.NextLevelRequiredXp ?? levelInfo.CurrentLevelRequiredXp; // Fallback to current level if next is null
         }
     }
 }

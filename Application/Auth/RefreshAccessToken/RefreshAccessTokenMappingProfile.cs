@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Auth.RefreshAccessToken
 {
-    public class RefreshAccessTokenMappingProfile : Profile
+    public class RefreshAccessTokenMappingProfile : IRegister
     {
-        public RefreshAccessTokenMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<RefreshAccessTokenRequest, RefreshAccessTokenCommand>()
-                .ForMember(src => src.TimeZoneId, opt => opt.Ignore());
+            config.NewConfig<RefreshAccessTokenRequest, RefreshAccessTokenCommand>();
         }
     }
 }

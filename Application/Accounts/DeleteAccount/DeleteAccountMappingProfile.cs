@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Accounts.DeleteAccount
 {
-    public class DeleteAccountMappingProfile : Profile
+    public class DeleteAccountMappingProfile : IRegister
     {
-        public DeleteAccountMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<DeleteAccountRequest, DeleteAccountCommand>()
-                .ForMember(dest => dest.AccountId, opt => opt.Ignore());
+            config.NewConfig<DeleteAccountRequest, DeleteAccountCommand>();
         }
     }
 }

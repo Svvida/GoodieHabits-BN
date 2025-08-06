@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Accounts.WipeoutData
 {
-    public class WipeoutDataMappingProfile : Profile
+    public class WipeoutDataMappingProfile : IRegister
     {
-        public WipeoutDataMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<WipeoutDataRequest, WipeoutDataCommand>()
-                .ForMember(dest => dest.AccountId, opt => opt.Ignore());
+            config.NewConfig<WipeoutDataRequest, WipeoutDataCommand>();
         }
     }
 }

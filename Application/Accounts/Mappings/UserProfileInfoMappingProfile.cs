@@ -1,18 +1,18 @@
 ﻿using Application.Accounts.Dtos;
-using AutoMapper;
 using Domain.Models;
+using Mapster;
 
 namespace Application.Accounts.Mappings
 {
-    public class UserProfileInfoMappingProfile : Profile
+    public class UserProfileInfoMappingProfile : IRegister
     {
-        public UserProfileInfoMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UserProfile, UserProfileInfoDto>()
-                .ForCtorParam(nameof(UserProfileInfoDto.Badges), opt => opt.MapFrom(src => src.UserProfile_Badges));
+            config.NewConfig<UserProfile, UserProfileInfoDto>()
+                .Map(dest => dest.Badges, src => src.UserProfile_Badges.Select(b => b.Adapt<BadgeDto>()));
 
-            CreateMap<UserProfile_Badge, BadgeDto>()
-                .ForCtorParam(nameof(BadgeDto.Text), opt => opt.MapFrom(src => src.Badge.Text));
+            config.NewConfig<UserProfile_Badge, BadgeDto>()
+                .Map(dest => dest.Text, src => src.Badge.Text);
         }
     }
 }

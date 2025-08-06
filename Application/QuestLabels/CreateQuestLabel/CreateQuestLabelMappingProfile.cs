@@ -1,16 +1,15 @@
-﻿using AutoMapper;
-using Domain.Models;
+﻿using Domain.Models;
+using Mapster;
 
 namespace Application.QuestLabels.CreateQuestLabel
 {
-    public class CreateQuestLabelMappingProfile : Profile
+    public class CreateQuestLabelMappingProfile : IRegister
     {
-        public CreateQuestLabelMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<CreateQuestLabelRequest, CreateQuestLabelCommand>()
-                .ForMember(dest => dest.AccountId, opt => opt.Ignore());
+            config.NewConfig<CreateQuestLabelRequest, CreateQuestLabelCommand>();
 
-            CreateMap<QuestLabel, CreateQuestLabelResponse>();
+            config.NewConfig<QuestLabel, CreateQuestLabelResponse>();
         }
     }
 }

@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Accounts.UpdateAccount
 {
-    public class UpdateAccountMappingProfile : Profile
+    public class UpdateAccountMappingProfile : IRegister
     {
-        public UpdateAccountMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UpdateAccountRequest, UpdateAccountCommand>()
-                .ForMember(dest => dest.AccountId, opt => opt.Ignore());
+            config.NewConfig<UpdateAccountRequest, UpdateAccountCommand>();
         }
     }
 }

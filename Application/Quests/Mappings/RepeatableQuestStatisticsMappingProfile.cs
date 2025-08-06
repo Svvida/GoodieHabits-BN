@@ -1,14 +1,14 @@
 ﻿using Application.Quests.Dtos;
-using AutoMapper;
 using Domain.Models;
+using Mapster;
 
 namespace Application.Quests.Mappings
 {
-    public class RepeatableQuestStatisticsMappingProfile : Profile
+    public class RepeatableQuestStatisticsMappingProfile : IRegister
     {
-        public RepeatableQuestStatisticsMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<QuestStatistics, RepeatableQuestStatisticsDto>();
+            config.NewConfig<QuestStatistics, RepeatableQuestStatisticsDto>();
         }
     }
 }

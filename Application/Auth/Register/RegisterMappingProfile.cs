@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Auth.Register
 {
-    public class RegisterMappingProfile : Profile
+    public class RegisterMappingProfile : IRegister
     {
-        public RegisterMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<RegisterRequest, RegisterCommand>()
-                .ForMember(dest => dest.TimeZoneId, opt => opt.Ignore());
+            config.NewConfig<RegisterRequest, RegisterCommand>();
         }
     }
 }

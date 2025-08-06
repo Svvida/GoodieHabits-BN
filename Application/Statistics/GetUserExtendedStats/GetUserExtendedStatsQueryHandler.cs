@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Interfaces;
+using MapsterMapper;
 using MediatR;
 
 namespace Application.Statistics.GetUserExtendedStats

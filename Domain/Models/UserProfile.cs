@@ -50,7 +50,7 @@ namespace Domain.Models
             UserProfile_Badges.Clear();
         }
 
-        public void ApplyQuestCompletionRewards(int xpAwarded, int goalsCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards)
+        public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards)
         {
             if (shouldAssignRewards)
             {
@@ -59,8 +59,8 @@ namespace Domain.Models
             }
             if (isFirstTimeCompleted)
                 EverCompletedExistingQuests++;
-            if (goalsCompleted > 0)
-                CompletedGoals += goalsCompleted;
+            if (isGoalCompleted)
+                CompletedGoals++;
             CurrentlyCompletedExistingQuests++;
         }
 
