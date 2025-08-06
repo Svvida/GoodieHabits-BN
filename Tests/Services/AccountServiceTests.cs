@@ -1,12 +1,8 @@
-﻿using Application.Accounts.Dtos;
-using Application.Dtos.Accounts;
-using Application.Dtos.Auth;
-using Application.Services;
-using AutoMapper;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using FluentAssertions;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;

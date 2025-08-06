@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Accounts.ChangePassword
 {
-    public class ChangePasswordMappingProfile : Profile
+    public class ChangePasswordMappingProfile : IRegister
     {
-        public ChangePasswordMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<ChangePasswordRequest, ChangePasswordCommand>()
-                .ForMember(dest => dest.AccountId, opt => opt.Ignore());
+            config.NewConfig<ChangePasswordRequest, ChangePasswordCommand>();
         }
     }
 }

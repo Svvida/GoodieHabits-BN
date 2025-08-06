@@ -1,4 +1,4 @@
-﻿namespace Application.Configurations.Leveling
+﻿namespace Domain.Common
 {
     public class LevelingOptions
     {

@@ -1,5 +1,5 @@
 ﻿using Application.Common.Interfaces.Quests;
-using Application.Models;
+using Domain.Common;
 using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.Extensions.Logging;

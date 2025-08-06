@@ -1,15 +1,15 @@
 ﻿using Application.Leaderboard.Dtos;
-using AutoMapper;
 using Domain.Models;
+using Mapster;
 
 namespace Application.Leaderboard.Mappings
 {
-    public class LeaderboardMappingProfile : Profile
+    public class LeaderboardMappingProfile : IRegister
     {
-        public LeaderboardMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UserProfile, LeaderboardItemDto>()
-                .ForCtorParam(nameof(LeaderboardItemDto.Xp), opt => opt.MapFrom(src => src.TotalXp));
+            config.NewConfig<UserProfile, LeaderboardItemDto>()
+                .Map(dest => dest.Xp, src => src.TotalXp);
         }
     }
 }

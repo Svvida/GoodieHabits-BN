@@ -1,12 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Quests.UpdateQuestCompletion
 {
-    public class UpdateQuestCompletionMappingProfile : Profile
+    public class UpdateQuestCompletionMappingProfile : IRegister
     {
-        public UpdateQuestCompletionMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UpdateQuestCompletionRequest, UpdateQuestCompletionCommand>();
+            config.NewConfig<UpdateQuestCompletionRequest, UpdateQuestCompletionCommand>();
         }
     }
 }

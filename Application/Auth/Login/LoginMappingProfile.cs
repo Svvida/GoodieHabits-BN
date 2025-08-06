@@ -1,12 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Auth.Login
 {
-    public class LoginMappingProfile : Profile
+    public class LoginMappingProfile : IRegister
     {
-        public LoginMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<LoginRequest, LoginCommand>();
+            config.NewConfig<LoginRequest, LoginCommand>();
         }
     }
 }

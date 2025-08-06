@@ -1,16 +1,16 @@
 ﻿using Application.Accounts.Dtos;
-using AutoMapper;
 using Domain.Models;
+using Mapster;
 
 namespace Application.Accounts.GetWithProfile
 {
-    public class GetAccountWithProfileMappingProfile : Profile
+    public class GetAccountWithProfileMappingProfile : IRegister
     {
-        public GetAccountWithProfileMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<Account, GetAccountWithProfileResponse>()
-                .ForCtorParam(nameof(GetAccountWithProfileResponse.JoinDate), opt => opt.MapFrom(src => src.CreatedAt))
-                .ForCtorParam(nameof(GetAccountWithProfileResponse.Preferences), opt => opt.MapFrom(src => new List<AccountPreferencesDto>()));
+            config.NewConfig<Account, GetAccountWithProfileResponse>()
+                .Map(dest => dest.JoinDate, src => src.CreatedAt)
+                .Map(dest => dest.Preferences, src => new List<AccountPreferencesDto>());
         }
     }
 }

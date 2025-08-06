@@ -1,20 +1,25 @@
-﻿using AutoMapper;
+﻿using Mapster;
 
 namespace Application.Quests.UpdateQuest
 {
-    public class UpdateQuestMappingProfile : Profile
+    public class UpdateQuestMappingProfile : IRegister
     {
-        public UpdateQuestMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UpdateOneTimeQuestRequest, UpdateOneTimeQuestCommand>();
+            config.NewConfig<UpdateOneTimeQuestRequest, UpdateOneTimeQuestCommand>()
+                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.OneTime);
 
-            CreateMap<UpdateDailyQuestRequest, UpdateDailyQuestCommand>();
+            config.NewConfig<UpdateDailyQuestRequest, UpdateDailyQuestCommand>()
+                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Daily);
 
-            CreateMap<UpdateWeeklyQuestRequest, UpdateWeeklyQuestCommand>();
+            config.NewConfig<UpdateWeeklyQuestRequest, UpdateWeeklyQuestCommand>()
+                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Weekly);
 
-            CreateMap<UpdateMonthlyQuestRequest, UpdateMonthlyQuestCommand>();
+            config.NewConfig<UpdateMonthlyQuestRequest, UpdateMonthlyQuestCommand>()
+                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Monthly);
 
-            CreateMap<UpdateSeasonalQuestRequest, UpdateSeasonalQuestCommand>();
+            config.NewConfig<UpdateSeasonalQuestRequest, UpdateSeasonalQuestCommand>()
+                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Seasonal);
         }
     }
 }

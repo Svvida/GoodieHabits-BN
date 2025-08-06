@@ -1,7 +1,7 @@
 ﻿using Application.QuestLabels.UpdateQuestLabel;
-using AutoMapper;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using MapsterMapper;
 using MediatR;
 
 namespace Application.QuestLabels.PatchQuestLabel

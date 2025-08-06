@@ -1,14 +1,14 @@
-﻿using AutoMapper;
-using Domain.Models;
+﻿using Domain.Models;
+using Mapster;
 
 namespace Application.Leaderboard.GetTopXp
 {
-    public class GetTopXpQueryMappingProfile : Profile
+    public class GetTopXpQueryMappingProfile : IRegister
     {
-        public GetTopXpQueryMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<IEnumerable<UserProfile>, GetTopXpResponse>()
-                .ForCtorParam(nameof(GetTopXpResponse.TopXp), opt => opt.MapFrom(src => src));
+            config.NewConfig<IEnumerable<UserProfile>, GetTopXpResponse>()
+                .Map(dest => dest.TopXp, src => src);
         }
     }
 }

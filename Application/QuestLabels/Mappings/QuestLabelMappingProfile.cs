@@ -1,19 +1,19 @@
 ﻿using Application.QuestLabels.Dtos;
-using AutoMapper;
 using Domain.Models;
+using Mapster;
 
 namespace Application.QuestLabels.Mappings
 {
-    public class QuestLabelMappingProfile : Profile
+    public class QuestLabelMappingProfile : IRegister
     {
-        public QuestLabelMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<QuestLabel, QuestLabelDto>();
+            config.NewConfig<QuestLabel, QuestLabelDto>();
 
-            CreateMap<Quest_QuestLabel, QuestLabelDto>()
-                .ForCtorParam(nameof(QuestLabelDto.Id), opt => opt.MapFrom(src => src.QuestLabel.Id))
-                .ForCtorParam(nameof(QuestLabelDto.Value), opt => opt.MapFrom(src => src.QuestLabel.Value))
-                .ForCtorParam(nameof(QuestLabelDto.BackgroundColor), opt => opt.MapFrom(src => src.QuestLabel.BackgroundColor));
+            config.NewConfig<Quest_QuestLabel, QuestLabelDto>()
+                .Map(dest => dest.Id, src => src.QuestLabel.Id)
+                .Map(dest => dest.Value, src => src.QuestLabel.Value)
+                .Map(dest => dest.BackgroundColor, src => src.QuestLabel.BackgroundColor);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Application.Quests.UpdateQuestCompletion
                 logger.LogDebug("Quest {QuestId} completion status is unchanged.", quest.Id);
                 return Unit.Value;
             }
-            logger.LogDebug("I'm in handler.");
+
             if (!command.IsCompleted && quest.UserGoal?.Count > 0)
                 throw new ConflictException("Cannot uncomplete a quest that is an active goal");
 
@@ -84,9 +84,8 @@ namespace Application.Quests.UpdateQuestCompletion
             }
 
             // Quest can be assigned to only one active goal at a time
-            var goal = await unitOfWork.UserGoals.GetActiveGoalByQuestIdAsync(questId, cancellationToken).ConfigureAwait(false);
-            if (goal is not null)
-                quest.UserGoal.Add(goal);
+            // Since quest is tracked we can just execute this to assign it to the goal if it exists
+            await unitOfWork.UserGoals.GetActiveGoalByQuestIdAsync(questId, cancellationToken).ConfigureAwait(false);
 
             return quest;
         }

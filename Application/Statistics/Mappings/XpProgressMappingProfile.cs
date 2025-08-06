@@ -1,15 +1,33 @@
-﻿using Application.Statistics.Dtos;
-using AutoMapper;
+﻿using Application.Common.Interfaces;
+using Application.Statistics.Dtos;
 using Domain.Models;
+using Mapster;
 
 namespace Application.Statistics.Mappings
 {
-    public class XpProgressMappingProfile : Profile
+    public class XpProgressMappingProfile : IRegister
     {
-        public XpProgressMappingProfile()
+        public void Register(TypeAdapterConfig config)
         {
-            CreateMap<UserProfile, XpProgressDto>()
-                .AfterMap<SetUserLevelAction>();
+            config.NewConfig<UserProfile, XpProgressDto>()
+                .MapToConstructor(true)
+                .ConstructUsing(src => MapToXpProgressDto(src));
+        }
+
+        private static XpProgressDto MapToXpProgressDto(UserProfile src)
+        {
+            var levelingService = MapContext.Current.GetService<ILevelingService>();
+            var levelInfo = levelingService.CalculateLevelInfo(src.TotalXp);
+
+            return new XpProgressDto
+            {
+                Level = levelInfo.CurrentLevel,
+                CurrentXp = src.TotalXp,
+                IsMaxLevel = levelInfo.IsMaxLevel,
+                NextLevelXpRequirement = levelInfo.IsMaxLevel
+                    ? levelInfo.CurrentLevelRequiredXp
+                    : levelInfo.NextLevelRequiredXp ?? levelInfo.CurrentLevelRequiredXp // fallback to current level if next level is null
+            };
         }
     }
 }
