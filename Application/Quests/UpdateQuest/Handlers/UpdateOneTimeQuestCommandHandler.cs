@@ -8,7 +8,7 @@ namespace Application.Quests.UpdateQuest.Handlers
         IUnitOfWork unitOfWork,
         IQuestResetService questResetService,
         IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMappingService questMappingService)
+        IQuestMapper questMappingService)
         : UpdateQuestCommandHandler<UpdateOneTimeQuestCommand, OneTimeQuestDetailsDto>(
             unitOfWork,
             questResetService,

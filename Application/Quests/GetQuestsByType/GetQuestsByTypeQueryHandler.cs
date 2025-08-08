@@ -5,11 +5,11 @@ using MediatR;
 
 namespace Application.Quests.GetQuestsByType
 {
-    public class GetQuestsByTypeQueryHandler(IUnitOfWork unitOfWork, IQuestMappingService questMapper)
+    public class GetQuestsByTypeQueryHandler(IUnitOfWork unitOfWork, IQuestMapper questMapper)
         : IRequestHandler<GetQuestsByTypeQuery, IEnumerable<QuestDetailsDto>>
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IQuestMappingService _questMapper = questMapper;
+        private readonly IQuestMapper _questMapper = questMapper;
 
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetQuestsByTypeQuery request, CancellationToken cancellationToken = default)
         {

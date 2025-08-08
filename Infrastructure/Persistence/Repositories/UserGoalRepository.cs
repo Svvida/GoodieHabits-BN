@@ -1,11 +1,10 @@
 ﻿using Domain.Enum;
 using Domain.Interfaces;
 using Domain.Models;
-using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Persistence.Repositories
 {
     public class UserGoalRepository : BaseRepository<UserGoal>, IUserGoalRepository
     {

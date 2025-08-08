@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.UserGoals.ExpireGoals;
+using MediatR;
 
 namespace Api.BackgroundTasks
 {
@@ -18,8 +19,8 @@ namespace Api.BackgroundTasks
 
             try
             {
-                var expirationService = scope.ServiceProvider.GetRequiredService<IGoalExpirationService>();
-                int affectedRows = await expirationService.ExpireGoalsAndSaveAsync(cancellationToken);
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                int affectedRows = await sender.Send(new ExpireGoalsCommand(), cancellationToken);
 
                 if (affectedRows > 0)
                 {

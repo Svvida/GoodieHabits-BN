@@ -7,10 +7,10 @@ using NodaTime;
 namespace Application.Quests.GetQuestsEligibleForGoal
 {
     public class GetQuestsEligibleForGoalQueryHandler(IUnitOfWork unitOfWork,
-        IQuestMappingService questMapper) : IRequestHandler<GetQuestsEligibleForGoalQuery, IEnumerable<QuestDetailsDto>>
+        IQuestMapper questMapper) : IRequestHandler<GetQuestsEligibleForGoalQuery, IEnumerable<QuestDetailsDto>>
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IQuestMappingService _questMapper = questMapper;
+        private readonly IQuestMapper _questMapper = questMapper;
 
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetQuestsEligibleForGoalQuery request, CancellationToken cancellationToken = default)
         {

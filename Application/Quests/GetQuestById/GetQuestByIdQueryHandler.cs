@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Application.Quests.GetQuestById
 {
-    public class GetQuestByIdQueryHandler(IUnitOfWork unitOfWork, IQuestMappingService questMappingService)
+    public class GetQuestByIdQueryHandler(IUnitOfWork unitOfWork, IQuestMapper questMappingService)
         : IRequestHandler<GetQuestByIdQuery, QuestDetailsDto?>
     {
         public async Task<QuestDetailsDto?> Handle(GetQuestByIdQuery request, CancellationToken cancellationToken)

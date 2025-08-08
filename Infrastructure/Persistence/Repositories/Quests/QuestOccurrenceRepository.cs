@@ -1,10 +1,10 @@
 ﻿using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Quests
+namespace Infrastructure.Persistence.Repositories.Quests
 {
     public class QuestOccurrenceRepository : BaseRepository<QuestOccurrence>, IQuestOccurrenceRepository
     {

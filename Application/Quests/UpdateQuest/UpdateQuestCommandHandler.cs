@@ -13,7 +13,7 @@ namespace Application.Quests.UpdateQuest
         IUnitOfWork unitOfWork,
         IQuestResetService questResetService,
         IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMappingService questMappingService)
+        IQuestMapper questMappingService)
         : IRequestHandler<TCommand, TResponse>
         where TCommand : UpdateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto
     {

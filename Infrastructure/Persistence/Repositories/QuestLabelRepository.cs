@@ -1,10 +1,10 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Persistence.Repositories
 {
     public class QuestLabelRepository : BaseRepository<QuestLabel>, IQuestLabelRepository
     {
@@ -16,9 +16,7 @@ namespace Infrastructure.Repositories
             var query = _context.QuestLabels.Where(ql => ql.AccountId == accountId);
 
             if (asNoTracking)
-            {
                 query = query.AsNoTracking();
-            }
 
             return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -40,9 +38,7 @@ namespace Infrastructure.Repositories
         public async Task<int> CountOwnedLabelsAsync(IEnumerable<int> labelIds, int accountId, CancellationToken cancellationToken = default)
         {
             if (labelIds == null || !labelIds.Any())
-            {
                 return 0; // No labels to count
-            }
 
             return await _context.QuestLabels
                 .AsNoTracking()

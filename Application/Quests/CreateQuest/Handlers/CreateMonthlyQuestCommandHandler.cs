@@ -10,7 +10,7 @@ namespace Application.Quests.CreateQuest.Handlers
         IUnitOfWork unitOfWork,
         IPublisher publisher,
         IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMappingService questMappingService,
+        IQuestMapper questMappingService,
         IQuestResetService questResetService)
         : CreateQuestCommandHandler<CreateMonthlyQuestCommand, MonthlyQuestDetailsDto>(
             unitOfWork,

@@ -1,10 +1,10 @@
 ﻿using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Quests
+namespace Infrastructure.Persistence.Repositories.Quests
 {
     public class QuestStatisticsRepository : BaseRepository<QuestStatistics>, IQuestStatisticsRepository
     {
@@ -18,9 +18,7 @@ namespace Infrastructure.Repositories.Quests
             var query = _context.QuestStatistics.Where(q => q.QuestId == questId);
 
             if (asNoTracking)
-            {
                 query = query.AsNoTracking();
-            }
 
             return await query.FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);

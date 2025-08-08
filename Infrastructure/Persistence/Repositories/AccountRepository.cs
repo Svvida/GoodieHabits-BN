@@ -1,10 +1,9 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
-using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Infrastructure.Persistence.Repositories
 {
     public class AccountRepository : BaseRepository<Account>, IAccountRepository
     {
@@ -66,6 +65,16 @@ namespace Infrastructure.Repositories
                 return await _context.Accounts
                     .FirstOrDefaultAsync(a => a.Login == loginIdentifier, cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        public async Task<IEnumerable<Account>> GetAccountWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .Include(a => a.UserGoals.Where(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
+                .Where(ug => ug.UserGoals.Any(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

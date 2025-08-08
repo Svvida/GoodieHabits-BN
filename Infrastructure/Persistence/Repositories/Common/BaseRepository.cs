@@ -2,7 +2,7 @@
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Common
+namespace Infrastructure.Persistence.Repositories.Common
 {
     public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
     {

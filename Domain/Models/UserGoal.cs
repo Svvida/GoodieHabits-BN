@@ -45,5 +45,17 @@ namespace Domain.Models
             AchievedAt = achievedAt;
             IsAchieved = true;
         }
+
+        public bool Expire(DateTime nowUtc)
+        {
+            if (IsExpired)
+                return false;
+
+            if (nowUtc < EndsAt)
+                return false;
+
+            IsExpired = true;
+            return true;
+        }
     }
 }

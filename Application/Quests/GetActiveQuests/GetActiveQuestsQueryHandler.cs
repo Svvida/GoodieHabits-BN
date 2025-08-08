@@ -12,12 +12,12 @@ namespace Application.Quests.GetActiveQuests
 {
     public class GetActiveQuestsQueryHandler(
         IUnitOfWork unitOfWork,
-        IQuestMappingService questMappingService,
+        IQuestMapper questMappingService,
         ILogger<GetActiveQuestsQueryHandler> logger)
         : IRequestHandler<GetActiveQuestsQuery, IEnumerable<QuestDetailsDto>>
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IQuestMappingService _questMappingService = questMappingService;
+        private readonly IQuestMapper _questMappingService = questMappingService;
         private readonly ILogger<GetActiveQuestsQueryHandler> _logger = logger;
 
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetActiveQuestsQuery request, CancellationToken cancellationToken = default)

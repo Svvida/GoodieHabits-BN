@@ -62,5 +62,17 @@ namespace Domain.Models
                 throw new InvalidArgumentException("HashPassword cannot be null or whitespace.");
             HashPassword = hashPassword;
         }
+
+        public int ExpireGoals(DateTime nowUtc)
+        {
+            int expiredCount = 0;
+            foreach (var goal in UserGoals)
+            {
+                if (goal.Expire(nowUtc))
+                    expiredCount++;
+            }
+            Profile.IncrementExpiredGoals(expiredCount);
+            return expiredCount;
+        }
     }
 }

@@ -2,7 +2,7 @@
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Resetting
+namespace Infrastructure.Persistence.Repositories.Resetting
 {
     public class ResetQuestsRepository : IResetQuestsRepository
     {

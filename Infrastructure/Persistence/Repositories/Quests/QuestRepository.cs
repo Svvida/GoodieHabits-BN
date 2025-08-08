@@ -2,10 +2,10 @@
 using Domain.Interfaces.Quests;
 using Domain.Models;
 using Infrastructure.Persistence;
-using Infrastructure.Repositories.Common;
+using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.Quests
+namespace Infrastructure.Persistence.Repositories.Quests
 {
     public class QuestRepository : BaseRepository<Quest>, IQuestRepository
     {
@@ -21,33 +21,33 @@ namespace Infrastructure.Repositories.Quests
             var baseQuery = _context.Quests
                 .Where(q => q.AccountId == accountId)
                 .Where(q =>
-                    (q.QuestType == QuestTypeEnum.OneTime &&
+                    q.QuestType == QuestTypeEnum.OneTime &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        (q.StartDate.HasValue || q.EndDate.HasValue))
+                        (q.StartDate.HasValue || q.EndDate.HasValue)
 
-                    || (q.QuestType == QuestTypeEnum.Daily &&
+                    || q.QuestType == QuestTypeEnum.Daily &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart)
+                        (q.EndDate ?? DateTime.MaxValue) >= todayStart
 
-                    || (q.QuestType == QuestTypeEnum.Weekly &&
+                    || q.QuestType == QuestTypeEnum.Weekly &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         q.WeeklyQuest_Days.Any(wd =>
                             wd.Weekday == (WeekdayEnum)todayStart.DayOfWeek ||
-                            wd.Weekday == (WeekdayEnum)todayEnd.DayOfWeek))
+                            wd.Weekday == (WeekdayEnum)todayEnd.DayOfWeek)
 
-                    || (q.QuestType == QuestTypeEnum.Monthly &&
+                    || q.QuestType == QuestTypeEnum.Monthly &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        ((q.MonthlyQuest_Days!.StartDay <= todayStart.Day && q.MonthlyQuest_Days.EndDay >= todayStart.Day)
+                        (q.MonthlyQuest_Days!.StartDay <= todayStart.Day && q.MonthlyQuest_Days.EndDay >= todayStart.Day
                         ||
-                        (q.MonthlyQuest_Days.StartDay <= todayEnd.Day && q.MonthlyQuest_Days.EndDay >= todayEnd.Day)))
+                        q.MonthlyQuest_Days.StartDay <= todayEnd.Day && q.MonthlyQuest_Days.EndDay >= todayEnd.Day)
 
-                    || (q.QuestType == QuestTypeEnum.Seasonal &&
+                    || q.QuestType == QuestTypeEnum.Seasonal &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        (q.SeasonalQuest_Season!.Season == currentSeason))
+                        q.SeasonalQuest_Season!.Season == currentSeason
                 )
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
@@ -125,17 +125,11 @@ namespace Infrastructure.Repositories.Quests
                 .AsQueryable();
 
             if (questType == QuestTypeEnum.Monthly)
-            {
                 query = query.Include(q => q.MonthlyQuest_Days);
-            }
             if (questType == QuestTypeEnum.Weekly)
-            {
                 query = query.Include(q => q.WeeklyQuest_Days);
-            }
             if (questType == QuestTypeEnum.Seasonal)
-            {
                 query = query.Include(q => q.SeasonalQuest_Season);
-            }
 
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -229,7 +223,7 @@ namespace Infrastructure.Repositories.Quests
             return await _context.Quests
                 .Where(q => q.IsCompleted &&
                        (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow &&
-                       (q.NextResetAt.HasValue && q.NextResetAt <= DateTime.UtcNow))
+                       q.NextResetAt.HasValue && q.NextResetAt <= DateTime.UtcNow)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

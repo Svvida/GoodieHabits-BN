@@ -14,6 +14,7 @@ namespace Domain.Interfaces
         Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default);
         Task<Account?> GetAccountToWipeoutDataAsync(int accountId, CancellationToken cancellationToken = default);
         Task<Account?> GetByLoginIdentifier(string loginIdentifier, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Account>> GetAccountWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
         // In delete method, we need to manually delete Quest_QuestLabels
     }
 }

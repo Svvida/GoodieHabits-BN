@@ -7,7 +7,7 @@ using MapsterMapper;
 
 namespace Application.Services.Quests
 {
-    public class QuestMappingService(IMapper mapper) : IQuestMappingService
+    public class QuestMapper(IMapper mapper) : IQuestMapper
     {
         public QuestDetailsDto MapToDto(Quest quest)
         {

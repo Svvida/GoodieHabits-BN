@@ -8,6 +8,7 @@ using Application.Dtos.Quests;
 using Application.Quests.CreateQuest.Validators;
 using Application.Services;
 using Application.Services.Quests;
+using Application.Statistics.Calculators;
 using Application.Validators.Accounts;
 using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
@@ -130,7 +131,7 @@ public class Startup
         services.AddScoped<IQuestLabelService, QuestLabelService>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenValidator, TokenValidator>();
-        services.AddSingleton<ILevelingService, LevelingService>();
+        services.AddSingleton<ILevelCalculator, LevelCalculator>();
         services.AddScoped<IUserGoalService, UserGoalService>();
         services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
         services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock

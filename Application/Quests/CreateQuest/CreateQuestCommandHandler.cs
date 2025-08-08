@@ -13,7 +13,7 @@ namespace Application.Quests.CreateQuest
         IUnitOfWork unitOfWork,
         IPublisher publisher,
         IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMappingService questMappingService,
+        IQuestMapper questMappingService,
         IQuestResetService questResetService)
         : IRequestHandler<TCommand, TResponse>
         where TCommand : CreateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto

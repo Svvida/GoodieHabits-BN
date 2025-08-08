@@ -7,10 +7,9 @@ using Api.Middlewares;
 using Api.ModelBinders;
 using Application.Auth.Register;
 using Application.Common.Behaviors;
-using Application.Common.Interfaces;
 using Application.Common.Interfaces.Quests;
-using Application.Services;
 using Application.Services.Quests;
+using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
 using Domain.Common;
 using Domain.Interfaces;
@@ -173,14 +172,13 @@ namespace Api
             builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
             builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
-            builder.Services.AddSingleton<ILevelingService, LevelingService>();
+            builder.Services.AddSingleton<ILevelCalculator, LevelCalculator>();
             builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
             builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
-            builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
             builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
-            builder.Services.AddScoped<IQuestMappingService, QuestMappingService>();
+            builder.Services.AddScoped<IQuestMapper, QuestMapper>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();

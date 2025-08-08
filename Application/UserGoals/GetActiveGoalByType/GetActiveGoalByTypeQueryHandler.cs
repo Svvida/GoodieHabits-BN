@@ -6,10 +6,10 @@ using MediatR;
 
 namespace Application.UserGoals.GetActiveGoalByType
 {
-    public class GetActiveGoalByTypeQueryHandler(IUnitOfWork unitOfWork, IQuestMappingService questMappingService) : IRequestHandler<GetActiveGoalByTypeQuery, QuestDetailsDto?>
+    public class GetActiveGoalByTypeQueryHandler(IUnitOfWork unitOfWork, IQuestMapper questMappingService) : IRequestHandler<GetActiveGoalByTypeQuery, QuestDetailsDto?>
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IQuestMappingService _questMappingService = questMappingService;
+        private readonly IQuestMapper _questMappingService = questMappingService;
         public async Task<QuestDetailsDto?> Handle(GetActiveGoalByTypeQuery request, CancellationToken cancellationToken)
         {
             var goal = await _unitOfWork.UserGoals.GetUserActiveGoalByTypeAsync(request.AccountId, request.GoalType, cancellationToken).ConfigureAwait(false);

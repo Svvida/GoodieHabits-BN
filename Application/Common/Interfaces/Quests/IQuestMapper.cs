@@ -3,7 +3,7 @@ using Domain.Models;
 
 namespace Application.Common.Interfaces.Quests
 {
-    public interface IQuestMappingService
+    public interface IQuestMapper
     {
         QuestDetailsDto MapToDto(Quest quests);
     }
