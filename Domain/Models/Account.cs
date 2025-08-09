@@ -74,5 +74,17 @@ namespace Domain.Models
             Profile.IncrementExpiredGoals(expiredCount);
             return expiredCount;
         }
+
+        public int ResetQuests(DateTime nowUtc)
+        {
+            int resetCount = 0;
+            foreach (var quest in Quests)
+            {
+                if (quest.ResetCompletedStatus(nowUtc))
+                    resetCount++;
+            }
+            Profile.DecrementCompletedQuestsAfterReset(resetCount);
+            return resetCount;
+        }
     }
 }

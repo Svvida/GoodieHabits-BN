@@ -117,5 +117,13 @@ namespace Domain.Models
             ExpiredGoals += count;
             ActiveGoals = Math.Max(ActiveGoals - count, 0);
         }
+
+        public void DecrementCompletedQuestsAfterReset(int count)
+        {
+            if (count <= 0)
+                return;
+
+            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - count, 0);
+        }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Api.Filters;
-using Api.Helpers;
+﻿using Api.Helpers;
 using Application.Quests.CreateQuest;
 using Application.Quests.DeleteQuest;
 using Application.Quests.Dtos;
@@ -61,12 +60,11 @@ namespace Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [ServiceFilter(typeof(QuestAuthorizationFilter))]
         public async Task<IActionResult> Delete(
             int id,
             CancellationToken cancellationToken)
         {
-            var command = new DeleteQuestCommand(id);
+            var command = new DeleteQuestCommand(id, JwtHelpers.GetCurrentUserId(User));
 
             await sender.Send(command, cancellationToken);
 

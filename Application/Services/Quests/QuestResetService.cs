@@ -9,49 +9,8 @@ namespace Application.Services.Quests
 {
     public class QuestResetService(
         ILogger<QuestResetService> logger,
-        IClock clock,
-        IUnitOfWork unitOfWork) : IQuestResetService
+        IClock clock) : IQuestResetService
     {
-        public async Task<int> ResetCompletedQuestsAsync(CancellationToken cancellationToken = default)
-        {
-            var questsToReset = await unitOfWork.Quests.GetQuestsEligibleForResetAsync(cancellationToken).ConfigureAwait(false);
-
-            if (!questsToReset.Any())
-            {
-                logger.LogInformation("No quests eligible for reset at this time.");
-                return 0;
-            }
-
-            foreach (var quest in questsToReset)
-            {
-                quest.IsCompleted = false;
-            }
-
-            var resetQuestsByAccount = questsToReset
-                .GroupBy(q => q.AccountId)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            var accountIds = resetQuestsByAccount.Keys.ToHashSet();
-
-            var userProfiles = await unitOfWork.UserProfiles.GetProfilesByAccountIdsAsync(accountIds, cancellationToken).ConfigureAwait(false);
-
-            foreach (var profile in userProfiles)
-            {
-                if (resetQuestsByAccount.TryGetValue(profile.AccountId, out var count))
-                {
-                    profile.CurrentlyCompletedExistingQuests = Math.Max(0, profile.CurrentlyCompletedExistingQuests - count);
-                    logger.LogDebug("Profile ID: {ProfileId} - Reset {Count} quests. New CurrentlyCompletedExistingQuests: {CompletedQuests}",
-                        profile.Id, count, profile.CurrentlyCompletedExistingQuests);
-                }
-                else
-                {
-                    logger.LogDebug("Profile ID: {ProfileId} - No quests to reset.", profile.Id);
-                }
-            }
-
-            return await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-
         public DateTime? GetNextResetTimeUtc(Quest quest)
         {
             logger.LogDebug("Calculating NextResetAt for Quest ID: {QuestId}, Type: {QuestType}", quest.Id, quest.QuestType);

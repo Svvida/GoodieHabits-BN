@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Application.Quests.ResetCompletedQuests;
+using MediatR;
 
 namespace Api.BackgroundTasks
 {
@@ -11,9 +12,9 @@ namespace Api.BackgroundTasks
 
             try
             {
-                var questResetService = scope.ServiceProvider.GetRequiredService<IQuestResetService>();
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-                int affectedRows = await questResetService.ResetCompletedQuestsAsync(cancellationToken).ConfigureAwait(false);
+                int affectedRows = await sender.Send(new ResetCompletedQuestsCommand(), cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)
                 {
@@ -27,6 +28,10 @@ namespace Api.BackgroundTasks
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occurred while executing ResetQuestsTask: {Message}", ex.Message);
+            }
+            finally
+            {
+                logger.LogInformation("ResetQuestsTask completed.");
             }
         }
     }

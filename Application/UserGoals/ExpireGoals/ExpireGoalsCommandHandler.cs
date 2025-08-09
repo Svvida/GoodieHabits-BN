@@ -10,7 +10,7 @@ namespace Application.UserGoals.ExpireGoals
         public async Task<int> Handle(ExpireGoalsCommand command, CancellationToken cancellationToken)
         {
             var nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            var accounts = await unitOfWork.Accounts.GetAccountWithGoalsToExpireAsync(nowUtc, cancellationToken).ConfigureAwait(false);
+            var accounts = await unitOfWork.Accounts.GetAccountsWithGoalsToExpireAsync(nowUtc, cancellationToken).ConfigureAwait(false);
 
             if (!accounts.Any())
             {
@@ -23,6 +23,7 @@ namespace Application.UserGoals.ExpireGoals
             {
                 int expiredGoalsForAccount = account.ExpireGoals(nowUtc);
                 totalExpiredGoals += expiredGoalsForAccount;
+                if (expiredGoalsForAccount > 0)
                 {
                     logger.LogInformation("Account {AccountId} has {ExpiredGoals} newly expired goals.", account.Id, expiredGoalsForAccount);
                 }

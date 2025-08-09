@@ -259,5 +259,18 @@ namespace Domain.Models
         {
             AddDomainEvent(new QuestDeletedEvent(Id, AccountId, IsCompleted, WasEverCompleted));
         }
+
+        public bool ResetCompletedStatus(DateTime nowUtc)
+        {
+            if (!IsCompleted || !IsRepeatable())
+                return false;
+            if (EndDate.HasValue && EndDate < nowUtc)
+                return false;
+            if (!NextResetAt.HasValue || NextResetAt > nowUtc)
+                return false;
+
+            IsCompleted = false;
+            return true;
+        }
     }
 }

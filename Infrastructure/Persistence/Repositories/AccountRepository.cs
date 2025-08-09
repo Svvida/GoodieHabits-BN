@@ -65,12 +65,22 @@ namespace Infrastructure.Persistence.Repositories
             }
         }
 
-        public async Task<IEnumerable<Account>> GetAccountWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Account>> GetAccountsWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
         {
             return await _context.Accounts
                 .Include(a => a.Profile)
                 .Include(a => a.UserGoals.Where(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
                 .Where(ug => ug.UserGoals.Any(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Account>> GetAccountsWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .Include(a => a.Quests.Where(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
+                .Where(a => a.Quests.Any(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
