@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories
 {
-    public class AccountRepository : BaseRepository<Account>, IAccountRepository
+    public class AccountRepository(AppDbContext context) : BaseRepository<Account>(context), IAccountRepository
     {
-        public AccountRepository(AppDbContext context) : base(context) { }
-
         public async Task<Account?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return await _context.Accounts.FirstOrDefaultAsync(a => a.Login == username, cancellationToken).ConfigureAwait(false)

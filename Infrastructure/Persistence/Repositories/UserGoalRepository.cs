@@ -6,11 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories
 {
-    public class UserGoalRepository : BaseRepository<UserGoal>, IUserGoalRepository
+    public class UserGoalRepository(AppDbContext context) : BaseRepository<UserGoal>(context), IUserGoalRepository
     {
-
-        public UserGoalRepository(AppDbContext context) : base(context) { }
-
         public async Task<int> GetActiveGoalsCountByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
         {
             return await _context.UserGoals.CountAsync
@@ -39,14 +36,6 @@ namespace Infrastructure.Persistence.Repositories
         {
             return await _context.UserGoals
                 .AnyAsync(ug => ug.QuestId == questId && !ug.IsExpired, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<UserGoal>> GetGoalsToExpireAsync(CancellationToken cancellationToken = default)
-        {
-            return await _context.UserGoals
-                .Where(ug => !ug.IsExpired && ug.EndsAt <= DateTime.UtcNow)
-                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
     }

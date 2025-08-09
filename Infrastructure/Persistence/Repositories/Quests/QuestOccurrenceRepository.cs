@@ -1,16 +1,12 @@
 ﻿using Domain.Interfaces.Quests;
 using Domain.Models;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Quests
 {
-    public class QuestOccurrenceRepository : BaseRepository<QuestOccurrence>, IQuestOccurrenceRepository
+    public class QuestOccurrenceRepository(AppDbContext context) : BaseRepository<QuestOccurrence>(context), IQuestOccurrenceRepository
     {
-
-        public QuestOccurrenceRepository(AppDbContext context) : base(context) { }
-
         public async Task<bool> IsQuestOccurrenceExistsAsync(int questId, DateTime occurenceStart, DateTime occurenceEnd, CancellationToken cancellationToken = default)
         {
             return await _context.QuestOccurrences

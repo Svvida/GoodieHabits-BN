@@ -1,15 +1,12 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories
 {
-    public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
+    public class UserProfileRepository(AppDbContext context) : BaseRepository<UserProfile>(context), IUserProfileRepository
     {
-        public UserProfileRepository(AppDbContext context) : base(context) { }
-
         public async Task<bool> DoesNicknameExistAsync(string nickname, int accountId, CancellationToken cancellationToken = default)
         {
             return await _context.UserProfiles.AnyAsync(u => u.Nickname == nickname && u.AccountId != accountId, cancellationToken)

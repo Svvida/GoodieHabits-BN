@@ -1,7 +1,14 @@
-﻿using Application.QuestLabels.Dtos;
+﻿using System.Text.Json.Serialization;
+using Application.QuestLabels.Dtos;
 
 namespace Application.Quests.Dtos
 {
+    [JsonDerivedType(typeof(OneTimeQuestDetailsDto), typeDiscriminator: "OneTime")]
+    [JsonDerivedType(typeof(DailyQuestDetailsDto), typeDiscriminator: "Daily")]
+    [JsonDerivedType(typeof(WeeklyQuestDetailsDto), typeDiscriminator: "Weekly")]
+    [JsonDerivedType(typeof(MonthlyQuestDetailsDto), typeDiscriminator: "Monthly")]
+    [JsonDerivedType(typeof(SeasonalQuestDetailsDto), typeDiscriminator: "Seasonal")]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "questType")]
     public abstract record QuestDetailsDto
     {
         public int Id { get; init; }

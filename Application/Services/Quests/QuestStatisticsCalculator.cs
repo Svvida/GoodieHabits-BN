@@ -4,19 +4,12 @@ using NodaTime;
 
 namespace Application.Services.Quests
 {
-    public class QuestStatisticsCalculator : IQuestStatisticsCalculator
+    public class QuestStatisticsCalculator(IClock clock) : IQuestStatisticsCalculator
     {
-        private readonly IClock _clock;
-
-        public QuestStatisticsCalculator(IClock clock)
-        {
-            _clock = clock;
-        }
-
         public QuestStatistics Calculate(IEnumerable<QuestOccurrence> occurrences)
         {
             var stats = new QuestStatistics();
-            var now = _clock.GetCurrentInstant().ToDateTimeUtc();
+            var now = clock.GetCurrentInstant().ToDateTimeUtc();
             var ordered = occurrences.OrderBy(o => o.OccurrenceStart).ToList();
 
             // Process all occurrences for basic counts

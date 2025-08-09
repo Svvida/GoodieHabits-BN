@@ -1,7 +1,7 @@
 ﻿using Application.Quests.Dtos;
 using Domain.Models;
 
-namespace Application.Common.Interfaces.Quests
+namespace Application.Quests
 {
     public interface IQuestMapper
     {

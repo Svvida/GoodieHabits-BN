@@ -8,6 +8,7 @@ using Api.ModelBinders;
 using Application.Auth.Register;
 using Application.Common.Behaviors;
 using Application.Common.Interfaces.Quests;
+using Application.Quests;
 using Application.Services.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;

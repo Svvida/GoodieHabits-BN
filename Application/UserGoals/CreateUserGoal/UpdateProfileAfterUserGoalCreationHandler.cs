@@ -9,13 +9,11 @@ namespace Application.UserGoals.CreateUserGoal
     public class UpdateProfileAfterUserGoalCreationHandler(IUnitOfWork unitOfWork)
         : INotificationHandler<DomainEventNotification<UserGoalCreatedEvent>>
     {
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-
         public async Task Handle(DomainEventNotification<UserGoalCreatedEvent> wrappedNotification, CancellationToken cancellationToken = default)
         {
             var notification = wrappedNotification.DomainEvent;
 
-            var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
+            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
 
             userProfile.UpdateAfterUserGoalCreation();

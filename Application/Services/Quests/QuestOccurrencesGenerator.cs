@@ -7,25 +7,14 @@ using NodaTime;
 
 namespace Application.Services.Quests
 {
-    public class QuestOccurrencesGenerator : IQuestOccurrenceGenerator
+    public class QuestOccurrencesGenerator(
+        IClock clock,
+        ILogger<QuestOccurrencesGenerator> logger,
+        IUnitOfWork unitOfWork) : IQuestOccurrenceGenerator
     {
-        private readonly IClock _clock;
-        private readonly ILogger<QuestOccurrencesGenerator> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public QuestOccurrencesGenerator(
-            IClock clock,
-            ILogger<QuestOccurrencesGenerator> logger,
-            IUnitOfWork unitOfWork)
-        {
-            _clock = clock;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
-
         public async Task<List<QuestOccurrence>> GenerateMissingOccurrencesForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
         {
-            var now = _clock.GetCurrentInstant().ToDateTimeUtc();
+            var now = clock.GetCurrentInstant().ToDateTimeUtc();
             var lastDate = quest.LastCompletedAt ?? quest.StartDate ?? quest.CreatedAt;
 
             var windows = QuestWindowCalculator.GenerateWindows(quest, lastDate, now);
@@ -33,7 +22,7 @@ namespace Application.Services.Quests
 
             foreach (var window in windows)
             {
-                bool exists = await _unitOfWork.QuestOccurrences
+                bool exists = await unitOfWork.QuestOccurrences
                     .IsQuestOccurrenceExistsAsync(quest.Id, window.Start, window.End, cancellationToken);
 
                 if (!exists)
@@ -47,11 +36,11 @@ namespace Application.Services.Quests
 
         public async Task<int> GenerateAndSaveMissingOccurrencesForQuestsAsync(CancellationToken cancellationToken = default)
         {
-            var now = _clock.GetCurrentInstant().ToDateTimeUtc();
+            var now = clock.GetCurrentInstant().ToDateTimeUtc();
             // Fetch all active repeatable quests with their occurrences
-            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsForOccurrencesProcessingAsync(now, cancellationToken);
+            var repeatableQuests = await unitOfWork.Quests.GetRepeatableQuestsForOccurrencesProcessingAsync(now, cancellationToken);
 
-            _logger.LogDebug("Found {Count} repeatable quests to process.", repeatableQuests.Count());
+            logger.LogDebug("Found {Count} repeatable quests to process.", repeatableQuests.Count());
 
             var allNewOcurrencesToSave = new List<QuestOccurrence>();
 
@@ -76,20 +65,20 @@ namespace Application.Services.Quests
 
                 if (newOccurrencesForThisQuest.Count != 0)
                 {
-                    _logger.LogDebug("Generated {Count} new occurrences for quest {QuestId}", newOccurrencesForThisQuest.Count, quest.Id);
+                    logger.LogDebug("Generated {Count} new occurrences for quest {QuestId}", newOccurrencesForThisQuest.Count, quest.Id);
                     allNewOcurrencesToSave.AddRange(newOccurrencesForThisQuest);
                 }
             }
 
             if (allNewOcurrencesToSave.Count == 0)
             {
-                _logger.LogInformation("No new occurrences needed to be generated for any quests.");
+                logger.LogInformation("No new occurrences needed to be generated for any quests.");
                 return 0;
             }
 
-            await _unitOfWork.QuestOccurrences.AddRangeAsync(allNewOcurrencesToSave, cancellationToken).ConfigureAwait(false);
+            await unitOfWork.QuestOccurrences.AddRangeAsync(allNewOcurrencesToSave, cancellationToken).ConfigureAwait(false);
 
-            int affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
+            int affectedRows = await unitOfWork.SaveChangesAsync(cancellationToken);
             return affectedRows;
         }
 

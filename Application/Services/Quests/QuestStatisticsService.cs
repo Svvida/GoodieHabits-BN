@@ -5,50 +5,39 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Quests
 {
-    public class QuestStatisticsService : IQuestStatisticsService
+    public class QuestStatisticsService(
+        ILogger<QuestStatisticsService> logger,
+        IQuestStatisticsCalculator questStatisticsCalculator,
+        IUnitOfWork unitOfWork) : IQuestStatisticsService
     {
-        private readonly ILogger<QuestStatisticsService> _logger;
-        private readonly IQuestStatisticsCalculator _questStatisticsCalculator;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public QuestStatisticsService(
-            ILogger<QuestStatisticsService> logger,
-            IQuestStatisticsCalculator questStatisticsCalculator,
-            IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _questStatisticsCalculator = questStatisticsCalculator;
-            _unitOfWork = unitOfWork;
-        }
-
         public async Task ProcessStatisticsForQuestAndSaveAsync(int questId, CancellationToken cancellationToken = default)
         {
-            var quest = await _unitOfWork.Quests.GetQuestForStatsProcessingAsync(questId, cancellationToken).ConfigureAwait(false);
+            var quest = await unitOfWork.Quests.GetQuestForStatsProcessingAsync(questId, cancellationToken).ConfigureAwait(false);
 
             if (quest is not null)
                 await ProcessStatisticsForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<int> ProcessStatisticsForQuestsAndSaveAsync(CancellationToken cancellationToken = default)
         {
-            var repeatableQuests = await _unitOfWork.Quests.GetRepeatableQuestsForStatsProcessingAsync(cancellationToken);
+            var repeatableQuests = await unitOfWork.Quests.GetRepeatableQuestsForStatsProcessingAsync(cancellationToken);
 
             foreach (var quest in repeatableQuests)
             {
                 await ProcessStatisticsForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
             }
 
-            return await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task ProcessStatisticsForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
         {
-            var occurrences = await _unitOfWork.QuestOccurrences.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken);
-            var newStats = _questStatisticsCalculator.Calculate(occurrences);
+            var occurrences = await unitOfWork.QuestOccurrences.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken);
+            var newStats = questStatisticsCalculator.Calculate(occurrences);
 
-            _logger.LogDebug("Processing statistics for quest {QuestId}: {@NewStats}", quest.Id, new
+            logger.LogDebug("Processing statistics for quest {QuestId}: {@NewStats}", quest.Id, new
             {
                 quest.Statistics!.Id,
                 quest.Statistics.QuestId,
@@ -63,7 +52,7 @@ namespace Application.Services.Quests
 
             UpdateQuestStatistics(quest, newStats);
 
-            _logger.LogDebug("Updated quest statistics for quest {QuestId}: {@QuestStatsData}", quest.Id, new
+            logger.LogDebug("Updated quest statistics for quest {QuestId}: {@QuestStatsData}", quest.Id, new
             {
                 quest.Statistics!.Id,
                 quest.Statistics.QuestId,

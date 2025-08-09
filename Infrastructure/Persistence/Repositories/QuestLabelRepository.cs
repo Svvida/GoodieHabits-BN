@@ -1,16 +1,12 @@
 ﻿using Domain.Interfaces;
 using Domain.Models;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories
 {
-    public class QuestLabelRepository : BaseRepository<QuestLabel>, IQuestLabelRepository
+    public class QuestLabelRepository(AppDbContext context) : BaseRepository<QuestLabel>(context), IQuestLabelRepository
     {
-
-        public QuestLabelRepository(AppDbContext context) : base(context) { }
-
         public async Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int accountId, bool asNoTracking = false, CancellationToken cancellationToken = default)
         {
             var query = _context.QuestLabels.Where(ql => ql.AccountId == accountId);

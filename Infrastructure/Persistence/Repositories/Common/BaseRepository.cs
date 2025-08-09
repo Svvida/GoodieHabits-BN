@@ -1,17 +1,12 @@
 ﻿using Domain.Interfaces.Domain.Interfaces;
-using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Common
 {
-    public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
+    public abstract class BaseRepository<T>(AppDbContext context) : IBaseRepository<T> where T : class
     {
-        protected readonly AppDbContext _context;
+        protected readonly AppDbContext _context = context;
 
-        public BaseRepository(AppDbContext context)
-        {
-            _context = context;
-        }
         public virtual async Task<T?> GetByIdAsync(
             int id,
             CancellationToken cancellationToken = default)

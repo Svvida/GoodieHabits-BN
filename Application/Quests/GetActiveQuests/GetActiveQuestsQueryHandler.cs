@@ -1,5 +1,4 @@
-﻿using Application.Common.Interfaces.Quests;
-using Application.Helpers;
+﻿using Application.Helpers;
 using Application.Quests.Dtos;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -16,13 +15,9 @@ namespace Application.Quests.GetActiveQuests
         ILogger<GetActiveQuestsQueryHandler> logger)
         : IRequestHandler<GetActiveQuestsQuery, IEnumerable<QuestDetailsDto>>
     {
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IQuestMapper _questMappingService = questMappingService;
-        private readonly ILogger<GetActiveQuestsQueryHandler> _logger = logger;
-
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetActiveQuestsQuery request, CancellationToken cancellationToken = default)
         {
-            var account = await _unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
+            var account = await unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {request.AccountId} not found.");
 
             var userTimeZone = DateTimeZoneProviders.Tzdb[account.TimeZone]
@@ -34,15 +29,15 @@ namespace Application.Quests.GetActiveQuests
             DateTime todayStart = localNow.Date.AtStartOfDayInZone(userTimeZone).ToDateTimeUtc();
             DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
 
-            _logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
+            logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
                 todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
                 todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason();
 
-            var quests = await _unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.AccountId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
+            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.AccountId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
 
-            return quests.Select(_questMappingService.MapToDto);
+            return quests.Select(questMappingService.MapToDto);
         }
     }
 }

@@ -7,9 +7,6 @@ namespace Application.QuestLabels.CreateQuestLabel
 {
     public class CreateQuestLabelCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateQuestLabelCommand, CreateQuestLabelResponse>
     {
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IMapper _mapper = mapper;
-
         public async Task<CreateQuestLabelResponse> Handle(CreateQuestLabelCommand request, CancellationToken cancellationToken)
         {
             var label = QuestLabel.Create(
@@ -17,10 +14,10 @@ namespace Application.QuestLabels.CreateQuestLabel
                 value: request.Value,
                 backgroundColor: request.BackgroundColor);
 
-            await _unitOfWork.QuestLabels.AddAsync(label, cancellationToken).ConfigureAwait(false);
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await unitOfWork.QuestLabels.AddAsync(label, cancellationToken).ConfigureAwait(false);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return _mapper.Map<CreateQuestLabelResponse>(label);
+            return mapper.Map<CreateQuestLabelResponse>(label);
         }
     }
 }

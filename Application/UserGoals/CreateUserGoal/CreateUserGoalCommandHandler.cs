@@ -10,14 +10,11 @@ namespace Application.UserGoals.CreateUserGoal
 {
     public class CreateUserGoalCommandHandler(IUnitOfWork unitOfWork, IPublisher publisher) : IRequestHandler<CreateUserGoalCommand, Unit>
     {
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IPublisher _publisher = publisher;
-
         public async Task<Unit> Handle(CreateUserGoalCommand request, CancellationToken cancellationToken)
         {
             GoalTypeEnum goalType = Enum.Parse<GoalTypeEnum>(request.GoalType, true);
 
-            var quest = await _unitOfWork.Quests.GetQuestWithAccountAsync(request.QuestId, request.AccountId, cancellationToken)
+            var quest = await unitOfWork.Quests.GetQuestWithAccountAsync(request.QuestId, request.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {request.QuestId} not found.");
 
             DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
@@ -37,13 +34,13 @@ namespace Application.UserGoals.CreateUserGoal
             foreach (var domainEvent in userGoal.DomainEvents)
             {
                 var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await _publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
+                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
             }
 
             userGoal.ClearDomainEvents();
 
-            await _unitOfWork.UserGoals.AddAsync(userGoal, cancellationToken).ConfigureAwait(false);
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await unitOfWork.UserGoals.AddAsync(userGoal, cancellationToken).ConfigureAwait(false);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return Unit.Value;
         }

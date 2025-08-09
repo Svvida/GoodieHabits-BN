@@ -6,22 +6,15 @@ using MediatR;
 
 namespace Application.Quests.DeleteQuest
 {
-    internal class UpdateProfileAfterQuestDeletionHandler : INotificationHandler<DomainEventNotification<QuestDeletedEvent>>
+    internal class UpdateProfileAfterQuestDeletionHandler(IUnitOfWork unitOfWork) : INotificationHandler<DomainEventNotification<QuestDeletedEvent>>
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public UpdateProfileAfterQuestDeletionHandler(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
-
         public async Task Handle(DomainEventNotification<QuestDeletedEvent> wrapperNotification, CancellationToken cancellationToken = default)
         {
             var notification = wrapperNotification.DomainEvent;
-            var userProfile = await _unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
+            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
 
-            var wasQuestActiveGoal = await _unitOfWork.UserGoals.IsQuestActiveGoalAsync(notification.QuestId, cancellationToken)
+            var wasQuestActiveGoal = await unitOfWork.UserGoals.IsQuestActiveGoalAsync(notification.QuestId, cancellationToken)
                 .ConfigureAwait(false);
 
             userProfile.UpdateAfterQuestDeletion(notification.IsQuestCompleted, notification.IsQuestEverCompleted, wasQuestActiveGoal);

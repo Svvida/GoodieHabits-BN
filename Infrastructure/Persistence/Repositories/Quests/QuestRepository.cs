@@ -1,16 +1,13 @@
 ﻿using Domain.Enum;
 using Domain.Interfaces.Quests;
 using Domain.Models;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Quests
 {
-    public class QuestRepository : BaseRepository<Quest>, IQuestRepository
+    public class QuestRepository(AppDbContext context) : BaseRepository<Quest>(context), IQuestRepository
     {
-        public QuestRepository(AppDbContext context) : base(context) { }
-
         public async Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(
             int accountId,
             DateTime todayStart,
@@ -49,6 +46,7 @@ namespace Infrastructure.Persistence.Repositories.Quests
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         q.SeasonalQuest_Season!.Season == currentSeason
                 )
+                .Include(q => q.Statistics)
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
                 .Include(q => q.SeasonalQuest_Season)

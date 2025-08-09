@@ -1,21 +1,13 @@
 ﻿using Domain.Interfaces.Resetting;
-using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Resetting
 {
-    public class ResetQuestsRepository : IResetQuestsRepository
+    public class ResetQuestsRepository(AppDbContext context) : IResetQuestsRepository
     {
-        private readonly AppDbContext _context;
-
-        public ResetQuestsRepository(AppDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task PrepareQuestsForResetAsync(CancellationToken cancellationToken = default)
         {
-            var questsToReset = await _context.Quests
+            var questsToReset = await context.Quests
                 .Where(q => q.IsCompleted == true && (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow && q.NextResetAt <= DateTime.UtcNow)
                 .Include(q => q.Account)
                     .ThenInclude(a => a.Profile)

@@ -16,7 +16,7 @@ namespace Application.Statistics.Calculators
             if (_options.Curve == null || _options.Curve.Count == 0)
                 throw new InvalidArgumentException("Leveling curve configuration in missing or empty");
 
-            _sortedCurve = _options.Curve.OrderBy(l => l.Level).ToList();
+            _sortedCurve = [.. _options.Curve.OrderBy(l => l.Level)];
         }
 
         public LevelInfo CalculateLevelInfo(int totalXp)

@@ -1,16 +1,12 @@
 ﻿using Domain.Interfaces.Quests;
 using Domain.Models;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Quests
 {
-    public class QuestStatisticsRepository : BaseRepository<QuestStatistics>, IQuestStatisticsRepository
+    public class QuestStatisticsRepository(AppDbContext context) : BaseRepository<QuestStatistics>(context), IQuestStatisticsRepository
     {
-
-        public QuestStatisticsRepository(AppDbContext context) : base(context) { }
-
         public async Task<QuestStatistics?> GetStatisticsForQuestAsync(int questId,
             bool asNoTracking = false,
             CancellationToken cancellationToken = default)
