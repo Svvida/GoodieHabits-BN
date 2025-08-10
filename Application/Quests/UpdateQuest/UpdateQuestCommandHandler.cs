@@ -1,5 +1,4 @@
-﻿using Application.Common.Interfaces.Quests;
-using Application.Quests.Dtos;
+﻿using Application.Quests.Dtos;
 using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -45,7 +44,7 @@ namespace Application.Quests.UpdateQuest
                 quest.SetNextResetAt(questResetService);
                 if (await unitOfWork.QuestOccurrences.GetCurrentOccurrenceForQuestAsync(quest.Id, now, cancellationToken).ConfigureAwait(false) is null)
                 {
-                    var generatedOccurrences = await questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+                    var generatedOccurrences = await questOccurrenceGenerator.GenerateOccurrenceForNewQuest(quest, cancellationToken).ConfigureAwait(false);
                     if (generatedOccurrences.Count != 0)
                         quest.AddOccurrences(generatedOccurrences);
                 }

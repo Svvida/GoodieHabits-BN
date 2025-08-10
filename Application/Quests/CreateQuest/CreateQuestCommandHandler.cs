@@ -1,11 +1,11 @@
 ﻿using Application.Common;
-using Application.Common.Interfaces.Quests;
 using Application.Quests.Dtos;
 using Domain.Enum;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using MediatR;
+using NodaTime;
 
 namespace Application.Quests.CreateQuest
 {
@@ -24,6 +24,8 @@ namespace Application.Quests.CreateQuest
             var account = await unitOfWork.Accounts.GetAccountWithProfileAsync(command.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Account with ID: {command.AccountId} not found.");
 
+            DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
+
             var quest = Quest.Create(
                 title: command.Title,
                 account: account,
@@ -35,7 +37,8 @@ namespace Application.Quests.CreateQuest
                 endDate: command.EndDate,
                 difficulty: EnumHelper.ParseNullable<DifficultyEnum>(command.Difficulty),
                 scheduledTime: command.ScheduledTime,
-                labelIds: command.Labels
+                labelIds: command.Labels,
+                nowUtc: nowUtc
             );
 
             await HandleQuestSpecificsAsync(quest, command, cancellationToken).ConfigureAwait(false);
@@ -45,7 +48,7 @@ namespace Application.Quests.CreateQuest
             if (quest.IsRepeatable())
             {
                 quest.SetNextResetAt(questResetService);
-                quest.AddOccurrences(await questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken).ConfigureAwait(false));
+                quest.AddOccurrences(await questOccurrenceGenerator.GenerateOccurrenceForNewQuest(quest, cancellationToken).ConfigureAwait(false));
             }
 
             foreach (var domainEvent in quest.DomainEvents)

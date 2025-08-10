@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces.Quests;
+﻿using Domain.Interfaces;
 
 namespace Api.BackgroundTasks
 {
@@ -13,7 +13,7 @@ namespace Api.BackgroundTasks
             {
                 var occurrencesGenerator = scope.ServiceProvider.GetRequiredService<IQuestOccurrenceGenerator>();
 
-                int affectedRows = await occurrencesGenerator.GenerateAndSaveMissingOccurrencesForQuestsAsync(cancellationToken).ConfigureAwait(false);
+                int affectedRows = await occurrencesGenerator.GenerateMissingOccurrencesForQuest(cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)
                 {

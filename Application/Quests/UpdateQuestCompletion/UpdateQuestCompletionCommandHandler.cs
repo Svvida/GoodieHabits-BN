@@ -118,7 +118,7 @@ namespace Application.Quests.UpdateQuestCompletion
             logger.LogDebug("Current occurrence for quest {QuestId} at {NowUtc}: {Start} {End}", quest.Id, nowUtc, currentOccurrence?.OccurrenceStart, currentOccurrence?.OccurrenceEnd);
             if (currentOccurrence is null)
             {
-                var missingOccurences = await questOccurrenceGenerator.GenerateMissingOccurrencesForQuestAsync(quest, cancellationToken).ConfigureAwait(false);
+                var missingOccurences = await questOccurrenceGenerator.GenerateOccurrenceForNewQuest(quest, cancellationToken).ConfigureAwait(false);
                 currentOccurrence = missingOccurences.FirstOrDefault(o => o.OccurrenceStart <= nowUtc && o.OccurrenceEnd >= nowUtc);
                 logger.LogDebug("Current occurrence for quest {QuestId} at {NowUtc}: {Start} {End}", quest.Id, nowUtc, currentOccurrence?.OccurrenceStart, currentOccurrence?.OccurrenceEnd);
             }

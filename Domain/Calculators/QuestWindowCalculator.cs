@@ -1,13 +1,13 @@
-﻿using Domain.Common;
-using Domain.Enum;
+﻿using Domain.Enum;
 using Domain.Models;
+using Domain.ValueObjects;
 using NodaTime;
 
-namespace Application.Services.Quests
+namespace Domain.Calculators
 {
-    public class QuestWindowCalculator
+    public static class QuestWindowCalculator
     {
-        public static List<TimeWindow> GenerateWindows(Quest quest, DateTime fromUtc, DateTime toUtc)
+        public static IReadOnlyList<QuestOccurrenceWindow> GenerateWindows(Quest quest, DateTime fromUtc, DateTime toUtc)
         {
             var userZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
 
@@ -20,9 +20,9 @@ namespace Application.Services.Quests
             };
         }
 
-        private static List<TimeWindow> GenerateDailyWindows(DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateDailyWindows(DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
         {
-            var windows = new List<TimeWindow>();
+            var windows = new List<QuestOccurrenceWindow>();
             var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
             var toLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(toUtc, DateTimeKind.Utc)).InZone(userZone).Date;
 
@@ -30,15 +30,15 @@ namespace Application.Services.Quests
             {
                 var start = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
                 var end = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                windows.Add(new TimeWindow(start, end));
+                windows.Add(new QuestOccurrenceWindow(start, end));
             }
 
             return windows;
         }
 
-        private static List<TimeWindow> GenerateWeeklyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateWeeklyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
         {
-            var windows = new List<TimeWindow>();
+            var windows = new List<QuestOccurrenceWindow>();
             var scheduledWeekdays = quest.WeeklyQuest_Days.Select(d => (DayOfWeek)d.Weekday).ToHashSet();
 
             var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
@@ -50,16 +50,16 @@ namespace Application.Services.Quests
                 {
                     var start = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
                     var end = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    windows.Add(new TimeWindow(start, end));
+                    windows.Add(new QuestOccurrenceWindow(start, end));
                 }
             }
 
             return windows;
         }
 
-        private static List<TimeWindow> GenerateMonthlyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateMonthlyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
         {
-            var windows = new List<TimeWindow>();
+            var windows = new List<QuestOccurrenceWindow>();
             var startDay = quest.MonthlyQuest_Days!.StartDay;
             var endDay = quest.MonthlyQuest_Days!.EndDay;
 
@@ -79,9 +79,7 @@ namespace Application.Services.Quests
                 var end = ym.OnDayOfMonth(eDay).PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
 
                 if (end > start)
-                {
-                    windows.Add(new TimeWindow(start, end));
-                }
+                    windows.Add(new QuestOccurrenceWindow(start, end));
             }
 
             return windows;

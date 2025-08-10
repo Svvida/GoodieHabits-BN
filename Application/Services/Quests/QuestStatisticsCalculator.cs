@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces.Quests;
+﻿using Domain.Interfaces;
 using Domain.Models;
 using NodaTime;
 

@@ -1,5 +1,4 @@
-﻿using Application.Common.Interfaces.Quests;
-using Application.Quests.Dtos;
+﻿using Application.Quests.Dtos;
 using Domain.Interfaces;
 using Domain.Models;
 using MediatR;

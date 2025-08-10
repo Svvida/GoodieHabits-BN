@@ -32,7 +32,7 @@ namespace Application.Services.Quests
             return await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task ProcessStatisticsForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
+        private async Task ProcessStatisticsForQuestAsync(Quest quest, CancellationToken cancellationToken = default)
         {
             var occurrences = await unitOfWork.QuestOccurrences.GetAllOccurrencesForQuestAsync(quest.Id, cancellationToken);
             var newStats = questStatisticsCalculator.Calculate(occurrences);

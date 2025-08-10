@@ -1,6 +1,6 @@
 ﻿using Domain.Models;
 
-namespace Application.Common.Interfaces.Quests
+namespace Domain.Interfaces
 {
     public interface IQuestStatisticsCalculator
     {

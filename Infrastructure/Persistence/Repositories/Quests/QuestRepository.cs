@@ -161,19 +161,44 @@ namespace Infrastructure.Persistence.Repositories.Quests
         }
         public async Task<IEnumerable<Quest>> GetRepeatableQuestsForOccurrencesProcessingAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
         {
-            var query = _context.Quests
-                .Where(q => q.QuestType == QuestTypeEnum.Daily ||
-                            q.QuestType == QuestTypeEnum.Weekly ||
-                            q.QuestType == QuestTypeEnum.Monthly)
-                .Where(q => (q.EndDate ?? DateTime.MaxValue) >= nowUtc &&
-                            (q.StartDate ?? DateTime.MinValue) <= nowUtc)
-                .Include(q => q.QuestOccurrences)
+            //var quests = await _context.Quests
+            //    .Where(q => q.QuestType == QuestTypeEnum.Daily ||
+            //                q.QuestType == QuestTypeEnum.Weekly ||
+            //                q.QuestType == QuestTypeEnum.Monthly)
+            //    .Where(q => (q.EndDate ?? DateTime.MaxValue) >= nowUtc &&
+            //                (q.StartDate ?? DateTime.MinValue) <= nowUtc)
+            //    .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
+            //    .Include(q => q.Account)
+            //    .Include(q => q.WeeklyQuest_Days)
+            //    .Include(q => q.MonthlyQuest_Days)
+            //    .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+            //var filtered = quests
+            //    .Where(q => q.QuestOccurrences.All(qo => qo.OccurrenceEnd < nowUtc) ||
+            //                q.QuestOccurrences.Count == 0);
+
+            //return filtered;
+
+            var query =
+                from quest in _context.Quests
+                let latestOccurrenceEnd = _context.QuestOccurrences
+                    .Where(qo => qo.QuestId == quest.Id)
+                    .Max(qo => (DateTime?)qo.OccurrenceEnd)
+                where quest.QuestType == QuestTypeEnum.Daily ||
+                      quest.QuestType == QuestTypeEnum.Weekly ||
+                      quest.QuestType == QuestTypeEnum.Monthly
+                where (quest.EndDate ?? DateTime.MaxValue) >= nowUtc &&
+                      (quest.StartDate ?? DateTime.MinValue) <= nowUtc
+                where latestOccurrenceEnd == null || latestOccurrenceEnd < nowUtc
+                select quest;
+
+            return await query
                 .Include(q => q.Account)
+                .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
-                    .AsNoTracking();
-
-            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public async Task<bool> IsQuestOwnedByUserAsync(

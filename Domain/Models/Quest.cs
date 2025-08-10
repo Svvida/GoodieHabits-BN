@@ -1,4 +1,5 @@
-﻿using Domain.Common;
+﻿using Domain.Calculators;
+using Domain.Common;
 using Domain.Enum;
 using Domain.Events.Quests;
 using Domain.Exceptions;
@@ -30,8 +31,9 @@ namespace Domain.Models
         public ICollection<WeeklyQuest_Day> WeeklyQuest_Days { get; set; } = [];
         public SeasonalQuest_Season? SeasonalQuest_Season { get; set; } = null;
         public ICollection<UserGoal> UserGoal { get; set; } = [];
-        public QuestStatistics? Statistics { get; set; } = null;
-        public ICollection<QuestOccurrence> QuestOccurrences { get; set; } = [];
+        public QuestStatistics? Statistics { get; private set; } = null;
+        private readonly List<QuestOccurrence> _occurrences = [];
+        public IReadOnlyCollection<QuestOccurrence> QuestOccurrences => _occurrences.AsReadOnly();
 
         // EF Core constructor
         protected Quest() { }
@@ -39,6 +41,7 @@ namespace Domain.Models
             string title,
             Account account,
             QuestTypeEnum questType,
+            DateTime nowUtc,
             string? description = null,
             PriorityEnum? priority = null,
             string? emoji = null,
@@ -67,14 +70,12 @@ namespace Domain.Models
 
             SetLabels(labelIds);
 
-            SetCreatedAt(DateTime.UtcNow);
+            SetCreatedAt(nowUtc);
 
             if (IsRepeatable())
             {
-                Statistics = new QuestStatistics
-                {
-                    Quest = this
-                };
+                Statistics = QuestStatistics.Create(this);
+                InitializeOccurrences(nowUtc);
             }
 
             // Raise domain event for quest creation
@@ -85,6 +86,7 @@ namespace Domain.Models
             string title,
             Account account,
             QuestTypeEnum questType,
+            DateTime nowUtc,
             string? description = null,
             PriorityEnum? priority = null,
             string? emoji = null,
@@ -94,7 +96,7 @@ namespace Domain.Models
             TimeOnly? scheduledTime = null,
             HashSet<int>? labelIds = null)
         {
-            return new Quest(title, account, questType, description, priority, emoji,
+            return new Quest(title, account, questType, nowUtc, description, priority, emoji,
                            startDate, endDate, difficulty, scheduledTime, labelIds);
         }
 
@@ -172,8 +174,7 @@ namespace Domain.Models
                 NextResetAt = questResetService.GetNextResetTimeUtc(this);
                 foreach (var occurrence in QuestOccurrences)
                 {
-                    occurrence.WasCompleted = true;
-                    occurrence.CompletedAt = completionTime;
+                    occurrence.MarkAsCompleted(completionTime);
                 }
             }
 
@@ -205,7 +206,7 @@ namespace Domain.Models
             {
                 foreach (var occurrence in QuestOccurrences)
                 {
-                    occurrence.WasCompleted = false;
+                    occurrence.MarkAsIncompleted();
                 }
             }
 
@@ -214,18 +215,10 @@ namespace Domain.Models
             AddDomainEvent(new QuestUncompletedEvent(AccountId));
         }
 
-        public void AddOccurrence(QuestOccurrence occurrence)
+        public void AddOccurrence(DateTime start, DateTime end)
         {
-            if (QuestOccurrences.All(o => o.OccurrenceStart != occurrence.OccurrenceStart && o.OccurrenceEnd != occurrence.OccurrenceEnd))
-                QuestOccurrences.Add(occurrence);
-        }
-        public void AddOccurrences(IEnumerable<QuestOccurrence> occurrences)
-        {
-            foreach (var occurrence in occurrences)
-            {
-                if (QuestOccurrences.All(o => o.OccurrenceStart != occurrence.OccurrenceStart && o.OccurrenceEnd != occurrence.OccurrenceEnd))
-                    QuestOccurrences.Add(occurrence);
-            }
+            var occurrence = QuestOccurrence.Create(this, start, end);
+            _occurrences.Add(occurrence);
         }
 
         public void SetLabels(HashSet<int>? labelIds)
@@ -271,6 +264,63 @@ namespace Domain.Models
 
             IsCompleted = false;
             return true;
+        }
+
+        public void RecalculateStatistics(IQuestStatisticsCalculator calculator)
+        {
+            if (!IsRepeatable())
+                return;
+
+            var newStats = calculator.Calculate(QuestOccurrences);
+            Statistics!.UpdateFrom(newStats);
+        }
+
+        public void CompleteOccurrence(int occurrenceId, DateTime utcNow)
+        {
+            QuestOccurrences.FirstOrDefault(o => o.Id == occurrenceId)?.MarkAsCompleted(utcNow);
+        }
+
+        public void UncompleteOccurrence(int occurrenceId)
+        {
+            QuestOccurrences.FirstOrDefault(o => o.Id == occurrenceId)?.MarkAsIncompleted();
+        }
+
+        public int GenerateMissingOccurrences(DateTime utcNow)
+        {
+            if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
+                return 0;
+
+            DateTime fromDate = QuestOccurrences.OrderByDescending(o => o.OccurrenceEnd).FirstOrDefault()?.OccurrenceEnd ?? StartDate ?? CreatedAt;
+
+            return GenerateAndAddWindows(fromDate, utcNow);
+        }
+
+        public int InitializeOccurrences(DateTime utcNow)
+        {
+            if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
+                return 0;
+
+            if (StartDate.HasValue && StartDate > utcNow)
+                return 0;
+
+            DateTime fromDate = StartDate ?? CreatedAt;
+            return GenerateAndAddWindows(fromDate, utcNow);
+        }
+
+        private int GenerateAndAddWindows(DateTime fromDate, DateTime toDate)
+        {
+            if (fromDate >= toDate)
+                return 0;
+
+            var windows = QuestWindowCalculator.GenerateWindows(this, fromDate, toDate);
+
+            int generatedCount = 0;
+            foreach (var window in windows)
+            {
+                AddOccurrence(window.Start, window.End);
+                generatedCount++;
+            }
+            return generatedCount;
         }
     }
 }
