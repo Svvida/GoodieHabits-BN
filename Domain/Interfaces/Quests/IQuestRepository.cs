@@ -9,6 +9,7 @@ namespace Domain.Interfaces.Quests
         Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(int accountId, DateTime todayStart, DateTime todayEnd, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(int accountId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default);
+        Task<Quest?> GetQuestByIdForCompletionUpdateAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<Quest?> GetQuestForDisplayAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(bool asNoTracking, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(CancellationToken cancellationToken = default);

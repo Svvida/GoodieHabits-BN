@@ -1,9 +1,10 @@
 ﻿using Domain.Models;
+using Domain.ValueObjects;
 
 namespace Domain.Interfaces
 {
     public interface IQuestStatisticsCalculator
     {
-        QuestStatistics Calculate(IEnumerable<QuestOccurrence> occurrences);
+        QuestStatisticsData Calculate(IEnumerable<QuestOccurrence> occurrences);
     }
 }

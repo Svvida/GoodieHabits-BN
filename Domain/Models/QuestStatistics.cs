@@ -1,4 +1,6 @@
-﻿namespace Domain.Models
+﻿using Domain.ValueObjects;
+
+namespace Domain.Models
 {
     public class QuestStatistics
     {
@@ -26,7 +28,7 @@
             return new QuestStatistics(quest);
         }
 
-        public void UpdateFrom(QuestStatistics newStats)
+        public void UpdateFrom(QuestStatisticsData newStats)
         {
             CompletionCount = newStats.CompletionCount;
             FailureCount = newStats.FailureCount;

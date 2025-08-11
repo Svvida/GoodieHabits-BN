@@ -9,15 +9,11 @@ namespace Application.Quests.CreateQuest.Handlers
     public class CreateWeeklyQuestCommandHandler(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : CreateQuestCommandHandler<CreateWeeklyQuestCommand, WeeklyQuestDetailsDto>(
             unitOfWork,
             publisher,
-            questOccurrenceGenerator,
-            questMappingService,
-            questResetService)
+            questMappingService)
     {
         protected override Task HandleQuestSpecificsAsync(Quest quest, CreateWeeklyQuestCommand command, CancellationToken cancellationToken)
         {

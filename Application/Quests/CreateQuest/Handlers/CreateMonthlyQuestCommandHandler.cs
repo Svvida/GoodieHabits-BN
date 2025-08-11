@@ -8,15 +8,11 @@ namespace Application.Quests.CreateQuest.Handlers
     internal class CreateMonthlyQuestCommandHandler(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : CreateQuestCommandHandler<CreateMonthlyQuestCommand, MonthlyQuestDetailsDto>(
             unitOfWork,
             publisher,
-            questOccurrenceGenerator,
-            questMappingService,
-            questResetService)
+            questMappingService)
     {
         protected override Task HandleQuestSpecificsAsync(Quest quest, CreateMonthlyQuestCommand command, CancellationToken cancellationToken)
         {

@@ -1,46 +1,44 @@
-﻿using Domain.Interfaces;
-using Domain.Models;
-using NodaTime;
+﻿using Domain.Models;
+using Domain.ValueObjects;
 
-namespace Application.Services.Quests
+namespace Domain.Calculators
 {
-    public class QuestStatisticsCalculator(IClock clock) : IQuestStatisticsCalculator
+    public static class QuestStatisticsCalculator
     {
-        public QuestStatistics Calculate(IEnumerable<QuestOccurrence> occurrences)
+        public static QuestStatisticsData Calculate(IEnumerable<QuestOccurrence> occurrences, DateTime now)
         {
-            var stats = new QuestStatistics();
-            var now = clock.GetCurrentInstant().ToDateTimeUtc();
+            var data = new QuestStatisticsData();
             var ordered = occurrences.OrderBy(o => o.OccurrenceStart).ToList();
 
             // Process all occurrences for basic counts
             foreach (var occurrence in ordered)
             {
-                ProcessOccurrenceForCounts(stats, occurrence, now);
+                ProcessOccurrenceForCounts(data, occurrence, now);
             }
 
             // Calculate streaks separately, considering only past occurrences
-            CalculateStreaks(stats, ordered, now);
+            CalculateStreaks(data, ordered, now);
 
-            return stats;
+            return data;
         }
 
-        private static void ProcessOccurrenceForCounts(QuestStatistics stats, QuestOccurrence occurrence, DateTime now)
+        private static void ProcessOccurrenceForCounts(QuestStatisticsData data, QuestOccurrence occurrence, DateTime now)
         {
-            stats.OccurrenceCount++;
+            data.OccurrenceCount++;
 
             if (occurrence.WasCompleted)
             {
-                stats.CompletionCount++;
-                stats.LastCompletedAt = occurrence.CompletedAt;
+                data.CompletionCount++;
+                data.LastCompletedAt = occurrence.CompletedAt;
             }
             else if (occurrence.OccurrenceEnd <= now)
             {
                 // Only count as failure if the occurrence window has passed
-                stats.FailureCount++;
+                data.FailureCount++;
             }
         }
 
-        private static void CalculateStreaks(QuestStatistics stats, List<QuestOccurrence> ordered, DateTime now)
+        private static void CalculateStreaks(QuestStatisticsData data, List<QuestOccurrence> ordered, DateTime now)
         {
             // Include past occurrences AND current occurrence that is completed
             var relevantOccurrences = ordered
@@ -48,15 +46,13 @@ namespace Application.Services.Quests
                 .ToList();
 
             if (relevantOccurrences.Count == 0)
-            {
                 return;
-            }
 
             // Calculate current streak (working backwards from most recent)
-            stats.CurrentStreak = CalculateCurrentStreak(relevantOccurrences, now);
+            data.CurrentStreak = CalculateCurrentStreak(relevantOccurrences, now);
 
             // Calculate longest streak
-            stats.LongestStreak = CalculateLongestStreak(relevantOccurrences, now);
+            data.LongestStreak = CalculateLongestStreak(relevantOccurrences, now);
         }
 
         private static int CalculateCurrentStreak(List<QuestOccurrence> relevantOccurrences, DateTime now)

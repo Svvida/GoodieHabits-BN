@@ -12,9 +12,7 @@ namespace Application.Quests.CreateQuest
     public class CreateQuestCommandHandler<TCommand, TResponse>(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : IRequestHandler<TCommand, TResponse>
         where TCommand : CreateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto
     {
@@ -47,8 +45,8 @@ namespace Application.Quests.CreateQuest
 
             if (quest.IsRepeatable())
             {
-                quest.SetNextResetAt(questResetService);
-                quest.AddOccurrences(await questOccurrenceGenerator.GenerateOccurrenceForNewQuest(quest, cancellationToken).ConfigureAwait(false));
+                quest.SetNextResetAt();
+                quest.InitializeOccurrences(nowUtc);
             }
 
             foreach (var domainEvent in quest.DomainEvents)

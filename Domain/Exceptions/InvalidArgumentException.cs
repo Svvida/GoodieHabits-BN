@@ -1,7 +1,6 @@
 ﻿namespace Domain.Exceptions
 {
-    public class InvalidArgumentException : AppException
+    public class InvalidArgumentException(string message) : AppException(message, 400)
     {
-        public InvalidArgumentException(string message) : base(message, 400) { }
     }
 }

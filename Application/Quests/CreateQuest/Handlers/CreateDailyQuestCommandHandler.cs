@@ -7,15 +7,11 @@ namespace Application.Quests.CreateQuest.Handlers
     public class CreateDailyQuestCommandHandler(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : CreateQuestCommandHandler<CreateDailyQuestCommand, DailyQuestDetailsDto>(
             unitOfWork,
             publisher,
-            questOccurrenceGenerator,
-            questMappingService,
-            questResetService)
+            questMappingService)
     {
     }
 }

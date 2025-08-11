@@ -112,6 +112,27 @@ namespace Infrastructure.Persistence.Repositories.Quests
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<Quest?> GetQuestByIdForCompletionUpdateAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        {
+            var query = _context.Quests
+                .Where(q => q.Id == questId && q.QuestType == questType);
+
+            query = query
+                .Include(q => q.QuestOccurrences)
+                .Include(q => q.Account.UserGoals.FirstOrDefault(ug => !ug.IsExpired && ug.QuestId == q.Id))
+                .Include(q => q.Account)
+                     .ThenInclude(a => a.Profile);
+
+            _ = questType switch
+            {
+                QuestTypeEnum.Monthly => query.Include(q => q.MonthlyQuest_Days),
+                QuestTypeEnum.Weekly => query.Include(q => q.WeeklyQuest_Days),
+                _ => query
+            };
+
+            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<Quest?> GetQuestForDisplayAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var query = _context.Quests
@@ -161,24 +182,6 @@ namespace Infrastructure.Persistence.Repositories.Quests
         }
         public async Task<IEnumerable<Quest>> GetRepeatableQuestsForOccurrencesProcessingAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
         {
-            //var quests = await _context.Quests
-            //    .Where(q => q.QuestType == QuestTypeEnum.Daily ||
-            //                q.QuestType == QuestTypeEnum.Weekly ||
-            //                q.QuestType == QuestTypeEnum.Monthly)
-            //    .Where(q => (q.EndDate ?? DateTime.MaxValue) >= nowUtc &&
-            //                (q.StartDate ?? DateTime.MinValue) <= nowUtc)
-            //    .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
-            //    .Include(q => q.Account)
-            //    .Include(q => q.WeeklyQuest_Days)
-            //    .Include(q => q.MonthlyQuest_Days)
-            //    .ToListAsync(cancellationToken).ConfigureAwait(false);
-
-            //var filtered = quests
-            //    .Where(q => q.QuestOccurrences.All(qo => qo.OccurrenceEnd < nowUtc) ||
-            //                q.QuestOccurrences.Count == 0);
-
-            //return filtered;
-
             var query =
                 from quest in _context.Quests
                 let latestOccurrenceEnd = _context.QuestOccurrences

@@ -1,9 +1,6 @@
 ﻿namespace Domain.Exceptions
 {
-    public class ForbiddenException : AppException
+    public class ForbiddenException(string message) : AppException(message, 403)
     {
-        public ForbiddenException(string message) : base(message, 403)
-        {
-        }
     }
 }

@@ -1,7 +1,6 @@
 ﻿namespace Domain.Exceptions
 {
-    public class NotFoundException : AppException
+    public class NotFoundException(string message) : AppException(message, 404)
     {
-        public NotFoundException(string message) : base(message, 404) { }
     }
 }

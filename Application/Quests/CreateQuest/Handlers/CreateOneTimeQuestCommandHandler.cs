@@ -7,15 +7,11 @@ namespace Application.Quests.CreateQuest.Handlers
     public class CreateOneTimeQuestCommandHandler(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : CreateQuestCommandHandler<CreateOneTimeQuestCommand, OneTimeQuestDetailsDto>(
             unitOfWork,
             publisher,
-            questOccurrenceGenerator,
-            questMappingService,
-            questResetService)
+            questMappingService)
     {
     }
 }

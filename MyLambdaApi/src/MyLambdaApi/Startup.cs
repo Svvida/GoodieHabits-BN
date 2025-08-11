@@ -14,6 +14,7 @@ using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Application.Validators.UserGoal;
+using Domain.Calculators;
 using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;

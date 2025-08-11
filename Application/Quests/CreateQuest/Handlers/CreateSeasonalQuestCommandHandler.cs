@@ -9,15 +9,11 @@ namespace Application.Quests.CreateQuest.Handlers
     public class CreateSeasonalQuestCommandHandler(
         IUnitOfWork unitOfWork,
         IPublisher publisher,
-        IQuestOccurrenceGenerator questOccurrenceGenerator,
-        IQuestMapper questMappingService,
-        IQuestResetService questResetService)
+        IQuestMapper questMappingService)
         : CreateQuestCommandHandler<CreateSeasonalQuestCommand, SeasonalQuestDetailsDto>(
             unitOfWork,
             publisher,
-            questOccurrenceGenerator,
-            questMappingService,
-            questResetService)
+            questMappingService)
     {
         protected override Task HandleQuestSpecificsAsync(Quest quest, CreateSeasonalQuestCommand command, CancellationToken cancellationToken)
         {

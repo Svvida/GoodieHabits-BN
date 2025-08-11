@@ -3,7 +3,6 @@ using Domain.Common;
 using Domain.Enum;
 using Domain.Events.Quests;
 using Domain.Exceptions;
-using Domain.Interfaces;
 
 namespace Domain.Models
 {
@@ -76,6 +75,7 @@ namespace Domain.Models
             {
                 Statistics = QuestStatistics.Create(this);
                 InitializeOccurrences(nowUtc);
+                SetNextResetAt();
             }
 
             // Raise domain event for quest creation
@@ -124,9 +124,9 @@ namespace Domain.Models
         {
             ScheduledTime = scheduledTime;
         }
-        public void SetNextResetAt(IQuestResetService questResetService)
+        public void SetNextResetAt()
         {
-            NextResetAt = questResetService.GetNextResetTimeUtc(this);
+            NextResetAt = NextResetDateCalculator.Calculate(this);
         }
 
         public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate)
@@ -157,25 +157,32 @@ namespace Domain.Models
             };
         }
 
-        public void Complete(DateTime completionTime, IQuestResetService questResetService, bool shouldAssignRewards)
+        public void Complete(DateTime nowUtc, bool shouldAssignRewards)
         {
+            if (IsCompleted)
+                return;
+
+            if (IsRepeatable())
+            {
+                NextResetAt = NextResetDateCalculator.Calculate(this);
+
+                var occurrenceToComplete = GetOrCreateCurrentOccurrence(nowUtc);
+                if (occurrenceToComplete is not null)
+                    occurrenceToComplete.MarkAsCompleted(nowUtc);
+                else
+                    throw new NoOccurrenceToMarkAsCompletedException(Id);
+
+                RecalculateStatistics(nowUtc);
+            }
+
             IsCompleted = true;
-            LastCompletedAt = completionTime;
+            LastCompletedAt = nowUtc;
 
             bool isFirstTimeCompleted = false;
             if (!WasEverCompleted)
             {
                 WasEverCompleted = true;
                 isFirstTimeCompleted = true;
-            }
-
-            if (IsRepeatable())
-            {
-                NextResetAt = questResetService.GetNextResetTimeUtc(this);
-                foreach (var occurrence in QuestOccurrences)
-                {
-                    occurrence.MarkAsCompleted(completionTime);
-                }
             }
 
             bool isGoalCompleted = false;
@@ -185,29 +192,29 @@ namespace Domain.Models
             {
                 foreach (var goal in UserGoal)
                 {
-                    goal.MarkAsAchieved(completionTime);
+                    goal.MarkAsAchieved(nowUtc);
                     xpGained += goal.XpBonus;
                     // We are just changing flag since its impossible to complete multiple goals at once but UserGoals is collection
                     isGoalCompleted = true;
                 }
             }
 
-            if (shouldAssignRewards)
-                xpGained += 10;
+            xpGained += shouldAssignRewards ? 10 : 0; // Base XP for quest completion
 
             AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards));
         }
 
-        public void Uncomplete()
+        public void Uncomplete(DateTime utcNow)
         {
+            if (!IsCompleted)
+                return;
             IsCompleted = false;
 
             if (IsRepeatable())
             {
-                foreach (var occurrence in QuestOccurrences)
-                {
-                    occurrence.MarkAsIncompleted();
-                }
+                var lastOccurrence = QuestOccurrences.OrderByDescending(o => o.CompletedAt).FirstOrDefault(o => o.WasCompleted);
+                lastOccurrence?.MarkAsIncompleted();
+                RecalculateStatistics(utcNow);
             }
 
             // We don't reset goals since handler prevent uncompleting if quest is active goal
@@ -215,10 +222,11 @@ namespace Domain.Models
             AddDomainEvent(new QuestUncompletedEvent(AccountId));
         }
 
-        public void AddOccurrence(DateTime start, DateTime end)
+        public QuestOccurrence AddOccurrence(DateTime start, DateTime end)
         {
             var occurrence = QuestOccurrence.Create(this, start, end);
             _occurrences.Add(occurrence);
+            return occurrence;
         }
 
         public void SetLabels(HashSet<int>? labelIds)
@@ -266,23 +274,14 @@ namespace Domain.Models
             return true;
         }
 
-        public void RecalculateStatistics(IQuestStatisticsCalculator calculator)
+        public void CompleteOccurrence(QuestOccurrence occurrence, DateTime utcNow)
         {
-            if (!IsRepeatable())
-                return;
-
-            var newStats = calculator.Calculate(QuestOccurrences);
-            Statistics!.UpdateFrom(newStats);
+            _occurrences.FirstOrDefault(occurrence)?.MarkAsCompleted(utcNow);
         }
 
-        public void CompleteOccurrence(int occurrenceId, DateTime utcNow)
+        public void UncompleteOccurrence(QuestOccurrence occurrence)
         {
-            QuestOccurrences.FirstOrDefault(o => o.Id == occurrenceId)?.MarkAsCompleted(utcNow);
-        }
-
-        public void UncompleteOccurrence(int occurrenceId)
-        {
-            QuestOccurrences.FirstOrDefault(o => o.Id == occurrenceId)?.MarkAsIncompleted();
+            _occurrences.FirstOrDefault(occurrence)?.MarkAsIncompleted();
         }
 
         public int GenerateMissingOccurrences(DateTime utcNow)
@@ -295,16 +294,16 @@ namespace Domain.Models
             return GenerateAndAddWindows(fromDate, utcNow);
         }
 
-        public int InitializeOccurrences(DateTime utcNow)
+        public void InitializeOccurrences(DateTime utcNow)
         {
             if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
-                return 0;
+                return;
 
             if (StartDate.HasValue && StartDate > utcNow)
-                return 0;
+                return;
 
             DateTime fromDate = StartDate ?? CreatedAt;
-            return GenerateAndAddWindows(fromDate, utcNow);
+            GenerateAndAddWindows(fromDate, utcNow);
         }
 
         private int GenerateAndAddWindows(DateTime fromDate, DateTime toDate)
@@ -314,13 +313,56 @@ namespace Domain.Models
 
             var windows = QuestWindowCalculator.GenerateWindows(this, fromDate, toDate);
 
-            int generatedCount = 0;
+            List<QuestOccurrence> generatedOccurrences = [];
             foreach (var window in windows)
             {
-                AddOccurrence(window.Start, window.End);
-                generatedCount++;
+                var newOccurrence = AddOccurrence(window.Start, window.End);
+                generatedOccurrences.Add(newOccurrence);
             }
-            return generatedCount;
+            return generatedOccurrences.Count;
         }
+
+        public void RecalculateStatistics(DateTime nowUtc)
+        {
+            if (!IsRepeatable() || Statistics is null)
+                return;
+
+            var newStats = QuestStatisticsCalculator.Calculate(QuestOccurrences, nowUtc);
+            if (Statistics is null)
+            {
+                Statistics = QuestStatistics.Create(this);
+                Statistics.UpdateFrom(newStats);
+            }
+            else
+            {
+                Statistics.UpdateFrom(newStats);
+            }
+        }
+
+        private QuestOccurrence? GetOrCreateCurrentOccurrence(DateTime utcNow)
+        {
+            // Find existing current occurrence
+            var current = QuestOccurrences.FirstOrDefault(o => o.OccurrenceStart <= utcNow && o.OccurrenceEnd >= utcNow);
+            if (current != null)
+                return current;
+
+            // If none, generate missing ones
+            GenerateMissingOccurrences(utcNow); // This adds new ones to the _occurrences list
+
+            // Try to find the current one again
+            current = QuestOccurrences.FirstOrDefault(o => o.OccurrenceStart <= utcNow && o.OccurrenceEnd >= utcNow);
+            if (current != null)
+                return current;
+
+            // If still none, check for grace period on last occurrence
+            var last = QuestOccurrences.OrderByDescending(o => o.OccurrenceEnd).FirstOrDefault();
+            if (last != null && utcNow <= last.OccurrenceEnd.AddHours(24))
+            {
+                return last;
+            }
+
+            return null;
+        }
+
     }
 }

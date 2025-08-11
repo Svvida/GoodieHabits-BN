@@ -12,6 +12,7 @@ using Application.Quests;
 using Application.Services.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
+using Domain.Calculators;
 using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
