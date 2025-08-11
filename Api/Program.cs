@@ -248,7 +248,7 @@ namespace Api
             builder.Services.AddHostedService<ResetQuestsTask>();
             builder.Services.AddHostedService<ExpireGoalsTask>();
             builder.Services.AddHostedService<ProcessOccurrencesTask>();
-            builder.Services.AddHostedService<ProcessStatisticsForRepeatableQuestsTask>();
+            builder.Services.AddHostedService<RecalculateRepeatableQuestStatisticsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

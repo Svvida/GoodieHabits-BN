@@ -28,6 +28,10 @@ namespace Api.BackgroundTasks
             {
                 logger.LogError(ex, "An error occurred while executing ExpireGoalsTask: {Message}", ex.Message);
             }
+            finally
+            {
+                logger.LogInformation("ExpireGoalsTask has finished.");
+            }
         }
     }
 }

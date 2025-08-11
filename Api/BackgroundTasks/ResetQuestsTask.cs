@@ -13,7 +13,6 @@ namespace Api.BackgroundTasks
             try
             {
                 var sender = scope.ServiceProvider.GetRequiredService<ISender>();
-
                 int affectedRows = await sender.Send(new ResetCompletedQuestsCommand(), cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)

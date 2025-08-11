@@ -170,13 +170,15 @@ namespace Infrastructure.Persistence.Repositories.Quests
             return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(DateTime utcNow, CancellationToken cancellationToken = default)
         {
             return await _context.Quests
                 .Where(q => q.QuestType == QuestTypeEnum.Daily ||
                             q.QuestType == QuestTypeEnum.Weekly ||
                             q.QuestType == QuestTypeEnum.Monthly)
+                .Where(q => (q.EndDate ?? DateTime.MaxValue) > utcNow && (q.StartDate ?? DateTime.MinValue) <= utcNow)
                 .Include(q => q.Statistics)
+                .Include(q => q.QuestOccurrences)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -214,13 +216,6 @@ namespace Infrastructure.Persistence.Repositories.Quests
                         q.AccountId == accountId,
                         cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public async Task<Quest?> GetQuestForStatsProcessingAsync(int questId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Quests
-                .Include(q => q.Statistics)
-                .FirstOrDefaultAsync(q => q.Id == questId, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default)

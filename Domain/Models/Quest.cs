@@ -274,16 +274,6 @@ namespace Domain.Models
             return true;
         }
 
-        public void CompleteOccurrence(QuestOccurrence occurrence, DateTime utcNow)
-        {
-            _occurrences.FirstOrDefault(occurrence)?.MarkAsCompleted(utcNow);
-        }
-
-        public void UncompleteOccurrence(QuestOccurrence occurrence)
-        {
-            _occurrences.FirstOrDefault(occurrence)?.MarkAsIncompleted();
-        }
-
         public int GenerateMissingOccurrences(DateTime utcNow)
         {
             if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
@@ -324,8 +314,10 @@ namespace Domain.Models
 
         public void RecalculateStatistics(DateTime nowUtc)
         {
-            if (!IsRepeatable() || Statistics is null)
+            if (!IsRepeatable())
                 return;
+
+            Statistics ??= QuestStatistics.Create(this);
 
             var newStats = QuestStatisticsCalculator.Calculate(QuestOccurrences, nowUtc);
             if (Statistics is null)

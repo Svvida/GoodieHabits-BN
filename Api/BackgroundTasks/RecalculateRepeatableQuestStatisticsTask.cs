@@ -1,8 +1,9 @@
-﻿using Application.Common.Interfaces.Quests;
+﻿using Application.Quests.RecalculateRepeatableQuestStatistics;
+using MediatR;
 
 namespace Api.BackgroundTasks
 {
-    public class ProcessStatisticsForRepeatableQuestsTask(IServiceScopeFactory scopeFactory, ILogger<ProcessStatisticsForRepeatableQuestsTask> logger) : StartupTask
+    public class RecalculateRepeatableQuestStatisticsTask(IServiceScopeFactory scopeFactory, ILogger<RecalculateRepeatableQuestStatisticsTask> logger) : StartupTask
     {
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
@@ -11,8 +12,8 @@ namespace Api.BackgroundTasks
 
             try
             {
-                var statisticsService = scope.ServiceProvider.GetRequiredService<IQuestStatisticsService>();
-                int affectedRows = await statisticsService.ProcessStatisticsForQuestsAndSaveAsync(cancellationToken).ConfigureAwait(false);
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                int affectedRows = await sender.Send(new RecalculateRepeatableQuestStatisticsCommand(), cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)
                 {
@@ -26,6 +27,10 @@ namespace Api.BackgroundTasks
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occurred while processing repeatable quests statistics.");
+            }
+            finally
+            {
+                logger.LogInformation("Finished processing repeatable quests statistics.");
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Application.Quests.GenerateMissingOccurrences;
+using MediatR;
 
 namespace Api.BackgroundTasks
 {
@@ -11,9 +12,8 @@ namespace Api.BackgroundTasks
 
             try
             {
-                var occurrencesGenerator = scope.ServiceProvider.GetRequiredService<IQuestOccurrenceGenerator>();
-
-                int affectedRows = await occurrencesGenerator.GenerateMissingOccurrencesForQuest(cancellationToken).ConfigureAwait(false);
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                int affectedRows = await sender.Send(new GenerateMissingOccurrencesCommand(), cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)
                 {
@@ -27,6 +27,10 @@ namespace Api.BackgroundTasks
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occurred while processing occurrences.");
+            }
+            finally
+            {
+                logger.LogInformation("ProcessOccurrences task finished.");
             }
         }
     }
