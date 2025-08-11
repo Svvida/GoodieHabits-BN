@@ -1,0 +1,88 @@
+﻿using Domain.Interfaces.Repositories;
+using Domain.Models;
+using Infrastructure.Persistence.Repositories.Common;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Persistence.Repositories
+{
+    public class AccountRepository(AppDbContext context) : BaseRepository<Account>(context), IAccountRepository
+    {
+        public async Task<Account?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.FirstOrDefaultAsync(a => a.Login == username, cancellationToken).ConfigureAwait(false)
+                ?? null;
+        }
+
+        public async Task<Account?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false)
+                ?? null;
+        }
+        public async Task<Account?> GetAccountWithProfileAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclue, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclue && a.Login == login, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Email == email, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return !await _context.Accounts.AnyAsync(a => a.Email == email, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<Account?> GetAccountToWipeoutDataAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Where(a => a.Id == accountId)
+                .Include(a => a.Profile)
+                    .ThenInclude(p => p.UserProfile_Badges)
+                .Include(a => a.Quests)
+                .Include(a => a.Labels)
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<Account?> GetByLoginIdentifier(string loginIdentifier, CancellationToken cancellationToken = default)
+        {
+            if (loginIdentifier.Contains('@'))
+            {
+                return await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Email == loginIdentifier, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                return await _context.Accounts
+                    .FirstOrDefaultAsync(a => a.Login == loginIdentifier, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        public async Task<IEnumerable<Account>> GetAccountsWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .Include(a => a.UserGoals.Where(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
+                .Where(ug => ug.UserGoals.Any(ug => ug.EndsAt <= nowUtc && !ug.IsExpired))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Account>> GetAccountsWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .Include(a => a.Profile)
+                .Include(a => a.Quests.Where(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
+                .Where(a => a.Quests.Any(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+}

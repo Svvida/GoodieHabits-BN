@@ -1,5 +1,5 @@
-﻿using Domain.Common;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
+using Infrastructure.Utilities;
 
 namespace Application.UserProfiles.Nickname
 {

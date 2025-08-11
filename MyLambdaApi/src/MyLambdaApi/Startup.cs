@@ -1,18 +1,20 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Application.Accounts.ChangePassword;
+using Application.Accounts.Commands.ChangePassword;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.Quests;
 using Application.Configurations;
 using Application.Dtos.Quests;
-using Application.Quests.CreateQuest.Validators;
+using Application.Quests.Commands.CreateQuest.Validators;
 using Application.Services;
 using Application.Services.Quests;
+using Application.Statistics.Calculators;
 using Application.Validators.Accounts;
 using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Application.Validators.UserGoal;
+using Domain.Calculators;
 using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
@@ -130,7 +132,7 @@ public class Startup
         services.AddScoped<IQuestLabelService, QuestLabelService>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenValidator, TokenValidator>();
-        services.AddSingleton<ILevelingService, LevelingService>();
+        services.AddSingleton<ILevelCalculator, LevelCalculator>();
         services.AddScoped<IUserGoalService, UserGoalService>();
         services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
         services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock

@@ -1,11 +1,7 @@
 ﻿namespace Domain.Exceptions
 {
-    public class AppException : Exception
+    public class AppException(string message, int statusCode) : Exception(message)
     {
-        public int StatusCode { get; }
-        public AppException(string message, int statusCode) : base(message)
-        {
-            StatusCode = statusCode;
-        }
+        public int StatusCode { get; } = statusCode;
     }
 }

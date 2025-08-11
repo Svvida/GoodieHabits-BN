@@ -1,8 +1,8 @@
 ﻿using Api.Helpers;
+using Application.Quests.Commands.UpdateQuestCompletion;
 using Application.Quests.Dtos;
-using Application.Quests.UpdateQuestCompletion;
-using Application.UserGoals.CreateUserGoal;
-using Application.UserGoals.GetActiveGoalByType;
+using Application.UserGoals.Commands.CreateUserGoal;
+using Application.UserGoals.Queries.GetActiveGoalByType;
 using Domain.Enum;
 using Domain.Interfaces;
 using MapsterMapper;

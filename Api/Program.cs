@@ -2,15 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Api.BackgroundTasks;
 using Api.Converters;
-using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
-using Application.Auth.Register;
+using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
-using Application.Common.Interfaces;
-using Application.Common.Interfaces.Quests;
-using Application.Services;
-using Application.Services.Quests;
+using Application.Quests;
+using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
 using Domain.Common;
 using Domain.Interfaces;
@@ -170,17 +167,12 @@ namespace Api
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
             builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
-            builder.Services.AddSingleton<ILevelingService, LevelingService>();
-            builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
+            builder.Services.AddSingleton<ILevelCalculator, LevelCalculator>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
-            builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
-            builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
             builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
-            builder.Services.AddScoped<IQuestMappingService, QuestMappingService>();
+            builder.Services.AddScoped<IQuestMapper, QuestMapper>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
@@ -237,10 +229,6 @@ namespace Api
                     };
                 });
 
-            // Configure Authorization
-            builder.Services.AddScoped<QuestAuthorizationFilter>();
-            builder.Services.AddScoped<QuestLabelAuthorizationFilter>();
-
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
@@ -248,7 +236,7 @@ namespace Api
             builder.Services.AddHostedService<ResetQuestsTask>();
             builder.Services.AddHostedService<ExpireGoalsTask>();
             builder.Services.AddHostedService<ProcessOccurrencesTask>();
-            builder.Services.AddHostedService<ProcessStatisticsForRepeatableQuestsTask>();
+            builder.Services.AddHostedService<RecalculateRepeatableQuestStatisticsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

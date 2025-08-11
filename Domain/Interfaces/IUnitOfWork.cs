@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces.Quests;
+﻿using Domain.Interfaces.Repositories;
 
 namespace Domain.Interfaces
 {
@@ -9,9 +9,6 @@ namespace Domain.Interfaces
         IUserGoalRepository UserGoals { get; }
         IQuestRepository Quests { get; }
         IQuestLabelRepository QuestLabels { get; }
-        IQuestOccurrenceRepository QuestOccurrences { get; }
-        IQuestStatisticsRepository QuestStatistics { get; }
-
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

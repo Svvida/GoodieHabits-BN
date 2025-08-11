@@ -1,7 +1,6 @@
 ﻿namespace Domain.Exceptions
 {
-    public class ConflictException : AppException
+    public class ConflictException(string message) : AppException(message, 409)
     {
-        public ConflictException(string message) : base(message, 409) { }
     }
 }

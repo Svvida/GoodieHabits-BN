@@ -108,5 +108,22 @@ namespace Domain.Models
                 throw new InvalidArgumentException("Bio cannot exceed 30 characters.");
             Bio = bio;
         }
+
+        public void IncrementExpiredGoals(int count)
+        {
+            if (count <= 0)
+                return;
+
+            ExpiredGoals += count;
+            ActiveGoals = Math.Max(ActiveGoals - count, 0);
+        }
+
+        public void DecrementCompletedQuestsAfterReset(int count)
+        {
+            if (count <= 0)
+                return;
+
+            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - count, 0);
+        }
     }
 }

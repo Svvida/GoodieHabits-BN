@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Statistics.Calculators;
 using Application.Statistics.Dtos;
 using Domain.Models;
 using Mapster;
@@ -16,7 +16,7 @@ namespace Application.Statistics.Mappings
 
         private static XpProgressDto MapToXpProgressDto(UserProfile src)
         {
-            var levelingService = MapContext.Current.GetService<ILevelingService>();
+            var levelingService = MapContext.Current.GetService<ILevelCalculator>();
             var levelInfo = levelingService.CalculateLevelInfo(src.TotalXp);
 
             return new XpProgressDto

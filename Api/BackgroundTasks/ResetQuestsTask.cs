@@ -1,41 +1,36 @@
-﻿using Domain.Interfaces;
+﻿using Application.Quests.Commands.ResetCompletedQuests;
+using MediatR;
 
 namespace Api.BackgroundTasks
 {
-    public class ResetQuestsTask : StartupTask
+    public class ResetQuestsTask(IServiceScopeFactory scopeFactory, ILogger<ResetQuestsTask> logger) : StartupTask
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<ResetQuestsTask> _logger;
-
-        public ResetQuestsTask(IServiceScopeFactory scopeFactory, ILogger<ResetQuestsTask> logger)
-        {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
-        }
-
         protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("ResetQuestsTask started.");
-            await using var scope = _scopeFactory.CreateAsyncScope();
+            logger.LogInformation("ResetQuestsTask started.");
+            await using var scope = scopeFactory.CreateAsyncScope();
 
             try
             {
-                var questResetService = scope.ServiceProvider.GetRequiredService<IQuestResetService>();
-
-                int affectedRows = await questResetService.ResetCompletedQuestsAsync(cancellationToken).ConfigureAwait(false);
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                int affectedRows = await sender.Send(new ResetCompletedQuestsCommand(), cancellationToken).ConfigureAwait(false);
 
                 if (affectedRows > 0)
                 {
-                    _logger.LogInformation("ResetQuestsTask successfully saved changes to the database. Affected rows: {Count}.", affectedRows);
+                    logger.LogInformation("ResetQuestsTask successfully saved changes to the database. Affected rows: {Count}.", affectedRows);
                 }
                 else
                 {
-                    _logger.LogInformation("ResetQuestsTask found no quests to reset.");
+                    logger.LogInformation("ResetQuestsTask found no quests to reset.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while executing ResetQuestsTask: {Message}", ex.Message);
+                logger.LogError(ex, "An error occurred while executing ResetQuestsTask: {Message}", ex.Message);
+            }
+            finally
+            {
+                logger.LogInformation("ResetQuestsTask completed.");
             }
         }
     }
