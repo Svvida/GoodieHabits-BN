@@ -1,4 +1,4 @@
-﻿using Application.UserGoals.ExpireGoals;
+﻿using Application.UserGoals.Commands.ExpireGoals;
 using MediatR;
 
 namespace Api.BackgroundTasks

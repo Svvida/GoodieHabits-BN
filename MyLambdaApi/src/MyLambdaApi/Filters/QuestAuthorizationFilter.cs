@@ -1,5 +1,5 @@
 ﻿using Domain;
-using Domain.Interfaces.Quests;
+using Domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

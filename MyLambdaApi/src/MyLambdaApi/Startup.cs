@@ -1,11 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Application.Accounts.ChangePassword;
+using Application.Accounts.Commands.ChangePassword;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.Quests;
 using Application.Configurations;
 using Application.Dtos.Quests;
-using Application.Quests.CreateQuest.Validators;
+using Application.Quests.Commands.CreateQuest.Validators;
 using Application.Services;
 using Application.Services.Quests;
 using Application.Statistics.Calculators;

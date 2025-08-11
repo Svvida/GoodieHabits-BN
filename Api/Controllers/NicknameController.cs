@@ -1,4 +1,4 @@
-﻿using Application.Nicknames.GetRandom;
+﻿using Application.Nicknames.Queries.GetRandom;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

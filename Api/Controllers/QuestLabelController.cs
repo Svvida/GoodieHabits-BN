@@ -1,9 +1,9 @@
 ﻿using Api.Helpers;
-using Application.QuestLabels.CreateQuestLabel;
-using Application.QuestLabels.DeleteQuestLabel;
+using Application.QuestLabels.Commands.CreateQuestLabel;
+using Application.QuestLabels.Commands.DeleteQuestLabel;
+using Application.QuestLabels.Commands.UpdateQuestLabel;
 using Application.QuestLabels.Dtos;
-using Application.QuestLabels.GetUserLabels;
-using Application.QuestLabels.UpdateQuestLabel;
+using Application.QuestLabels.Queries.GetUserLabels;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

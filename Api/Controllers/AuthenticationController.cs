@@ -1,6 +1,6 @@
-﻿using Application.Auth.Login;
-using Application.Auth.RefreshAccessToken;
-using Application.Auth.Register;
+﻿using Application.Auth.Commands.Login;
+using Application.Auth.Commands.RefreshAccessToken;
+using Application.Auth.Commands.Register;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

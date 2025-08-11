@@ -1,4 +1,4 @@
-﻿using Application.Leaderboard.GetTopXp;
+﻿using Application.Leaderboard.Queries.GetTopXp;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

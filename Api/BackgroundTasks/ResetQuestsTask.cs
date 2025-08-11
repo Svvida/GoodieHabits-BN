@@ -1,4 +1,4 @@
-﻿using Application.Quests.ResetCompletedQuests;
+﻿using Application.Quests.Commands.ResetCompletedQuests;
 using MediatR;
 
 namespace Api.BackgroundTasks

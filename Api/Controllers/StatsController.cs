@@ -1,6 +1,6 @@
 ﻿using Api.Helpers;
-using Application.Statistics.GetUserExtendedStats;
-using Application.Statistics.GetUserProfileStats;
+using Application.Statistics.Queries.GetUserExtendedStats;
+using Application.Statistics.Queries.GetUserProfileStats;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

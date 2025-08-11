@@ -1,4 +1,4 @@
-﻿using Application.Quests.RecalculateRepeatableQuestStatistics;
+﻿using Application.Quests.Commands.RecalculateRepeatableQuestStatistics;
 using MediatR;
 
 namespace Api.BackgroundTasks

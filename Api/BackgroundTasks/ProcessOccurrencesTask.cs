@@ -1,4 +1,4 @@
-﻿using Application.Quests.GenerateMissingOccurrences;
+﻿using Application.Quests.Commands.GenerateMissingOccurrences;
 using MediatR;
 
 namespace Api.BackgroundTasks

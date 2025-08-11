@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Microsoft.Extensions.Options;
 
 namespace Application.Statistics.Calculators

@@ -1,9 +1,9 @@
 ﻿using Api.Helpers;
-using Application.Accounts.ChangePassword;
-using Application.Accounts.DeleteAccount;
-using Application.Accounts.GetWithProfile;
-using Application.Accounts.UpdateAccount;
-using Application.Accounts.WipeoutData;
+using Application.Accounts.Commands.ChangePassword;
+using Application.Accounts.Commands.DeleteAccount;
+using Application.Accounts.Commands.UpdateAccount;
+using Application.Accounts.Commands.WipeoutData;
+using Application.Accounts.Queries.GetWithProfile;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

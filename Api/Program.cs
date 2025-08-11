@@ -2,17 +2,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Api.BackgroundTasks;
 using Api.Converters;
-using Api.Filters;
 using Api.Middlewares;
 using Api.ModelBinders;
-using Application.Auth.Register;
+using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
-using Application.Common.Interfaces.Quests;
 using Application.Quests;
-using Application.Services.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
-using Domain.Calculators;
 using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
@@ -171,14 +167,10 @@ namespace Api
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IQuestResetService, QuestResetService>();
             builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
             builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
             builder.Services.AddSingleton<ILevelCalculator, LevelCalculator>();
-            builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
-            builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
             builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
             builder.Services.AddScoped<IQuestMapper, QuestMapper>();
 
@@ -236,10 +228,6 @@ namespace Api
                         ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
                     };
                 });
-
-            // Configure Authorization
-            builder.Services.AddScoped<QuestAuthorizationFilter>();
-            builder.Services.AddScoped<QuestLabelAuthorizationFilter>();
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
