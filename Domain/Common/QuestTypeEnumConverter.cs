@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Globalization;
-using Domain.Enum;
+using System.Reflection;
+using System.Runtime.Serialization;
+using Domain.Enums;
 using Domain.Exceptions;
 
-namespace Api.Converters
+namespace Domain.Common
 {
     public class QuestTypeEnumConverter : TypeConverter
     {
@@ -16,6 +18,16 @@ namespace Api.Converters
         {
             if (value is string stringValue)
             {
+                // Try parsing by EnumMember attribute value
+                foreach (var field in typeof(QuestTypeEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
+                {
+                    var enumMemberAttribute = field.GetCustomAttribute<EnumMemberAttribute>();
+                    if (enumMemberAttribute != null && string.Equals(enumMemberAttribute.Value, stringValue, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Enum.Parse(typeof(QuestTypeEnum), field.Name);
+                    }
+                }
+
                 if (Enum.TryParse<QuestTypeEnum>(stringValue, true, out var result))
                     return result;
 

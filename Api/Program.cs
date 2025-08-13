@@ -3,7 +3,6 @@ using System.Text;
 using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Middlewares;
-using Api.ModelBinders;
 using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
 using Application.Quests;
@@ -96,10 +95,7 @@ namespace Api
             //});
 
             //Add Controllers
-            builder.Services.AddControllers(options =>
-                {
-                    options.ModelBinderProviders.Insert(0, new QuestTypeModelBinderProvider());
-                })
+            builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());

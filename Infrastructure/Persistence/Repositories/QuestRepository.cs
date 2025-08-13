@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+﻿using Domain.Enums;
 using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
@@ -119,15 +119,17 @@ namespace Infrastructure.Persistence.Repositories
 
             query = query
                 .Include(q => q.QuestOccurrences)
-                .Include(q => q.Account.UserGoals.FirstOrDefault(ug => !ug.IsExpired && ug.QuestId == q.Id))
                 .Include(q => q.Account)
                      .ThenInclude(a => a.Profile);
 
+            if (questType == QuestTypeEnum.Daily)
+                query = query.Include(q => q.Statistics);
+
             if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days);
+                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
 
             else if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days);
+                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
 
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }

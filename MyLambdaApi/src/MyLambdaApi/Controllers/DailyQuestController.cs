@@ -1,10 +1,6 @@
-﻿using Application.Commands;
-using Application.Common.Interfaces.Quests;
-using Application.Dtos.Quests;
-using Application.Dtos.Quests.DailyQuest;
-using Application.Quests.Dtos;
+﻿using Application.Quests.Dtos;
 using Domain;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

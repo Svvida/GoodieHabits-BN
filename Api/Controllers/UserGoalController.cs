@@ -3,7 +3,7 @@ using Application.Quests.Commands.UpdateQuestCompletion;
 using Application.Quests.Dtos;
 using Application.UserGoals.Commands.CreateUserGoal;
 using Application.UserGoals.Queries.GetActiveGoalByType;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Interfaces;
 using MapsterMapper;
 using MediatR;

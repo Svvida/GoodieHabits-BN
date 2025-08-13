@@ -1,8 +1,10 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel;
+using System.Runtime.Serialization;
+using Domain.Common;
 
-namespace Domain.Enum
+namespace Domain.Enums
 {
-    //[TypeConverter(typeof(QuestTypeEnumConverter))]
+    [TypeConverter(typeof(QuestTypeEnumConverter))]
     public enum QuestTypeEnum
     {
         [EnumMember(Value = "one-time")]

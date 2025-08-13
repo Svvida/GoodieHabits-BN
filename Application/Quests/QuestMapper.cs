@@ -1,5 +1,5 @@
 ﻿using Application.Quests.Dtos;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using MapsterMapper;

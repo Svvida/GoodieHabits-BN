@@ -1,6 +1,6 @@
 ﻿using Application.Quests.Dtos;
 using Application.Quests.Utilities;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;

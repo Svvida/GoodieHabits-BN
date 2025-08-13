@@ -1,6 +1,5 @@
-﻿using Application.Quests.Commands.CreateQuest;
-using Application.Quests.Dtos;
-using Domain.Enum;
+﻿using Application.Quests.Dtos;
+using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Models;
 using MediatR;

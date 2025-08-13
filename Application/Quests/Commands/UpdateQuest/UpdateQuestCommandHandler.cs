@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Quests.Dtos;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;

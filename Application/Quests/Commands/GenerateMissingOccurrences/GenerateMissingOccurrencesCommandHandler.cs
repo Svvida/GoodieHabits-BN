@@ -31,6 +31,7 @@ namespace Application.Quests.Commands.GenerateMissingOccurrences
                     continue;
                 }
 
+                logger.LogDebug("Generated {Occurreces} new occurreces fro quest {QuestId}", generatedForQuest, quest.Id);
                 totalGenerated += generatedForQuest;
             }
 
