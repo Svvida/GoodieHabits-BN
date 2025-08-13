@@ -1,6 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Quests.Dtos;
-using Domain.Enum;
+using Domain.Enums;
 using MediatR;
 
 namespace Application.Quests.Commands.UpdateQuest

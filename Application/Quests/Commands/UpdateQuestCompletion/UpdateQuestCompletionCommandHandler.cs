@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
@@ -30,7 +30,9 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
 
             if (command.IsCompleted)
+            {
                 quest.Complete(nowUtc.ToDateTimeUtc(), ShouldAssignRewards(quest, nowUtc));
+            }
             else
             {
                 quest.Uncomplete(nowUtc.ToDateTimeUtc());
@@ -60,6 +62,9 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
                     quest.AccountId, quest.Id);
                 throw new InvalidArgumentException($"TimeZone information is missing for the account associated with Quest {quest.Id}.");
             }
+
+            // We can just call this, EF tracker will connect goal to the quest if it is returned
+            await unitOfWork.UserGoals.GetActiveGoalByQuestIdAsync(questId, cancellationToken).ConfigureAwait(false);
 
             return quest;
         }

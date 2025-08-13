@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.Common.ValidatorsExtensions;
-using Application.Quests.Commands.UpdateQuest;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
 

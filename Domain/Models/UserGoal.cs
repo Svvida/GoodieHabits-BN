@@ -1,5 +1,5 @@
 ﻿using Domain.Common;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Events.UserGoals;
 using Domain.Exceptions;
 

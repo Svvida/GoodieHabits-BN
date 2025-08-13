@@ -1,5 +1,4 @@
-﻿using Application.Quests.Commands.CreateQuest;
-using Domain.Enum;
+﻿using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
 

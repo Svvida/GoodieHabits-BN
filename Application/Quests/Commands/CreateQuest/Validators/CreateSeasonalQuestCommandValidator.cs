@@ -1,6 +1,5 @@
-﻿using Application.Quests.Commands.CreateQuest;
-using Application.Quests.Utilities;
-using Domain.Enum;
+﻿using Application.Quests.Utilities;
+using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
 using NodaTime;

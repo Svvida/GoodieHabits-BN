@@ -1,5 +1,5 @@
 ﻿using Application.Common.ValidatorsExtensions;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
 

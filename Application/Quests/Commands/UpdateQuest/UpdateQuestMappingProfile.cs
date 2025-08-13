@@ -1,4 +1,5 @@
-﻿using Mapster;
+﻿using Domain.Enums;
+using Mapster;
 
 namespace Application.Quests.Commands.UpdateQuest
 {
@@ -7,19 +8,19 @@ namespace Application.Quests.Commands.UpdateQuest
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<UpdateOneTimeQuestRequest, UpdateOneTimeQuestCommand>()
-                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.OneTime);
+                .Map(dest => dest.QuestType, src => QuestTypeEnum.OneTime);
 
             config.NewConfig<UpdateDailyQuestRequest, UpdateDailyQuestCommand>()
-                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Daily);
+                .Map(dest => dest.QuestType, src => QuestTypeEnum.Daily);
 
             config.NewConfig<UpdateWeeklyQuestRequest, UpdateWeeklyQuestCommand>()
-                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Weekly);
+                .Map(dest => dest.QuestType, src => QuestTypeEnum.Weekly);
 
             config.NewConfig<UpdateMonthlyQuestRequest, UpdateMonthlyQuestCommand>()
-                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Monthly);
+                .Map(dest => dest.QuestType, src => QuestTypeEnum.Monthly);
 
             config.NewConfig<UpdateSeasonalQuestRequest, UpdateSeasonalQuestCommand>()
-                .Map(dest => dest.QuestType, src => Domain.Enum.QuestTypeEnum.Seasonal);
+                .Map(dest => dest.QuestType, src => QuestTypeEnum.Seasonal);
         }
     }
 }

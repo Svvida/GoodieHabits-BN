@@ -1,6 +1,6 @@
 ﻿using Domain.Calculators;
 using Domain.Common;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Events.Quests;
 using Domain.Exceptions;
 
@@ -31,8 +31,7 @@ namespace Domain.Models
         public SeasonalQuest_Season? SeasonalQuest_Season { get; set; } = null;
         public ICollection<UserGoal> UserGoal { get; set; } = [];
         public QuestStatistics? Statistics { get; private set; } = null;
-        private readonly List<QuestOccurrence> _occurrences = [];
-        public IReadOnlyCollection<QuestOccurrence> QuestOccurrences => _occurrences.AsReadOnly();
+        public ICollection<QuestOccurrence> QuestOccurrences { get; private set; } = [];
 
         // EF Core constructor
         protected Quest() { }
@@ -225,7 +224,7 @@ namespace Domain.Models
         public QuestOccurrence AddOccurrence(DateTime start, DateTime end)
         {
             var occurrence = QuestOccurrence.Create(this, start, end);
-            _occurrences.Add(occurrence);
+            QuestOccurrences.Add(occurrence);
             return occurrence;
         }
 
@@ -306,6 +305,9 @@ namespace Domain.Models
             List<QuestOccurrence> generatedOccurrences = [];
             foreach (var window in windows)
             {
+                if (QuestOccurrences.Any(qo => qo.OccurrenceStart == window.Start && qo.OccurrenceEnd == window.End))
+                    continue;
+
                 var newOccurrence = AddOccurrence(window.Start, window.End);
                 generatedOccurrences.Add(newOccurrence);
             }

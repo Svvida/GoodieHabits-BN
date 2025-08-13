@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Domain.Enum;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;

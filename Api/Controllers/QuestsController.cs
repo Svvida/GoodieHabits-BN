@@ -8,7 +8,7 @@ using Application.Quests.Queries.GetActiveQuests;
 using Application.Quests.Queries.GetQuestById;
 using Application.Quests.Queries.GetQuestsByType;
 using Application.Quests.Queries.GetQuestsEligibleForGoal;
-using Domain.Enum;
+using Domain.Enums;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

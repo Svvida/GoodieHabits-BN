@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+﻿using Domain.Enums;
 using Domain.Exceptions;
 
 namespace Application.Quests.Utilities

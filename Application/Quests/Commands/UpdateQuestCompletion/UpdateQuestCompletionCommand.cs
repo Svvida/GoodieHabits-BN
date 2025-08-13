@@ -1,5 +1,5 @@
 ﻿using Application.Common.Interfaces;
-using Domain.Enum;
+using Domain.Enums;
 using MediatR;
 
 namespace Application.Quests.Commands.UpdateQuestCompletion
