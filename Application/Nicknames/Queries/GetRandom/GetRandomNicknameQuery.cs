@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Nicknames.Queries.GetRandom
 {
-    public record GetRandomNicknameQuery() : IRequest<GetRandomNicknameResponse>;
+    public record GetRandomNicknameQuery() : IQuery<GetRandomNicknameResponse>;
 }

@@ -1,7 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Quests.Dtos;
 using Domain.Enums;
-using MediatR;
 
 namespace Application.Quests.Commands.UpdateQuest
 {
@@ -21,18 +20,18 @@ namespace Application.Quests.Commands.UpdateQuest
         public int AccountId { get; init; }
     }
 
-    public record UpdateOneTimeQuestCommand : UpdateQuestCommand, IRequest<OneTimeQuestDetailsDto>;
-    public record UpdateDailyQuestCommand : UpdateQuestCommand, IRequest<DailyQuestDetailsDto>;
-    public record UpdateWeeklyQuestCommand : UpdateQuestCommand, IRequest<WeeklyQuestDetailsDto>
+    public record UpdateOneTimeQuestCommand : UpdateQuestCommand, ICommand<OneTimeQuestDetailsDto>;
+    public record UpdateDailyQuestCommand : UpdateQuestCommand, ICommand<DailyQuestDetailsDto>;
+    public record UpdateWeeklyQuestCommand : UpdateQuestCommand, ICommand<WeeklyQuestDetailsDto>
     {
         public HashSet<string> Weekdays { get; init; } = [];
     }
-    public record UpdateMonthlyQuestCommand : UpdateQuestCommand, IRequest<MonthlyQuestDetailsDto>
+    public record UpdateMonthlyQuestCommand : UpdateQuestCommand, ICommand<MonthlyQuestDetailsDto>
     {
         public int StartDay { get; init; }
         public int EndDay { get; init; }
     }
-    public record UpdateSeasonalQuestCommand : UpdateQuestCommand, IRequest<SeasonalQuestDetailsDto>
+    public record UpdateSeasonalQuestCommand : UpdateQuestCommand, ICommand<SeasonalQuestDetailsDto>
     {
         public string Season { get; init; } = null!;
     }

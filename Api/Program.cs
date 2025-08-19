@@ -187,10 +187,8 @@ namespace Api
             {
                 cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
                 cfg.RegisterServicesFromAssembly(applicationAssembly);
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
-
-            // Register Pipeline Behaviour
-            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -198,6 +196,7 @@ namespace Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
                 options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment()); // Enable sensitive data logging only in development
             });
+
             // Register Password Hasher
             builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
             builder.Services.Configure<PasswordHasherOptions>(options =>

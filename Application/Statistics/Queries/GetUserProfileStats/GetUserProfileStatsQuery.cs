@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Statistics.Queries.GetUserProfileStats
 {
-    public record GetUserProfileStatsQuery(int AccountId) : IRequest<GetUserProfileStatsResponse>;
+    public record GetUserProfileStatsQuery(int AccountId) : IQuery<GetUserProfileStatsResponse>;
 }

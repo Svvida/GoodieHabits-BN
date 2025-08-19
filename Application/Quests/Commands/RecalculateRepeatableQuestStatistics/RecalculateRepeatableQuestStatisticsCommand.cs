@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Quests.Commands.RecalculateRepeatableQuestStatistics
 {
-    public record RecalculateRepeatableQuestStatisticsCommand() : IRequest<int>;
+    public record RecalculateRepeatableQuestStatisticsCommand() : ICommand<int>;
 }

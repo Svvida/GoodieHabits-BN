@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Accounts.Commands.DeleteAccount
 {
-    public record DeleteAccountCommand(string Password, string ConfirmPassword, int AccountId) : IRequest;
+    public record DeleteAccountCommand(string Password, string ConfirmPassword, int AccountId) : ICommand;
 }

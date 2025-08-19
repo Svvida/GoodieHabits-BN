@@ -1,7 +1,7 @@
-﻿using Application.Leaderboard.Dtos;
-using MediatR;
+﻿using Application.Common.Interfaces;
+using Application.Leaderboard.Dtos;
 
 namespace Application.Leaderboard.Queries.GetTopXp
 {
-    public record GetTopXpQuery() : IRequest<List<LeaderboardItemDto>>;
+    public record GetTopXpQuery() : IQuery<List<LeaderboardItemDto>>;
 }

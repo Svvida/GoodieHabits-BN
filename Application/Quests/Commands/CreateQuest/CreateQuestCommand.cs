@@ -1,6 +1,6 @@
-﻿using Application.Quests.Dtos;
+﻿using Application.Common.Interfaces;
+using Application.Quests.Dtos;
 using Domain.Enums;
-using MediatR;
 
 namespace Application.Quests.Commands.CreateQuest
 {
@@ -19,18 +19,18 @@ namespace Application.Quests.Commands.CreateQuest
         public QuestTypeEnum QuestType { get; init; }
     }
 
-    public record CreateOneTimeQuestCommand : CreateQuestCommand, IRequest<OneTimeQuestDetailsDto>;
-    public record CreateDailyQuestCommand : CreateQuestCommand, IRequest<DailyQuestDetailsDto>;
-    public record CreateWeeklyQuestCommand : CreateQuestCommand, IRequest<WeeklyQuestDetailsDto>
+    public record CreateOneTimeQuestCommand : CreateQuestCommand, ICommand<OneTimeQuestDetailsDto>;
+    public record CreateDailyQuestCommand : CreateQuestCommand, ICommand<DailyQuestDetailsDto>;
+    public record CreateWeeklyQuestCommand : CreateQuestCommand, ICommand<WeeklyQuestDetailsDto>
     {
         public HashSet<string> Weekdays { get; init; } = [];
     }
-    public record CreateMonthlyQuestCommand : CreateQuestCommand, IRequest<MonthlyQuestDetailsDto>
+    public record CreateMonthlyQuestCommand : CreateQuestCommand, ICommand<MonthlyQuestDetailsDto>
     {
         public int StartDay { get; init; }
         public int EndDay { get; init; }
     }
-    public record CreateSeasonalQuestCommand : CreateQuestCommand, IRequest<SeasonalQuestDetailsDto>
+    public record CreateSeasonalQuestCommand : CreateQuestCommand, ICommand<SeasonalQuestDetailsDto>
     {
         public string Season { get; init; } = null!;
     }

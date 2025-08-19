@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Accounts.Commands.ChangePassword
 {
-    public class ChangePasswordCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<ChangePasswordCommand>
+    public class ChangePasswordCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<ChangePasswordCommand, Unit>
     {
-        public async Task Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
         {
             var account = await unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false);
 
@@ -17,7 +17,7 @@ namespace Application.Accounts.Commands.ChangePassword
 
             account.UpdateHashPassword(passwordHasher.HashPassword(account, request.NewPassword));
 
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Unit.Value;
         }
     }
 }

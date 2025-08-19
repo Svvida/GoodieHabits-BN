@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Accounts.Commands.WipeoutData
 {
-    public class WipeoutDataCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<WipeoutDataCommand>
+    public class WipeoutDataCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<WipeoutDataCommand, Unit>
     {
-        public async Task Handle(WipeoutDataCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(WipeoutDataCommand request, CancellationToken cancellationToken)
         {
             var account = await unitOfWork.Accounts.GetAccountToWipeoutDataAsync(request.AccountId, cancellationToken).ConfigureAwait(false);
 
@@ -23,7 +23,7 @@ namespace Application.Accounts.Commands.WipeoutData
             var labelsToDelete = account.Labels.ToList();
             unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
 
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Unit.Value;
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Quests.Commands.ResetCompletedQuests
 {
-    public record ResetCompletedQuestsCommand() : IRequest<int>;
+    public record ResetCompletedQuestsCommand() : ICommand<int>;
 }

@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Accounts.Queries.GetWithProfile
 {
-    public record GetAccountWithProfileQuery(int AccountId) : IRequest<GetAccountWithProfileResponse>;
+    public record GetAccountWithProfileQuery(int AccountId) : IQuery<GetAccountWithProfileResponse>;
 }
