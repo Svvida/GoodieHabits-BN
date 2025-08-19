@@ -2,29 +2,22 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Api.BackgroundTasks;
 using Api.Converters;
-using Api.Filters;
 using Api.Middlewares;
-using Application.Configurations;
-using Application.Configurations.Leveling;
-using Application.Dtos.Quests;
-using Application.Interfaces;
-using Application.Interfaces.Quests;
-using Application.MappingProfiles;
-using Application.Services;
-using Application.Services.Quests;
-using Application.Validators.Accounts;
-using Application.Validators.Auth;
-using Application.Validators.QuestLabels;
-using Application.Validators.Quests;
-using Application.Validators.UserGoal;
+using Application.Auth.Commands.Register;
+using Application.Common.Behaviors;
+using Application.Quests;
+using Application.Statistics.Calculators;
+using Application.UserProfiles.Nickname;
+using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Mapster;
+using MapsterMapper;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -88,6 +81,7 @@ namespace Api
 
         private static void ConfigureServices(WebApplicationBuilder builder)
         {
+            var applicationAssembly = typeof(Application.AssemblyReference).Assembly;
             //builder.Services.AddCors(options =>
             //{
             //    options.AddPolicy("SwaggerCors",
@@ -107,6 +101,7 @@ namespace Api
                     options.JsonSerializerOptions.Converters.Add(new TrimmingJsonConverter());
                     options.JsonSerializerOptions.Converters.Add(new JsonConverterForUtcDateTime());
                     options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
             // Add Swagger for API Documentation
@@ -160,48 +155,40 @@ namespace Api
                         Array.Empty<string>()
                     }
                 });
+
+                options.EnableAnnotations();
             });
-            builder.Services.AddFluentValidationRulesToSwagger();
 
             // Register Repositories
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IQuestService, QuestService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IQuestResetService, QuestResetService>();
-            builder.Services.AddScoped<IQuestLabelService, QuestLabelService>();
-            builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
-            builder.Services.AddScoped<ITokenValidator, TokenValidator>();
-            builder.Services.AddSingleton<ILevelingService, LevelingService>();
-            builder.Services.AddScoped<IUserGoalService, UserGoalService>();
-            builder.Services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
+            builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
+            builder.Services.AddSingleton<ITokenValidator, TokenValidator>();
+            builder.Services.AddSingleton<ILevelCalculator, LevelCalculator>();
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
-            builder.Services.AddScoped<IQuestOccurrenceGenerator, QuestOccurrencesGenerator>();
-            builder.Services.AddScoped<IQuestStatisticsCalculator, QuestStatisticsCalculator>();
-            builder.Services.AddScoped<IStatsService, StatsService>();
-            builder.Services.AddScoped<IGoalExpirationService, GoalExpirationService>();
-            builder.Services.AddScoped<INicknameGeneratorService, NicknameGeneratorService>();
-            builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+            builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
+            builder.Services.AddScoped<IQuestMapper, QuestMapper>();
 
             // Register Validators
-            builder.Services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<UpdateAccountValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<PasswordConfirmationValidator>();
-            builder.Services.AddFluentValidationAutoValidation();
-            builder.Services.AddFluentValidationClientsideAdapters();
+            builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
 
-            // Register AutoMapper profiles
-            builder.Services.AddAutoMapper(typeof(AccountProfile).Assembly); // Automatically register all profiles in the assembly
+            // Register Mapster
+            var typeAdapterConfig = new TypeAdapterConfig();
+
+            typeAdapterConfig.Scan(applicationAssembly); // Scan the current assembly for mappings
+
+            builder.Services.AddSingleton(typeAdapterConfig);
+
+            builder.Services.AddScoped<IMapper, ServiceMapper>();
+
+            // Register MediatR
+            builder.Services.AddMediatR(cfg =>
+            {
+                cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
+                cfg.RegisterServicesFromAssembly(applicationAssembly);
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            });
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -209,6 +196,7 @@ namespace Api
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
                 options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment()); // Enable sensitive data logging only in development
             });
+
             // Register Password Hasher
             builder.Services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
             builder.Services.Configure<PasswordHasherOptions>(options =>
@@ -236,10 +224,6 @@ namespace Api
                     };
                 });
 
-            // Configure Authorization
-            builder.Services.AddScoped<QuestAuthorizationFilter>();
-            builder.Services.AddScoped<QuestLabelAuthorizationFilter>();
-
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
@@ -247,7 +231,7 @@ namespace Api
             builder.Services.AddHostedService<ResetQuestsTask>();
             builder.Services.AddHostedService<ExpireGoalsTask>();
             builder.Services.AddHostedService<ProcessOccurrencesTask>();
-            builder.Services.AddHostedService<ProcessStatisticsForRepeatableQuestsTask>();
+            builder.Services.AddHostedService<RecalculateRepeatableQuestStatisticsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

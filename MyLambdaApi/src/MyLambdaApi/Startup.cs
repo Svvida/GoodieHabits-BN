@@ -1,18 +1,21 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Application.Accounts.Commands.ChangePassword;
+using Application.Common.Interfaces;
+using Application.Common.Interfaces.Quests;
 using Application.Configurations;
-using Application.Configurations.Leveling;
 using Application.Dtos.Quests;
-using Application.Interfaces;
-using Application.Interfaces.Quests;
-using Application.MappingProfiles;
+using Application.Quests.Commands.CreateQuest.Validators;
 using Application.Services;
 using Application.Services.Quests;
+using Application.Statistics.Calculators;
 using Application.Validators.Accounts;
 using Application.Validators.Auth;
 using Application.Validators.QuestLabels;
 using Application.Validators.Quests;
 using Application.Validators.UserGoal;
+using Domain.Calculators;
+using Domain.Common;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
@@ -20,7 +23,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Authentication;
 using Infrastructure.Persistence;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -118,7 +120,6 @@ public class Startup
                     }
                 });
         });
-        services.AddFluentValidationRulesToSwagger();
 
         // Register Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -131,7 +132,7 @@ public class Startup
         services.AddScoped<IQuestLabelService, QuestLabelService>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenValidator, TokenValidator>();
-        services.AddSingleton<ILevelingService, LevelingService>();
+        services.AddSingleton<ILevelCalculator, LevelCalculator>();
         services.AddScoped<IUserGoalService, UserGoalService>();
         services.AddScoped<IQuestStatisticsService, QuestStatisticsService>();
         services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
@@ -141,7 +142,7 @@ public class Startup
         services.AddScoped<IGoalExpirationService, GoalExpirationService>();
 
         // Register Validators
-        services.AddValidatorsFromAssemblyContaining<BaseCreateQuestValidator<BaseCreateQuestDto>>();
+        services.AddValidatorsFromAssemblyContaining<CreateQuestCommandValidator<BaseCreateQuestDto>>();
         services.AddValidatorsFromAssemblyContaining<BaseUpdateQuestValidator<BaseUpdateQuestDto>>();
         services.AddValidatorsFromAssemblyContaining<QuestCompletionPatchValidator<QuestCompletionPatchDto>>();
         services.AddValidatorsFromAssemblyContaining<CreateAccountValidator>();
@@ -149,14 +150,25 @@ public class Startup
         services.AddValidatorsFromAssemblyContaining<LoginValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateQuestLabelValidator>();
         services.AddValidatorsFromAssemblyContaining<PatchQuestLabelValidator>();
-        services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
+        services.AddValidatorsFromAssemblyContaining<ChangePasswordCommandValidator>();
         services.AddValidatorsFromAssemblyContaining<PasswordConfirmationValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateUserGoalValidator>();
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
 
         // Register AutoMapper profiles
-        services.AddAutoMapper(typeof(AccountProfile).Assembly); // Automatically register all profiles in the assembly
+        //var profileAssembly = typeof(AccountProfile).Assembly;
+
+        //services.AddAutoMapper(cfg =>
+        //{
+        //    cfg.LicenseKey = services..Configuration["AutomapperKey"] ?? string.Empty;
+        //}, profileAssembly);
+
+        //// Register MediatR
+        //builder.Services.AddMediatR(cfg =>
+        //{
+        //    cfg.LicenseKey = builder.Configuration["AutomapperKey"] ?? string.Empty;
+        //});
 
         // Configure EF Core with SQL Server
         services.AddDbContext<AppDbContext>(options =>

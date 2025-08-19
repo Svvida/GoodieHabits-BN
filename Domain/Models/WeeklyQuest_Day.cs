@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+﻿using Domain.Enums;
 
 namespace Domain.Models
 {
@@ -11,10 +11,8 @@ namespace Domain.Models
         public Quest Quest { get; set; } = null!;
 
         public WeeklyQuest_Day() { }
-        public WeeklyQuest_Day(int id, int questId, WeekdayEnum weekday)
+        public WeeklyQuest_Day(WeekdayEnum weekday)
         {
-            Id = id;
-            QuestId = questId;
             Weekday = weekday;
         }
     }

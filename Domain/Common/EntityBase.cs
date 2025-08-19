@@ -2,7 +2,7 @@
 
 namespace Domain.Common
 {
-    public abstract class EntityBase
+    public abstract class EntityBase : AggregateRoot
     {
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

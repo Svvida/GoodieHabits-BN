@@ -1,5 +1,5 @@
-﻿using Application.Dtos.UserProfile;
-using Application.Interfaces;
+﻿using Application.Nicknames.Queries.GetRandom;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,24 +8,15 @@ namespace Api.Controllers
     [ApiController]
     [Route("api")]
     [Authorize]
-    public class NicknameController : ControllerBase
+    public class NicknameController(ISender sender) : ControllerBase
     {
-        private readonly INicknameGeneratorService _nicknameGeneratorService;
-
-        public NicknameController(INicknameGeneratorService nicknameGeneratorService)
-        {
-            _nicknameGeneratorService = nicknameGeneratorService;
-        }
 
         [HttpGet("nickname/random")]
-        public async Task<ActionResult<GetNicknameDto>> GenerateUniqueNickname(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetRandomNicknameResponse>> GenerateUniqueNickname(CancellationToken cancellationToken = default)
         {
-            var randomNickname = await _nicknameGeneratorService.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false);
+            var randomNickname = await sender.Send(new GetRandomNicknameQuery(), cancellationToken);
 
-            return new GetNicknameDto
-            {
-                Nickname = randomNickname
-            };
+            return Ok(randomNickname);
         }
     }
 }

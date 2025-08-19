@@ -1,6 +1,6 @@
-﻿using Application.Dtos.Quests;
-using Application.Dtos.UserGoal;
+﻿using Application.Dtos.UserGoal;
 using Application.Interfaces;
+using Application.Quests.Dtos;
 using Domain;
 using Domain.Enum;
 using Domain.Exceptions;
@@ -40,7 +40,7 @@ namespace MyLambdaApi.Controllers
 
         [HttpGet]
         [Route("active/{goaltype}")]
-        public async Task<ActionResult<BaseGetQuestDto>> GetActiveGoal(
+        public async Task<ActionResult<QuestDetailsDto>> GetActiveGoal(
             string goalType,
             CancellationToken cancellationToken = default)
         {

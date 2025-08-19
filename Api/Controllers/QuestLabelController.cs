@@ -1,8 +1,11 @@
-﻿using Api.Filters;
-using Application.Dtos.Labels;
-using Application.Interfaces;
-using Domain;
-using Domain.Exceptions;
+﻿using Api.Helpers;
+using Application.QuestLabels.Commands.CreateQuestLabel;
+using Application.QuestLabels.Commands.DeleteQuestLabel;
+using Application.QuestLabels.Commands.UpdateQuestLabel;
+using Application.QuestLabels.Dtos;
+using Application.QuestLabels.Queries.GetUserLabels;
+using MapsterMapper;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,53 +14,47 @@ namespace Api.Controllers
     [ApiController]
     [Authorize]
     [Route("api/quest-labels")]
-    public class QuestLabelController : ControllerBase
+    public class QuestLabelController(ISender sender, IMapper mapper) : ControllerBase
     {
-        private readonly IQuestLabelService _questLabelService;
-
-        public QuestLabelController(IQuestLabelService questLabelService)
-        {
-            _questLabelService = questLabelService;
-        }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetQuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            return Ok(await _questLabelService.GetUserLabelsAsync(accountId, cancellationToken));
+            var query = new GetUserLabelsQuery(JwtHelpers.GetCurrentUserId(User));
+            return Ok(await sender.Send(query, cancellationToken));
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> CreateLabelAsync(CreateQuestLabelDto createDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<CreateQuestLabelResponse>> CreateLabelAsync([FromBody] CreateQuestLabelRequest request, CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
+            var command = mapper.Map<CreateQuestLabelCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
 
-            createDto.AccountId = accountId;
-
-            int questLabel = await _questLabelService.CreateLabelAsync(createDto, cancellationToken);
+            var questLabel = await sender.Send(command, cancellationToken);
 
             return Ok(questLabel);
         }
 
-        [HttpPatch("{id}")]
-        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<IActionResult> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<UpdateQuestLabelResponse>> UpdateQuestLabelAsync(int id, [FromBody] UpdateQuestLabelRequest request, CancellationToken cancellationToken = default)
         {
-            await _questLabelService.PatchLabelAsync(id, patchDto, cancellationToken);
-            return Ok();
+            var command = mapper.Map<UpdateQuestLabelCommand>(request) with
+            {
+                LabelId = id,
+                AccountId = JwtHelpers.GetCurrentUserId(User)
+            };
+            var label = await sender.Send(command, cancellationToken);
+            return Ok(label);
         }
 
         [HttpDelete("{id}")]
-        [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<IActionResult> DeleteLabelAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> DeleteQuestLabelAsync(int id, CancellationToken cancellationToken = default)
         {
-            await _questLabelService.DeleteLabelAsync(id, cancellationToken);
-            return Ok();
+            var command = new DeleteQuestLabelCommand(id, JwtHelpers.GetCurrentUserId(User));
+            await sender.Send(command, cancellationToken);
+            return NoContent();
         }
     }
 }

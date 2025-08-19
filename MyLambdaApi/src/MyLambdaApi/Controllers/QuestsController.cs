@@ -1,5 +1,5 @@
-﻿using Application.Dtos.Quests;
-using Application.Interfaces.Quests;
+﻿using Application.Common.Interfaces.Quests;
+using Application.Quests.Dtos;
 using Domain;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +21,7 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BaseGetQuestDto>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetAllQuestesAsync(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))

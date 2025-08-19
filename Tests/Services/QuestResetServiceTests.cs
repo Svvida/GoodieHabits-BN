@@ -1,5 +1,6 @@
 ﻿using Application.Services.Quests;
-using Domain.Enum;
+using Domain.Calculators;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Moq;

@@ -12,17 +12,15 @@ namespace Domain.Models
         public Quest Quest { get; set; } = null!;
 
         public MonthlyQuest_Days() { }
-        public MonthlyQuest_Days(int id, int questId, int startDay, int endDay)
+        public MonthlyQuest_Days(int startDay, int endDay)
         {
             ValidateDays(startDay, endDay);
 
-            Id = id;
-            QuestId = questId;
             StartDay = startDay;
             EndDay = endDay;
         }
 
-        private void ValidateDays(int startDay, int endDay)
+        private static void ValidateDays(int startDay, int endDay)
         {
             if (startDay < 1 || startDay > 31)
                 throw new InvalidArgumentException("Start day must be between 1 and 31.");

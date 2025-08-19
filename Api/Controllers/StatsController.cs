@@ -1,8 +1,7 @@
-﻿using Application.Dtos.Stats;
-using Application.Dtos.UserProfileStats;
-using Application.Interfaces;
-using Domain;
-using Domain.Exceptions;
+﻿using Api.Helpers;
+using Application.Statistics.Queries.GetUserExtendedStats;
+using Application.Statistics.Queries.GetUserProfileStats;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,36 +10,22 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/stats")]
     [Authorize]
-    public class StatsController : ControllerBase
+    public class StatsController(ISender sender) : ControllerBase
     {
-        private readonly IStatsService _statsService;
-
-        public StatsController(IStatsService statsService)
-        {
-            _statsService = statsService;
-        }
 
         [HttpGet("profile")]
-        public async Task<ActionResult<GetUserProfileStatsDto>> GetUserProfileStats(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetUserProfileStatsResponse>> GetUserProfileStats(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            var profileStats = await _statsService.GetUserProfileStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
-
+            var query = new GetUserProfileStatsQuery(JwtHelpers.GetCurrentUserId(User));
+            var profileStats = await sender.Send(query, cancellationToken);
             return Ok(profileStats);
         }
 
         [HttpGet("extended")]
-        public async Task<ActionResult<GetUserExtendedStatsDto>> GetUserExtendedStats(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetUserExtendedStatsResponse>> GetUserExtendedStats(CancellationToken cancellationToken = default)
         {
-            string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
-            if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
-                throw new UnauthorizedException("Invalid access token: missing account identifier.");
-
-            var extendedStats = await _statsService.GetUserExtendedStatsAsync(accountId, cancellationToken).ConfigureAwait(false);
-
+            var query = new GetUserExtendedStatsQuery(JwtHelpers.GetCurrentUserId(User));
+            var extendedStats = await sender.Send(query, cancellationToken);
             return Ok(extendedStats);
         }
     }

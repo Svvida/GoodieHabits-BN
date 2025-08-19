@@ -1,0 +1,43 @@
+﻿using Application.Quests.Dtos;
+using Application.Quests.Utilities;
+using Domain.Enums;
+using Domain.Exceptions;
+using Domain.Interfaces;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using NodaTime;
+
+namespace Application.Quests.Queries.GetActiveQuests
+{
+    public class GetActiveQuestsQueryHandler(
+        IUnitOfWork unitOfWork,
+        IQuestMapper questMappingService,
+        ILogger<GetActiveQuestsQueryHandler> logger)
+        : IRequestHandler<GetActiveQuestsQuery, IEnumerable<QuestDetailsDto>>
+    {
+        public async Task<IEnumerable<QuestDetailsDto>> Handle(GetActiveQuestsQuery request, CancellationToken cancellationToken = default)
+        {
+            var account = await unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {request.AccountId} not found.");
+
+            var userTimeZone = DateTimeZoneProviders.Tzdb[account.TimeZone]
+                ?? throw new InvalidArgumentException($"Invalid timezone: {account.TimeZone}");
+
+            Instant utcNow = SystemClock.Instance.GetCurrentInstant();
+            LocalDateTime localNow = utcNow.InZone(userTimeZone).LocalDateTime;
+
+            DateTime todayStart = localNow.Date.AtStartOfDayInZone(userTimeZone).ToDateTimeUtc();
+            DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
+
+            logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
+                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
+
+            SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason(utcNow.ToDateTimeUtc());
+
+            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.AccountId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
+
+            return quests.Select(questMappingService.MapToDto);
+        }
+    }
+}

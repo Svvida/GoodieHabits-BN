@@ -3,25 +3,21 @@ using System.Security.Claims;
 using System.Text;
 using Domain.Exceptions;
 using Domain.Interfaces.Authentication;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Authentication
 {
-    public class TokenValidator : ITokenValidator
+    public class TokenValidator(JwtSecurityTokenHandler jwtSecurityTokenHandler, IOptions<JwtSettings> jwtSettingsOptions) : ITokenValidator
     {
-        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
+        private readonly JwtSettings _jwtSettings = jwtSettingsOptions.Value;
 
-        public TokenValidator(JwtSecurityTokenHandler jwtSecurityTokenHandler)
-        {
-            _jwtSecurityTokenHandler = jwtSecurityTokenHandler ?? new JwtSecurityTokenHandler();
-        }
-
-        public ClaimsPrincipal ValidateRefreshToken(string refreshToken, string issuer, string refreshTokenKey)
+        public ClaimsPrincipal ValidateRefreshToken(string refreshToken)
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
                 throw new InvalidArgumentException("Refresh token is required.");
 
-            if (!_jwtSecurityTokenHandler.CanReadToken(refreshToken))
+            if (!jwtSecurityTokenHandler.CanReadToken(refreshToken))
                 throw new InvalidArgumentException("Invalid refresh token format.");
 
             var tokenValidationParameters = new TokenValidationParameters
@@ -31,18 +27,18 @@ namespace Infrastructure.Authentication
                 ValidateLifetime = true,
                 ValidateIssuer = true,
                 ValidateAudience = false,
-                ValidIssuer = issuer,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshTokenKey)),
+                ValidIssuer = _jwtSettings.Issuer,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.RefreshToken.Key)),
             };
 
             ClaimsPrincipal? principal;
             try
             {
-                principal = _jwtSecurityTokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken validatedToken);
+                principal = jwtSecurityTokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken validatedToken);
             }
             catch (Exception)
             {
-                throw new InvalidArgumentException("Invalid refresh token");
+                throw;
             }
 
             return principal ?? throw new UnauthorizedException("Invalid refresh token");

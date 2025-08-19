@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+﻿using Domain.Enums;
 using Domain.Models;
 
 namespace Tests.Factories

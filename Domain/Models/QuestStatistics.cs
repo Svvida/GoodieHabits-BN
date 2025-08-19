@@ -1,34 +1,41 @@
-﻿namespace Domain.Models
+﻿using Domain.ValueObjects;
+
+namespace Domain.Models
 {
     public class QuestStatistics
     {
-        public int Id { get; set; }
-        public int QuestId { get; set; }
+        public int Id { get; private set; }
+        public int QuestId { get; private set; }
 
-        public int CompletionCount { get; set; } = 0;
-        public int FailureCount { get; set; } = 0;
-        public int OccurrenceCount { get; set; } = 0;
-        public int CurrentStreak { get; set; } = 0;
-        public int LongestStreak { get; set; } = 0;
+        public int CompletionCount { get; private set; } = 0;
+        public int FailureCount { get; private set; } = 0;
+        public int OccurrenceCount { get; private set; } = 0;
+        public int CurrentStreak { get; private set; } = 0;
+        public int LongestStreak { get; private set; } = 0;
 
-        public DateTime? LastCompletedAt { get; set; } = null;
+        public DateTime? LastCompletedAt { get; private set; } = null;
 
-        public Quest Quest { get; set; } = null!;
+        public Quest Quest { get; private set; } = null!;
 
-        public QuestStatistics() { }
-        public QuestStatistics(int questId)
+        protected QuestStatistics() { }
+        private QuestStatistics(Quest quest)
         {
-            QuestId = questId;
+            Quest = quest;
         }
 
-        public void UpdateFrom(QuestStatistics source)
+        public static QuestStatistics Create(Quest quest)
         {
-            CompletionCount = source.CompletionCount;
-            FailureCount = source.FailureCount;
-            OccurrenceCount = source.OccurrenceCount;
-            CurrentStreak = source.CurrentStreak;
-            LongestStreak = source.LongestStreak;
-            LastCompletedAt = source.LastCompletedAt;
+            return new QuestStatistics(quest);
+        }
+
+        public void UpdateFrom(QuestStatisticsData newStats)
+        {
+            CompletionCount = newStats.CompletionCount;
+            FailureCount = newStats.FailureCount;
+            OccurrenceCount = newStats.OccurrenceCount;
+            CurrentStreak = newStats.CurrentStreak;
+            LongestStreak = newStats.LongestStreak;
+            LastCompletedAt = newStats.LastCompletedAt;
         }
     }
 }

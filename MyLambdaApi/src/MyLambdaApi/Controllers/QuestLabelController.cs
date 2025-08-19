@@ -1,5 +1,7 @@
-﻿using Application.Dtos.Labels;
-using Application.Interfaces;
+﻿using Application.Interfaces;
+using Application.QuestLabels.CreateQuestLabel;
+using Application.QuestLabels.Dtos;
+using Application.QuestLabels.PatchQuestLabel;
 using Domain;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +23,7 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetQuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<QuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
@@ -46,7 +48,7 @@ namespace MyLambdaApi.Controllers
 
         [HttpPatch("{id}")]
         [ServiceFilter(typeof(QuestLabelAuthorizationFilter))]
-        public async Task<IActionResult> PatchLabelAsync(int id, PatchQuestLabelDto patchDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> PatchLabelAsync(int id, UpdateQuestLabelDto patchDto, CancellationToken cancellationToken = default)
         {
             await _questLabelService.PatchLabelAsync(id, patchDto, cancellationToken);
             return Ok();

@@ -1,9 +1,7 @@
-﻿using Application.Dtos.Quests;
-using Application.Dtos.Quests.MonthlyQuest;
-using Application.Interfaces.Quests;
+﻿using Application.Quests.Dtos;
 using Domain;
-using Domain.Enum;
 using Domain.Exceptions;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyLambdaApi.Filters;
@@ -16,16 +14,18 @@ namespace MyLambdaApi.Controllers
     public class MonthlyQuestController : ControllerBase
     {
         private readonly IQuestService _questService;
+        private readonly ISender _sender;
         private static QuestTypeEnum QuestType => QuestTypeEnum.Monthly;
 
-        public MonthlyQuestController(IQuestService questService)
+        public MonthlyQuestController(IQuestService questService, ISender sender)
         {
             _questService = questService;
+            _sender = sender;
         }
 
         [HttpGet("{id}")]
         [ServiceFilter(typeof(QuestAuthorizationFilter))]
-        public async Task<ActionResult<GetMonthlyQuestDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<MonthlyQuestDetailsDto>> GetUserQuestById(int id, CancellationToken cancellationToken = default)
         {
             var quest = await _questService.GetUserQuestByIdAsync(id, QuestType, cancellationToken);
             if (quest is null)
@@ -42,7 +42,7 @@ namespace MyLambdaApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetMonthlyQuestDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<MonthlyQuestDetailsDto>>> GetAllUserQuests(CancellationToken cancellationToken = default)
         {
             string? accountIdString = User.FindFirst(JwtClaimTypes.AccountId)?.Value;
             if (string.IsNullOrWhiteSpace(accountIdString) || !int.TryParse(accountIdString, out int accountId))
@@ -74,10 +74,12 @@ namespace MyLambdaApi.Controllers
             [FromBody] QuestCompletionPatchDto patchDto,
             CancellationToken cancellationToken = default)
         {
-            patchDto.Id = id;
-            await _questService.UpdateQuestCompletionAsync(patchDto, QuestType, cancellationToken);
-            return NoContent();
-
+            var command = new UpdateQuestCompletionCommand(
+                id,
+                patchDto.IsCompleted,
+                QuestType);
+            await _sender.Send(command, cancellationToken);
+            return Ok();
         }
 
         [HttpPut("{id}")]

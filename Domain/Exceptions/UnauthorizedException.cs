@@ -1,7 +1,6 @@
 ﻿namespace Domain.Exceptions
 {
-    public class UnauthorizedException : AppException
+    public class UnauthorizedException(string message) : AppException(message, 401)
     {
-        public UnauthorizedException(string message) : base(message, 401) { }
     }
 }

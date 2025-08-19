@@ -1,0 +1,22 @@
+﻿using Domain.Exceptions;
+using Domain.Interfaces;
+using MapsterMapper;
+using MediatR;
+
+namespace Application.QuestLabels.Commands.UpdateQuestLabel
+{
+    public class UpdateQuestLabelCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<UpdateQuestLabelCommand, UpdateQuestLabelResponse>
+    {
+        public async Task<UpdateQuestLabelResponse> Handle(UpdateQuestLabelCommand request, CancellationToken cancellationToken)
+        {
+            var label = await unitOfWork.QuestLabels.GetByIdAsync(request.LabelId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Label with ID {request.LabelId} not found.");
+
+            label.UpdateValue(request.Value);
+            label.UpdateBackgroundColor(request.BackgroundColor);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return mapper.Map<UpdateQuestLabelResponse>(label);
+        }
+    }
+}

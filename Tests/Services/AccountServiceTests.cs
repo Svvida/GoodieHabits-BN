@@ -1,11 +1,8 @@
-﻿using Application.Dtos.Accounts;
-using Application.Dtos.Auth;
-using Application.Services;
-using AutoMapper;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
 using FluentAssertions;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -35,7 +32,7 @@ namespace Tests.Services
         {
             // Arrange
             var account = AccountFactory.CreateAccountWithProfile(1, "test@email.com");
-            var expectedDto = new GetAccountDto
+            var expectedDto = new GetAccountWithProfileDto
             {
                 Login = account.Login,
                 Email = account.Email
@@ -45,7 +42,7 @@ namespace Tests.Services
                 .Setup(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(account);
 
-            _mapperMock.Setup(m => m.Map<GetAccountDto>(account))
+            _mapperMock.Setup(m => m.Map<GetAccountWithProfileDto>(account))
                 .Returns(expectedDto);
 
             // Act
@@ -53,7 +50,7 @@ namespace Tests.Services
 
             // Assert
             _unitOfWorkMock.Verify(repo => repo.Accounts.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
-            _mapperMock.Verify(m => m.Map<GetAccountDto>(account), Times.Once);
+            _mapperMock.Verify(m => m.Map<GetAccountWithProfileDto>(account), Times.Once);
             result.Should().BeSameAs(expectedDto);
         }
 
@@ -325,7 +322,7 @@ namespace Tests.Services
                 .WithMessage("Invalid password");
 
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
-            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Never);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Remove(account), Times.Never);
             _unitOfWorkMock.Verify(repo => repo.SaveChangesAsync(CancellationToken.None), Times.Never);
         }
 
@@ -355,7 +352,7 @@ namespace Tests.Services
 
             // Assert
             await act.Should().NotThrowAsync();
-            _unitOfWorkMock.Verify(repo => repo.Accounts.Delete(account), Times.Once);
+            _unitOfWorkMock.Verify(repo => repo.Accounts.Remove(account), Times.Once);
             _passwordHasherMock.Verify(hasher => hasher.VerifyHashedPassword(account, account.HashPassword, deleteAccountDto.Password), Times.Once);
 
             _unitOfWorkMock.Verify();

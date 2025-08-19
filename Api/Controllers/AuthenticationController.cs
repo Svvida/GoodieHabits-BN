@@ -1,6 +1,8 @@
-﻿using Application.Dtos.Accounts;
-using Application.Dtos.Auth;
-using Application.Interfaces;
+﻿using Application.Auth.Commands.Login;
+using Application.Auth.Commands.RefreshAccessToken;
+using Application.Auth.Commands.Register;
+using MapsterMapper;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,59 +10,42 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api")]
-    public class AuthenticationController : ControllerBase
+    public class AuthenticationController(ISender sender, IMapper mapper) : ControllerBase
     {
-        private readonly IAuthService _authService;
-        private readonly IAccountService _accountService;
-
-        public AuthenticationController(IAuthService authService, IAccountService accountService)
-        {
-            _authService = authService;
-            _accountService = accountService;
-        }
-
         [HttpPost]
         [Route("auth/login")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponseDto))]  // Returns JWT Token
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
-        [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
-        public async Task<ActionResult<AuthResponseDto>> Login(
-            [FromBody] LoginDto loginDto,
+        public async Task<ActionResult<LoginResponse>> Login(
+            [FromBody] LoginRequest request,
             CancellationToken cancellationToken = default)
         {
-            var authResponse = await _authService.LoginAsync(loginDto, cancellationToken);
-            return Ok(authResponse);
+            var command = mapper.Map<LoginCommand>(request);
+            var loginResponse = await sender.Send(command, cancellationToken);
+            return Ok(loginResponse);
         }
-
 
         [HttpPost]
         [Route("register")]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AuthResponseDto))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<ActionResult<AuthResponseDto>> CreateAccount(
-            [FromBody] CreateAccountDto createDto,
+        public async Task<ActionResult<RegisterResponse>> CreateAccount(
+            [FromBody] RegisterRequest request,
             CancellationToken cancellationToken = default)
         {
-            var authResponse = await _authService.RegisterAsync(createDto, cancellationToken);
-            return Created(nameof(CreateAccount), authResponse);
+            var timeZoneId = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
+            var command = mapper.Map<RegisterCommand>(request) with { TimeZoneId = timeZoneId };
+            var registerResponse = await sender.Send(command, cancellationToken);
+            return Created(nameof(CreateAccount), registerResponse);
         }
 
         [HttpPost]
         [Route("auth/refresh-token")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RefreshResponseDto))]  // Returns JWT Token
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))] // Validation Errors
-        [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ProblemDetails))] // Invalid credentials
-        public async Task<ActionResult<RefreshResponseDto>> RefreshToken(
-            [FromBody] RefreshRequestDto refreshRequestDto,
+        public async Task<ActionResult<RefreshAccessTokenResponse>> RefreshToken(
+            [FromBody] RefreshAccessTokenRequest request,
             CancellationToken cancellationToken = default)
         {
-            var refreshResponse = await _authService.RefreshAccessTokenAsync(refreshRequestDto.RefreshToken, cancellationToken);
-
-            var timeZone = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
-            await _accountService.UpdateTimeZoneIfChangedAsync(refreshResponse.AccountId, timeZone, cancellationToken);
-
-            return Ok(refreshResponse);
+            var timeZoneId = Request.Headers.TryGetValue("x-time-zone", out var tzHeader) ? tzHeader.ToString() : null;
+            var command = mapper.Map<RefreshAccessTokenCommand>(request) with { TimeZoneId = timeZoneId };
+            var accessToken = await sender.Send(command, cancellationToken);
+            return Ok(accessToken);
         }
     }
 }

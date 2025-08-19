@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Exceptions;
 
 namespace Domain.Models
 {
@@ -26,15 +27,13 @@ namespace Domain.Models
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];
 
         public UserProfile() { }
-        public UserProfile(int id, int accountId)
+        public UserProfile(Account account)
         {
-            Id = id;
-            AccountId = accountId;
+            Account = account ?? throw new InvalidArgumentException("Account cannot be null.");
         }
 
         public void WipeoutData()
         {
-            Nickname = null;
             Avatar = null;
             Bio = null;
             TotalXp = 0;
@@ -49,6 +48,82 @@ namespace Domain.Models
             ActiveGoals = 0;
 
             UserProfile_Badges.Clear();
+        }
+
+        public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards)
+        {
+            if (shouldAssignRewards)
+            {
+                CompletedQuests++;
+                TotalXp += xpAwarded;
+            }
+            if (isFirstTimeCompleted)
+                EverCompletedExistingQuests++;
+            if (isGoalCompleted)
+                CompletedGoals++;
+            CurrentlyCompletedExistingQuests++;
+        }
+
+        public void RevertQuestCompletion()
+        {
+            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
+        }
+
+        public void UpdateAfterQuestDeletion(
+            bool isQuestCompleted,
+            bool isQuestEverCompleted,
+            bool isQuestActiveGoal)
+        {
+            ExistingQuests = Math.Max(ExistingQuests - 1, 0);
+            if (isQuestCompleted)
+                CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
+            if (isQuestEverCompleted)
+                EverCompletedExistingQuests = Math.Max(EverCompletedExistingQuests - 1, 0);
+            if (isQuestActiveGoal)
+                ActiveGoals = Math.Max(ActiveGoals - 1, 0);
+        }
+
+        public void UpdateAfterQuestCreation()
+        {
+            ExistingQuests++;
+            TotalQuests++;
+        }
+
+        public void UpdateAfterUserGoalCreation()
+        {
+            ActiveGoals++;
+            TotalGoals++;
+        }
+
+        public void UpdateNickname(string nickname)
+        {
+            if (string.IsNullOrWhiteSpace(nickname))
+                throw new InvalidArgumentException("Nickname cannot be null or whitespace.");
+            Nickname = nickname;
+        }
+
+        public void UpdateBio(string? bio)
+        {
+            if (bio != null && bio.Length > 30)
+                throw new InvalidArgumentException("Bio cannot exceed 30 characters.");
+            Bio = bio;
+        }
+
+        public void IncrementExpiredGoals(int count)
+        {
+            if (count <= 0)
+                return;
+
+            ExpiredGoals += count;
+            ActiveGoals = Math.Max(ActiveGoals - count, 0);
+        }
+
+        public void DecrementCompletedQuestsAfterReset(int count)
+        {
+            if (count <= 0)
+                return;
+
+            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - count, 0);
         }
     }
 }

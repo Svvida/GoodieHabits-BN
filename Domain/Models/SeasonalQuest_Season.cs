@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+﻿using Domain.Enums;
 
 namespace Domain.Models
 {
@@ -11,10 +11,8 @@ namespace Domain.Models
         public Quest Quest { get; set; } = null!;
 
         public SeasonalQuest_Season() { }
-        public SeasonalQuest_Season(int id, int questId, SeasonEnum season)
+        public SeasonalQuest_Season(SeasonEnum season)
         {
-            Id = id;
-            QuestId = questId;
             Season = season;
         }
     }

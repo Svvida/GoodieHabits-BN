@@ -1,5 +1,5 @@
 using Amazon.Lambda.Core;
-using Application.Interfaces;
+using Application.Common.Interfaces;
 using Application.Services;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
