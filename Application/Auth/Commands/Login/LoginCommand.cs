@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Auth.Commands.Login
 {
-    public record LoginCommand(string Login, string Password) : IRequest<LoginResponse>;
+    public record LoginCommand(string Login, string Password) : ICommand<LoginResponse>;
 }

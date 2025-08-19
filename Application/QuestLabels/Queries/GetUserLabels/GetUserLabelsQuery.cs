@@ -1,7 +1,7 @@
-﻿using Application.QuestLabels.Dtos;
-using MediatR;
+﻿using Application.Common.Interfaces;
+using Application.QuestLabels.Dtos;
 
 namespace Application.QuestLabels.Queries.GetUserLabels
 {
-    public record GetUserLabelsQuery(int AccountId) : IRequest<IEnumerable<QuestLabelDto>>;
+    public record GetUserLabelsQuery(int AccountId) : IQuery<IEnumerable<QuestLabelDto>>;
 }

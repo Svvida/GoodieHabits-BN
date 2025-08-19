@@ -1,7 +1,7 @@
-﻿using Application.Quests.Dtos;
-using MediatR;
+﻿using Application.Common.Interfaces;
+using Application.Quests.Dtos;
 
 namespace Application.Quests.Queries.GetQuestsEligibleForGoal
 {
-    public record GetQuestsEligibleForGoalQuery(int AccountId, CancellationToken CancellationToken) : IRequest<IEnumerable<QuestDetailsDto>>;
+    public record GetQuestsEligibleForGoalQuery(int AccountId, CancellationToken CancellationToken) : IQuery<IEnumerable<QuestDetailsDto>>;
 }

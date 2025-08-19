@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Accounts.Commands.DeleteAccount
 {
-    public class DeleteAccountCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<DeleteAccountCommand>
+    public class DeleteAccountCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<DeleteAccountCommand, Unit>
     {
-        public async Task Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
         {
             var account = await unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false);
 
@@ -25,7 +25,7 @@ namespace Application.Accounts.Commands.DeleteAccount
 
             unitOfWork.Accounts.Remove(account);
 
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Unit.Value;
         }
     }
 }

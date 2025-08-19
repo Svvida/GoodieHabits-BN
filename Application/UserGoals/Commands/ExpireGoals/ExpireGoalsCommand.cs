@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.UserGoals.Commands.ExpireGoals
 {
-    public record ExpireGoalsCommand() : IRequest<int>;
+    public record ExpireGoalsCommand() : ICommand<int>;
 }

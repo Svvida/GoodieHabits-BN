@@ -8,5 +8,5 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
         bool IsCompleted,
         int QuestId,
         int AccountId,
-        QuestTypeEnum QuestType) : IRequest<Unit>, ICurrentUserQuestCommand;
+        QuestTypeEnum QuestType) : ICommand<Unit>, ICurrentUserQuestCommand;
 }

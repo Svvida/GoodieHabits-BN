@@ -4,9 +4,9 @@ using MediatR;
 
 namespace Application.Accounts.Commands.UpdateAccount
 {
-    public class UpdateAccountCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateAccountCommand>
+    public class UpdateAccountCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateAccountCommand, Unit>
     {
-        public async Task Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
         {
             var account = await unitOfWork.Accounts.GetAccountWithProfileAsync(request.AccountId, cancellationToken)
                 ?? throw new NotFoundException($"Account with ID {request.AccountId} not found.");
@@ -15,7 +15,7 @@ namespace Application.Accounts.Commands.UpdateAccount
             account.UpdateEmail(request.Email);
             account.Profile.UpdateNickname(request.Nickname);
             account.Profile.UpdateBio(request.Bio);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return Unit.Value;
         }
     }
 }

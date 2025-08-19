@@ -1,6 +1,6 @@
-﻿using MediatR;
+﻿using Application.Common.Interfaces;
 
 namespace Application.Quests.Commands.GenerateMissingOccurrences
 {
-    public record GenerateMissingOccurrencesCommand() : IRequest<int>;
+    public record GenerateMissingOccurrencesCommand() : ICommand<int>;
 }
