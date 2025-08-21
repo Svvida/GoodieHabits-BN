@@ -59,9 +59,11 @@ namespace Api.Controllers
             return Ok(quests);
         }
 
-        [HttpDelete("{id}")]
+        // QuestType is not used in this endpoint, but is kept to allow fronted to invalidate only specific cache tags
+        [HttpDelete("{questType}/{id}")]
         public async Task<IActionResult> Delete(
             int id,
+            QuestTypeEnum questType,
             CancellationToken cancellationToken)
         {
             var command = new DeleteQuestCommand(id, JwtHelpers.GetCurrentUserId(User));
