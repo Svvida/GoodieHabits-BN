@@ -20,7 +20,6 @@ namespace Application.Quests.Dtos
         public string? Emoji { get; init; }
         public bool IsCompleted { get; init; }
         public string? Priority { get; init; }
-        public string? Type { get; init; }
         public string? Difficulty { get; init; }
         public TimeOnly? ScheduledTime { get; init; }
         public DateTime? LastCompletedAt { get; init; }
