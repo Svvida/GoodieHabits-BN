@@ -141,8 +141,8 @@ namespace Domain.Models
             if (newEndDate.HasValue && StartDate.HasValue && newEndDate < StartDate)
                 throw new InvalidArgumentException("End date cannot be before the start date.");
 
-            StartDate = newStartDate ?? StartDate;
-            EndDate = newEndDate ?? EndDate;
+            StartDate = newStartDate;
+            EndDate = newEndDate;
         }
 
         public bool IsRepeatable()
