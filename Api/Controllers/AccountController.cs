@@ -1,6 +1,7 @@
 ﻿using Api.Helpers;
 using Application.Accounts.Commands.ChangePassword;
 using Application.Accounts.Commands.DeleteAccount;
+using Application.Accounts.Commands.ForgotPassword;
 using Application.Accounts.Commands.UpdateAccount;
 using Application.Accounts.Commands.WipeoutData;
 using Application.Accounts.Queries.GetWithProfile;
@@ -60,6 +61,17 @@ namespace Api.Controllers
             CancellationToken cancellationToken = default)
         {
             var command = mapper.Map<WipeoutDataCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            await sender.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("accounts/forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword(
+            ForgotPasswordRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<ForgotPasswordCommand>(request);
             await sender.Send(command, cancellationToken);
             return NoContent();
         }

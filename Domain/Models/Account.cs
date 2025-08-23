@@ -1,4 +1,5 @@
-﻿using Domain.Common;
+﻿using System.Security.Cryptography;
+using Domain.Common;
 using Domain.Exceptions;
 
 namespace Domain.Models
@@ -6,10 +7,12 @@ namespace Domain.Models
     public class Account : EntityBase
     {
         public int Id { get; set; }
-        public string? Login { get; set; } = null;
+        public string? Login { get; private set; } = null;
         public string HashPassword { get; private set; } = null!;
         public string Email { get; private set; } = null!;
         public string TimeZone { get; private set; } = "Etc/UTC";
+        public int? ResetPasswordCode { get; private set; } = null;
+        public DateTime? ResetPasswordCodeExpiresAt { get; private set; } = null;
         public ICollection<Quest> Quests { get; set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public UserProfile Profile { get; set; } = null!;
@@ -85,6 +88,16 @@ namespace Domain.Models
             }
             Profile.DecrementCompletedQuestsAfterReset(resetCount);
             return resetCount;
+        }
+
+        public int InitializePasswordReset(DateTime utcNow)
+        {
+            int code = RandomNumberGenerator.GetInt32(100000, 1000000);
+
+            ResetPasswordCode = code;
+            ResetPasswordCodeExpiresAt = utcNow.AddMinutes(15);
+
+            return code;
         }
     }
 }

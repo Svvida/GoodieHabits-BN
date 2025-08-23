@@ -39,6 +39,12 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(a => a.UpdatedAt)
                 .IsRequired(false);
+
+            builder.Property(a => a.ResetPasswordCode)
+                .IsRequired(false);
+
+            builder.Property(a => a.ResetPasswordCodeExpiresAt)
+                .IsRequired(false);
         }
     }
 }
