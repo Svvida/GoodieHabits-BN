@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using Domain.Common;
 using Domain.Exceptions;
 
@@ -11,7 +12,7 @@ namespace Domain.Models
         public string HashPassword { get; private set; } = null!;
         public string Email { get; private set; } = null!;
         public string TimeZone { get; private set; } = "Etc/UTC";
-        public int? ResetPasswordCode { get; private set; } = null;
+        public string? ResetPasswordCode { get; private set; } = null;
         public DateTime? ResetPasswordCodeExpiresAt { get; private set; } = null;
         public ICollection<Quest> Quests { get; set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
@@ -90,9 +91,15 @@ namespace Domain.Models
             return resetCount;
         }
 
-        public int InitializePasswordReset(DateTime utcNow)
+        public string InitializePasswordReset(DateTime utcNow)
         {
-            int code = RandomNumberGenerator.GetInt32(100000, 1000000);
+            var codeBuilder = new StringBuilder();
+            for (int i = 0; i < 6; i++)
+            {
+                codeBuilder.Append(RandomNumberGenerator.GetInt32(0, 10));
+            }
+
+            var code = codeBuilder.ToString();
 
             ResetPasswordCode = code;
             ResetPasswordCodeExpiresAt = utcNow.AddMinutes(15);

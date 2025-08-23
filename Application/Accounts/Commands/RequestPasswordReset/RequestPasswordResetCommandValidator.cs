@@ -1,11 +1,12 @@
-﻿using Application.Common;
+﻿using Application.Accounts.Commands.RequestPasswordReset;
+using Application.Common;
 using FluentValidation;
 
 namespace Application.Accounts.Commands.ForgotPassword
 {
-    public class ForgotPasswordCommandValidator : AbstractValidator<ForgotPasswordCommand>
+    public class RequestPasswordResetCommandValidator : AbstractValidator<RequestPasswordResetCommand>
     {
-        public ForgotPasswordCommandValidator()
+        public RequestPasswordResetCommandValidator()
         {
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("{PropertyName} is required.")

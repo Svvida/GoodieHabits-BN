@@ -2,6 +2,6 @@
 {
     public interface IForgotPasswordEmailSender
     {
-        Task SendForgotPasswordEmailAsync(string toEmail, int resetCode, CancellationToken cancellationToken = default);
+        Task SendForgotPasswordEmailAsync(string toEmail, string resetCode, CancellationToken cancellationToken = default);
     }
 }
