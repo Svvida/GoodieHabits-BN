@@ -1,7 +1,10 @@
 ﻿using Api.Helpers;
 using Application.Accounts.Commands.ChangePassword;
 using Application.Accounts.Commands.DeleteAccount;
+using Application.Accounts.Commands.RequestPasswordReset;
+using Application.Accounts.Commands.ResetPassword;
 using Application.Accounts.Commands.UpdateAccount;
+using Application.Accounts.Commands.VerifyPasswordResetCode;
 using Application.Accounts.Commands.WipeoutData;
 using Application.Accounts.Queries.GetWithProfile;
 using MapsterMapper;
@@ -60,6 +63,34 @@ namespace Api.Controllers
             CancellationToken cancellationToken = default)
         {
             var command = mapper.Map<WipeoutDataCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            await sender.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("accounts/forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword(
+            RequestPasswordResetCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            await sender.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("accounts/verify-reset-code")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyResetCode(VerifyPasswordResetCodeCommand command, CancellationToken cancellationToken = default)
+        {
+            var result = await sender.Send(command, cancellationToken);
+            if (!result)
+                return BadRequest(new { Message = "Invalid email or reset code.", StatusCode = 400 });
+            return NoContent();
+        }
+
+        [HttpPost("accounts/reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(ResetPasswordCommand command, CancellationToken cancellationToken = default)
+        {
             await sender.Send(command, cancellationToken);
             return NoContent();
         }
