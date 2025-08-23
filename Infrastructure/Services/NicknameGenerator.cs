@@ -1,7 +1,8 @@
-﻿using Domain.Interfaces;
+﻿using Application.UserProfiles.Nickname;
+using Domain.Interfaces;
 using Infrastructure.Utilities;
 
-namespace Application.UserProfiles.Nickname
+namespace Infrastructure.Services
 {
     public class NicknameGenerator(IUnitOfWork unitOfWork) : INicknameGenerator
     {

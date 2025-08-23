@@ -5,6 +5,7 @@ using Api.Converters;
 using Api.Middlewares;
 using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
+using Application.Common.Interfaces.Email;
 using Application.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
@@ -14,7 +15,10 @@ using Domain.Interfaces.Authentication;
 using Domain.Models;
 using FluentValidation;
 using Infrastructure.Authentication;
+using Infrastructure.Email;
+using Infrastructure.Email.Senders;
 using Infrastructure.Persistence;
+using Infrastructure.Services;
 using Mapster;
 using MapsterMapper;
 using MediatR;
@@ -169,6 +173,8 @@ namespace Api
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
             builder.Services.AddScoped<IQuestMapper, QuestMapper>();
+            builder.Services.AddScoped<IEmailSender, EmailSender>();
+            builder.Services.AddScoped<IForgotPasswordEmailSender, ForgotPasswordEmailSender>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
@@ -206,8 +212,9 @@ namespace Api
             });
 
             // Register configurations
-            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
             builder.Services.Configure<LevelingOptions>(builder.Configuration.GetSection(LevelingOptions.SectionName));
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
 
             // Configure Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Default is not necessary since we use only one scheme
