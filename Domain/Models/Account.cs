@@ -106,5 +106,12 @@ namespace Domain.Models
 
             return code;
         }
+
+        public void ResetPassword(string hashPassword)
+        {
+            HashPassword = hashPassword;
+            ResetPasswordCode = null;
+            ResetPasswordCodeExpiresAt = null;
+        }
     }
 }
