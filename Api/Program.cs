@@ -18,6 +18,7 @@ using Infrastructure.Authentication;
 using Infrastructure.Email;
 using Infrastructure.Email.Senders;
 using Infrastructure.Persistence;
+using Infrastructure.Photos;
 using Infrastructure.Services;
 using Mapster;
 using MapsterMapper;
@@ -25,6 +26,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NodaTime;
@@ -215,6 +217,25 @@ namespace Api
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
             builder.Services.Configure<LevelingOptions>(builder.Configuration.GetSection(LevelingOptions.SectionName));
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(CloudinarySettings.SectionName));
+
+            // Configure Cloudinary settings
+            builder.Services.AddSingleton(sp =>
+            {
+                var settings = sp.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+
+                var account = new CloudinaryDotNet.Account(
+                    settings.CloudName,
+                    settings.ApiKey,
+                    settings.ApiSecret);
+
+                var cloudinary = new CloudinaryDotNet.Cloudinary(account)
+                {
+                    Api = { Secure = true }
+                };
+
+                return cloudinary;
+            });
 
             // Configure Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Default is not necessary since we use only one scheme
