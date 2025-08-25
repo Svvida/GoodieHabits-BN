@@ -40,7 +40,7 @@ namespace Api.Controllers
 
         [HttpPost("accounts/me/avatar")]
         public async Task<ActionResult<UploadAvatarResponse>> UploadAvatar(
-            [FromForm] IFormFile avatarFile, CancellationToken cancellationToken = default)
+            IFormFile avatarFile, CancellationToken cancellationToken = default)
         {
             var validationResult = ImageValidator.Validate(avatarFile);
 

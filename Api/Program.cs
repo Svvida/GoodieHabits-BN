@@ -5,6 +5,7 @@ using Api.Converters;
 using Api.Middlewares;
 using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
+using Application.Common.Interfaces;
 using Application.Common.Interfaces.Email;
 using Application.Quests;
 using Application.Statistics.Calculators;
@@ -177,6 +178,8 @@ namespace Api
             builder.Services.AddScoped<IQuestMapper, QuestMapper>();
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IForgotPasswordEmailSender, ForgotPasswordEmailSender>();
+            builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
+            builder.Services.AddScoped<IUrlBuilder, CloudinaryUrlBuilder>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
