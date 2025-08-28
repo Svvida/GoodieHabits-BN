@@ -33,6 +33,18 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(p => p.CompletedDailyQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedWeeklyQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedMonthlyQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(p => p.ExistingQuests)
                 .IsRequired()
                 .HasDefaultValue(0);

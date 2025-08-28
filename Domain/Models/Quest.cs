@@ -200,7 +200,7 @@ namespace Domain.Models
 
             xpGained += shouldAssignRewards ? 10 : 0; // Base XP for quest completion
 
-            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards));
+            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards, QuestType));
         }
 
         public void Uncomplete(DateTime utcNow)
@@ -218,7 +218,7 @@ namespace Domain.Models
 
             // We don't reset goals since handler prevent uncompleting if quest is active goal
 
-            AddDomainEvent(new QuestUncompletedEvent(AccountId));
+            AddDomainEvent(new QuestUncompletedEvent(AccountId, QuestType));
         }
 
         public QuestOccurrence AddOccurrence(DateTime start, DateTime end)

@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 using Domain.Exceptions;
 
 namespace Domain.Models
@@ -13,6 +14,9 @@ namespace Domain.Models
         public int TotalXp { get; set; } = 0;
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
+        public int CompletedDailyQuests { get; set; } = 0;
+        public int CompletedWeeklyQuests { get; set; } = 0;
+        public int CompletedMonthlyQuests { get; set; } = 0;
         public int TotalQuests { get; set; } = 0;
         public int ExistingQuests { get; set; } = 0;
         public int CurrentlyCompletedExistingQuests { get; set; } = 0;
@@ -50,7 +54,7 @@ namespace Domain.Models
             UserProfile_Badges.Clear();
         }
 
-        public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards)
+        public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards, QuestTypeEnum questType)
         {
             if (shouldAssignRewards)
             {
@@ -62,11 +66,36 @@ namespace Domain.Models
             if (isGoalCompleted)
                 CompletedGoals++;
             CurrentlyCompletedExistingQuests++;
+
+            switch (questType)
+            {
+                case QuestTypeEnum.Daily:
+                    CompletedDailyQuests++;
+                    break;
+                case QuestTypeEnum.Weekly:
+                    CompletedWeeklyQuests++;
+                    break;
+                case QuestTypeEnum.Monthly:
+                    CompletedMonthlyQuests++;
+                    break;
+            }
         }
 
-        public void RevertQuestCompletion()
+        public void RevertQuestCompletion(QuestTypeEnum questType)
         {
             CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
+            switch (questType)
+            {
+                case QuestTypeEnum.Daily:
+                    CompletedDailyQuests = Math.Max(CompletedDailyQuests - 1, 0);
+                    break;
+                case QuestTypeEnum.Weekly:
+                    CompletedWeeklyQuests = Math.Max(CompletedWeeklyQuests - 1, 0);
+                    break;
+                case QuestTypeEnum.Monthly:
+                    CompletedMonthlyQuests = Math.Max(CompletedMonthlyQuests - 1, 0);
+                    break;
+            }
         }
 
         public void UpdateAfterQuestDeletion(

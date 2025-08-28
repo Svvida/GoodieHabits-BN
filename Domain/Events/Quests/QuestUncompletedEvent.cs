@@ -1,5 +1,8 @@
-﻿namespace Domain.Events.Quests
+﻿using Domain.Enums;
+
+namespace Domain.Events.Quests
 {
     public record QuestUncompletedEvent(
-        int AccountId);
+        int AccountId,
+        QuestTypeEnum QuestType);
 }
