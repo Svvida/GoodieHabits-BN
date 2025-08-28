@@ -25,7 +25,10 @@ namespace Application.Statistics.Queries.GetUserExtendedStats
                 .Map(dest => dest.CurrentEverCompleted, src => src.EverCompletedExistingQuests)
                 .Map(dest => dest.CurrentCompleted, src => src.CurrentlyCompletedExistingQuests)
                 .Map(dest => dest.TotalCreated, src => src.TotalQuests)
-                .Map(dest => dest.TotalCompleted, src => src.CompletedQuests);
+                .Map(dest => dest.TotalCompleted, src => src.CompletedQuests)
+                .Map(dest => dest.CompletedDaily, src => src.CompletedDailyQuests)
+                .Map(dest => dest.CompletedWeekly, src => src.CompletedWeeklyQuests)
+                .Map(dest => dest.CompletedMonthly, src => src.CompletedMonthlyQuests);
         }
     }
 }
