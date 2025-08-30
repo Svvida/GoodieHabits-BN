@@ -13,8 +13,8 @@ namespace Application.Quests.Commands.CreateQuest
         {
             var notification = wrappedNotification.DomainEvent;
 
-            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
-                ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(notification.UserProfileId, cancellationToken)
+                ?? throw new NotFoundException($"Profile {notification.UserProfileId} not found.");
 
             userProfile.UpdateAfterQuestCreation();
         }

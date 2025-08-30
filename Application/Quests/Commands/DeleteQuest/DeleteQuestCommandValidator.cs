@@ -13,7 +13,7 @@ namespace Application.Quests.Commands.DeleteQuest
                 .GreaterThan(0).WithMessage("Quest ID must be greater than 0.")
                 .QuestMustBeOwnedByCurrentUser(unitOfWork)
                 .WithMessage("Quest not found or you do not have permission to access it.");
-            RuleFor(x => x.AccountId)
+            RuleFor(x => x.UserProfileId)
                 .GreaterThan(0).WithMessage("Account ID must be greater than 0.");
         }
     }

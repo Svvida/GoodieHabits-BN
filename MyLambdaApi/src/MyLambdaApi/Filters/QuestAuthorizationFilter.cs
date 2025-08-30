@@ -1,5 +1,5 @@
-﻿using Domain;
-using Domain.Interfaces.Repositories;
+﻿using Domain.Interfaces.Repositories;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

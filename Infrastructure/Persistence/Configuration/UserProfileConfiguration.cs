@@ -14,6 +14,11 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(p => p.AccountId).IsUnique();
             builder.HasIndex(p => p.Nickname).IsUnique();
 
+            builder.Property(a => a.TimeZone)
+                .IsRequired()
+                .HasDefaultValue("Etc/UTC")
+                .HasMaxLength(100);
+
             builder.Property(p => p.Nickname)
                 .IsRequired(true)
                 .HasMaxLength(30);

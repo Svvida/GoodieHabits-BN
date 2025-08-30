@@ -14,10 +14,10 @@ namespace Application.UserGoals.Commands.CreateUserGoal
         {
             GoalTypeEnum goalType = Enum.Parse<GoalTypeEnum>(request.GoalType, true);
 
-            var quest = await unitOfWork.Quests.GetQuestWithAccountAsync(request.QuestId, request.AccountId, cancellationToken)
+            var quest = await unitOfWork.Quests.GetQuestWithUserProfileAsync(request.QuestId, request.UserProfileId, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {request.QuestId} not found.");
 
-            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
+            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone];
             DateTime endsAtUtc = CalculateGoalEndTime(goalType, userTimeZone);
 
             var bonusXp = goalType switch
@@ -29,7 +29,7 @@ namespace Application.UserGoals.Commands.CreateUserGoal
                 _ => throw new InvalidArgumentException($"Invalid goal type: {goalType}."),
             };
 
-            var userGoal = UserGoal.Create(quest.Id, request.AccountId, goalType, endsAtUtc, bonusXp);
+            var userGoal = UserGoal.Create(quest.Id, quest.UserProfileId, goalType, endsAtUtc, bonusXp);
 
             foreach (var domainEvent in userGoal.DomainEvents)
             {

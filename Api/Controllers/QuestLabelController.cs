@@ -20,7 +20,7 @@ namespace Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<QuestLabelDto>>> GetUserLabelsAsync(CancellationToken cancellationToken = default)
         {
-            var query = new GetUserLabelsQuery(JwtHelpers.GetCurrentUserId(User));
+            var query = new GetUserLabelsQuery(JwtHelpers.GetCurrentUserProfileId(User));
             return Ok(await sender.Send(query, cancellationToken));
         }
 
@@ -29,7 +29,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateQuestLabelCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var questLabel = await sender.Send(command, cancellationToken);
@@ -43,7 +43,7 @@ namespace Api.Controllers
             var command = mapper.Map<UpdateQuestLabelCommand>(request) with
             {
                 LabelId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
             var label = await sender.Send(command, cancellationToken);
             return Ok(label);
@@ -52,7 +52,7 @@ namespace Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuestLabelAsync(int id, CancellationToken cancellationToken = default)
         {
-            var command = new DeleteQuestLabelCommand(id, JwtHelpers.GetCurrentUserId(User));
+            var command = new DeleteQuestLabelCommand(id, JwtHelpers.GetCurrentUserProfileId(User));
             await sender.Send(command, cancellationToken);
             return NoContent();
         }

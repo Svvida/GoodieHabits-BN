@@ -17,7 +17,7 @@ namespace Application.Common.ValidatorsExtensions
                     return;
                 }
 
-                var isOwner = await unitOfWork.Quests.IsQuestOwnedByUserAsync(questId, command.AccountId, cancellationToken).ConfigureAwait(false);
+                var isOwner = await unitOfWork.Quests.IsQuestOwnedByUserAsync(questId, command.UserProfileId, cancellationToken).ConfigureAwait(false);
 
                 if (!isOwner)
                 {
@@ -37,7 +37,7 @@ namespace Application.Common.ValidatorsExtensions
                     return;
                 }
 
-                var isOwner = await unitOfWork.QuestLabels.IsLabelOwnedByUserAsync(questId, command.AccountId, cancellationToken).ConfigureAwait(false);
+                var isOwner = await unitOfWork.QuestLabels.IsLabelOwnedByUserAsync(questId, command.UserProfileId, cancellationToken).ConfigureAwait(false);
 
                 if (!isOwner)
                 {

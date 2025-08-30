@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence.Repositories
         {
             return await _context.UserGoals.CountAsync
                 (ug =>
-                ug.AccountId == accountId &&
+                ug.UserProfile.AccountId == accountId &&
                 ug.GoalType == goalType &&
                 !ug.IsExpired, cancellationToken).ConfigureAwait(false);
         }
@@ -28,7 +28,7 @@ namespace Infrastructure.Persistence.Repositories
         {
             return await _context.UserGoals
                 .Include(ug => ug.Quest)
-                .FirstOrDefaultAsync(ug => ug.AccountId == accountId && ug.GoalType == goalType && !ug.IsExpired, cancellationToken)
+                .FirstOrDefaultAsync(ug => ug.UserProfile.AccountId == accountId && ug.GoalType == goalType && !ug.IsExpired, cancellationToken)
                 .ConfigureAwait(false);
         }
 

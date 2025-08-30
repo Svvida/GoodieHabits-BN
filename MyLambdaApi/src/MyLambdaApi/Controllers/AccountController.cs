@@ -2,8 +2,8 @@
 using Application.Dtos.Accounts;
 using Application.Dtos.Auth;
 using Application.Interfaces;
-using Domain;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -33,7 +33,11 @@ namespace Api.Controllers
             UpdateAccountRequest request,
             CancellationToken cancellationToken = default)
         {
-            var command = mapper.Map<UpdateAccountCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            var command = mapper.Map<UpdateAccountCommand>(request) with
+            {
+                AccountId = JwtHelpers.GetCurrentUserId(User),
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
+            };
             await sender.Send(command, cancellationToken);
             return NoContent();
         }
@@ -57,7 +61,7 @@ namespace Api.Controllers
             }
 
             var command = new UploadAvatarCommand(
-                AccountId: JwtHelpers.GetCurrentUserId(User),
+                UserProfileId: JwtHelpers.GetCurrentUserProfileId(User),
                 FileStream: avatarFile.OpenReadStream(),
                 FileName: avatarFile.FileName);
 
@@ -91,7 +95,7 @@ namespace Api.Controllers
             WipeoutDataRequest request,
             CancellationToken cancellationToken = default)
         {
-            var command = mapper.Map<WipeoutDataCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            var command = mapper.Map<WipeoutDataCommand>(request) with { UserProfileId = JwtHelpers.GetCurrentUserProfileId(User) };
             await sender.Send(command, cancellationToken);
             return NoContent();
         }

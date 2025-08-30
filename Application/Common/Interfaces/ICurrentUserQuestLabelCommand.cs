@@ -2,6 +2,6 @@
 {
     public interface ICurrentUserQuestLabelCommand
     {
-        int AccountId { get; }
+        int UserProfileId { get; }
     }
 }

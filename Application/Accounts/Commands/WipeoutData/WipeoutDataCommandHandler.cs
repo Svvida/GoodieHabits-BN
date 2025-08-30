@@ -8,19 +8,19 @@ namespace Application.Accounts.Commands.WipeoutData
 {
     public class WipeoutDataCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher) : IRequestHandler<WipeoutDataCommand, Unit>
     {
-        public async Task<Unit> Handle(WipeoutDataCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(WipeoutDataCommand command, CancellationToken cancellationToken)
         {
-            var account = await unitOfWork.Accounts.GetAccountToWipeoutDataAsync(request.AccountId, cancellationToken).ConfigureAwait(false);
+            var userProfile = await unitOfWork.UserProfiles.GetUserProfileToWipeoutDataAsync(command.UserProfileId, cancellationToken).ConfigureAwait(false);
 
-            if (account is null || passwordHasher.VerifyHashedPassword(account, account.HashPassword, request.Password) == PasswordVerificationResult.Failed)
+            if (userProfile is null || passwordHasher.VerifyHashedPassword(userProfile.Account, userProfile.Account.HashPassword, command.Password) == PasswordVerificationResult.Failed)
                 throw new UnauthorizedException("Invalid credentials provided.");
 
             // Clear profile information
-            account.Profile.WipeoutData();
+            userProfile.WipeoutData();
             // Clear quests
-            account.Quests.Clear();
+            userProfile.Quests.Clear();
             // Clear labels
-            var labelsToDelete = account.Labels.ToList();
+            var labelsToDelete = userProfile.Labels.ToList();
             unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
 
             return Unit.Value;

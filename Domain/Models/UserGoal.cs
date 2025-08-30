@@ -9,7 +9,7 @@ namespace Domain.Models
     {
         public int Id { get; set; }
         public int QuestId { get; private set; }
-        public int AccountId { get; private set; }
+        public int UserProfileId { get; private set; }
         public GoalTypeEnum GoalType { get; private set; }
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
         public DateTime EndsAt { get; private set; }
@@ -19,23 +19,23 @@ namespace Domain.Models
         public int XpBonus { get; private set; } = 5;
 
         public Quest Quest { get; set; } = null!;
-        public Account Account { get; set; } = null!;
+        public UserProfile UserProfile { get; set; } = null!;
 
         protected UserGoal() { }
-        private UserGoal(int questId, int accountId, GoalTypeEnum goalType, DateTime endsAt, int xpBonus)
+        private UserGoal(int questId, int userProfileId, GoalTypeEnum goalType, DateTime endsAt, int xpBonus)
         {
             QuestId = questId;
-            AccountId = accountId;
+            UserProfileId = userProfileId;
             GoalType = goalType;
             EndsAt = endsAt;
             XpBonus = xpBonus;
 
-            AddDomainEvent(new UserGoalCreatedEvent(accountId));
+            AddDomainEvent(new UserGoalCreatedEvent(userProfileId));
         }
 
-        public static UserGoal Create(int questId, int accountId, GoalTypeEnum goalType, DateTime endsAt, int xpBonus)
+        public static UserGoal Create(int questId, int userProfileId, GoalTypeEnum goalType, DateTime endsAt, int xpBonus)
         {
-            return new UserGoal(questId, accountId, goalType, endsAt, xpBonus);
+            return new UserGoal(questId, userProfileId, goalType, endsAt, xpBonus);
         }
 
         public void MarkAsAchieved(DateTime achievedAt)

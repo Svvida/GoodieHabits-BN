@@ -50,7 +50,7 @@ namespace Application.Accounts.Commands.UpdateAccount
 
         private async Task<bool> BeUniqueNicknameAsync(UpdateAccountCommand command, string nickname, CancellationToken cancellationToken)
         {
-            return !await _unitOfWork.UserProfiles.DoesNicknameExistAsync(nickname, command.AccountId, cancellationToken).ConfigureAwait(false);
+            return !await _unitOfWork.UserProfiles.DoesNicknameExistAsync(nickname, command.UserProfileId, cancellationToken).ConfigureAwait(false);
         }
     }
 }

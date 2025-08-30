@@ -2,8 +2,8 @@
 using Application.QuestLabels.CreateQuestLabel;
 using Application.QuestLabels.Dtos;
 using Application.QuestLabels.PatchQuestLabel;
-using Domain;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyLambdaApi.Filters;

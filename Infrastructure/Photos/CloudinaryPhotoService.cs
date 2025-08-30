@@ -8,9 +8,9 @@ namespace Infrastructure.Photos
     public class CloudinaryPhotoService(Cloudinary cloudinary, IOptions<CloudinarySettings> settings) : IPhotoService
     {
         private readonly CloudinarySettings _settings = settings.Value;
-        public async Task<string> UploadPhotoAsync(Stream fileStream, string fileName, int accountId)
+        public async Task<string> UploadPhotoAsync(Stream fileStream, string fileName, int userProfileId)
         {
-            var publicId = $"{accountId}";
+            var publicId = $"{userProfileId}";
 
             var uploadParams = new ImageUploadParams()
             {

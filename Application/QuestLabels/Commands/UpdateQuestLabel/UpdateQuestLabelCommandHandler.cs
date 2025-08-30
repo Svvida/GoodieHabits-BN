@@ -9,7 +9,7 @@ namespace Application.QuestLabels.Commands.UpdateQuestLabel
     {
         public async Task<UpdateQuestLabelResponse> Handle(UpdateQuestLabelCommand request, CancellationToken cancellationToken)
         {
-            var label = await unitOfWork.QuestLabels.GetByIdAsync(request.LabelId, cancellationToken).ConfigureAwait(false)
+            var label = await unitOfWork.QuestLabels.GetUserLabelByIdAsync(request.LabelId, request.UserProfileId, false, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Label with ID {request.LabelId} not found.");
 
             label.UpdateValue(request.Value);

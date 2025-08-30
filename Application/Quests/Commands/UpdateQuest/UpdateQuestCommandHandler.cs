@@ -17,7 +17,7 @@ namespace Application.Quests.Commands.UpdateQuest
     {
         public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            var quest = await unitOfWork.Quests.GetQuestByIdForUpdateAsync(command.QuestId, command.QuestType, cancellationToken).ConfigureAwait(false)
+            var quest = await unitOfWork.Quests.GetQuestByIdForUpdateAsync(command.QuestId, command.UserProfileId, command.QuestType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID {command.QuestId} not found.");
 
             quest.UpdateDescription(command.Description);

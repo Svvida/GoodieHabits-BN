@@ -17,7 +17,7 @@ namespace Application.Quests.Commands.UpdateQuest
         public HashSet<int> Labels { get; init; } = [];
         public int QuestId { get; init; }
         public QuestTypeEnum QuestType { get; init; }
-        public int AccountId { get; init; }
+        public int UserProfileId { get; init; }
     }
 
     public record UpdateOneTimeQuestCommand : UpdateQuestCommand, ICommand<OneTimeQuestDetailsDto>;

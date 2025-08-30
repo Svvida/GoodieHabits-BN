@@ -4,5 +4,5 @@ using Domain.Enums;
 
 namespace Application.Quests.Queries.GetQuestsByType
 {
-    public record GetQuestsByTypeQuery(int AccountId, QuestTypeEnum QuestType) : IQuery<IEnumerable<QuestDetailsDto>>;
+    public record GetQuestsByTypeQuery(int UserProfileId, QuestTypeEnum QuestType) : IQuery<IEnumerable<QuestDetailsDto>>;
 }

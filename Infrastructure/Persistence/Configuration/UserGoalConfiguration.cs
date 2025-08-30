@@ -11,8 +11,8 @@ namespace Infrastructure.Persistence.Configuration
             builder.ToTable("UserGoals");
             builder.HasKey(ug => ug.Id);
             builder.HasIndex(ug => ug.QuestId);
-            builder.HasIndex(ug => new { ug.AccountId, ug.IsExpired, ug.QuestId });
-            builder.HasIndex(ug => new { ug.AccountId, ug.IsAchieved, ug.IsExpired });
+            builder.HasIndex(ug => new { ug.UserProfileId, ug.IsExpired, ug.QuestId });
+            builder.HasIndex(ug => new { ug.UserProfileId, ug.IsAchieved, ug.IsExpired });
             builder.HasIndex(ug => ug.EndsAt);
 
             builder.Property(ug => ug.GoalType)
@@ -45,10 +45,10 @@ namespace Infrastructure.Persistence.Configuration
                 .HasForeignKey(ug => ug.QuestId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(ug => ug.Account)
+            builder.HasOne(ug => ug.UserProfile)
                 .WithMany(a => a.UserGoals)
-                .HasForeignKey(ug => ug.AccountId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey(ug => ug.UserProfileId)
+                .OnDelete(DeleteBehavior.NoAction); // Goals are deleted from Quest deletion
         }
     }
 }

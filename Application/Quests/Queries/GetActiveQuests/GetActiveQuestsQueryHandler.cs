@@ -17,11 +17,11 @@ namespace Application.Quests.Queries.GetActiveQuests
     {
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetActiveQuestsQuery request, CancellationToken cancellationToken = default)
         {
-            var account = await unitOfWork.Accounts.GetByIdAsync(request.AccountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Account with ID {request.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(request.UserProfileId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {request.UserProfileId} not found.");
 
-            var userTimeZone = DateTimeZoneProviders.Tzdb[account.TimeZone]
-                ?? throw new InvalidArgumentException($"Invalid timezone: {account.TimeZone}");
+            var userTimeZone = DateTimeZoneProviders.Tzdb[userProfile.TimeZone]
+                ?? throw new InvalidArgumentException($"Invalid timezone: {userProfile.TimeZone}");
 
             Instant utcNow = SystemClock.Instance.GetCurrentInstant();
             LocalDateTime localNow = utcNow.InZone(userTimeZone).LocalDateTime;
@@ -35,7 +35,7 @@ namespace Application.Quests.Queries.GetActiveQuests
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason(utcNow.ToDateTimeUtc());
 
-            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.AccountId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
+            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.UserProfileId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
 
             return quests.Select(questMappingService.MapToDto);
         }

@@ -1,9 +1,9 @@
 ﻿using Application.Dtos.UserGoal;
 using Application.Interfaces;
 using Application.Quests.Dtos;
-using Domain;
 using Domain.Enum;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyLambdaApi.Filters;

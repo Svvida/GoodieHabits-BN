@@ -16,7 +16,7 @@ namespace Api.Controllers
         [HttpGet("profile")]
         public async Task<ActionResult<GetUserProfileStatsResponse>> GetUserProfileStats(CancellationToken cancellationToken = default)
         {
-            var query = new GetUserProfileStatsQuery(JwtHelpers.GetCurrentUserId(User));
+            var query = new GetUserProfileStatsQuery(JwtHelpers.GetCurrentUserProfileId(User));
             var profileStats = await sender.Send(query, cancellationToken);
             return Ok(profileStats);
         }
@@ -24,7 +24,7 @@ namespace Api.Controllers
         [HttpGet("extended")]
         public async Task<ActionResult<GetUserExtendedStatsResponse>> GetUserExtendedStats(CancellationToken cancellationToken = default)
         {
-            var query = new GetUserExtendedStatsQuery(JwtHelpers.GetCurrentUserId(User));
+            var query = new GetUserExtendedStatsQuery(JwtHelpers.GetCurrentUserProfileId(User));
             var extendedStats = await sender.Send(query, cancellationToken);
             return Ok(extendedStats);
         }
