@@ -11,7 +11,7 @@ namespace Domain.Calculators
         public static DateTime? Calculate(Quest quest)
         {
             Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
-            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone]
+            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone]
                 ?? throw new InvalidArgumentException("Invalid time zone during next reset date calculation.");
 
             ZonedDateTime nowLocal = nowUtc.InZone(userTimeZone);

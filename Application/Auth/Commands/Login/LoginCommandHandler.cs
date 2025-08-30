@@ -1,5 +1,4 @@
-﻿using Application.Common;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
@@ -10,17 +9,11 @@ namespace Application.Auth.Commands.Login
 {
     public class LoginCommandHandler(IUnitOfWork unitOfWork, IPasswordHasher<Account> passwordHasher, ITokenGenerator tokenGenerator) : IRequestHandler<LoginCommand, LoginResponse>
     {
-        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<LoginResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
         {
-            Account? account;
-            if (Checkers.IsEmail(request.Login))
-                account = await unitOfWork.Accounts.GetByEmailAsync(request.Login, cancellationToken).ConfigureAwait(false);
-            else
-            {
-                account = await unitOfWork.Accounts.GetByUsernameAsync(request.Login, cancellationToken).ConfigureAwait(false);
-            }
+            var account = await unitOfWork.Accounts.GetByLoginIdentifier(command.Login, cancellationToken).ConfigureAwait(false);
 
-            if (account is null || passwordHasher.VerifyHashedPassword(account, account.HashPassword, request.Password) == PasswordVerificationResult.Failed)
+            if (account is null || passwordHasher.VerifyHashedPassword(account, account.HashPassword, command.Password) == PasswordVerificationResult.Failed)
                 throw new UnauthorizedException("Invalid credentials provided.");
 
             return new LoginResponse(

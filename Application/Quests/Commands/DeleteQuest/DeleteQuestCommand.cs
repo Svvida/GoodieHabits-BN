@@ -2,5 +2,5 @@
 
 namespace Application.Quests.Commands.DeleteQuest
 {
-    public record DeleteQuestCommand(int QuestId, int AccountId) : ICommand, ICurrentUserQuestCommand;
+    public record DeleteQuestCommand(int QuestId, int UserProfileId) : ICommand, ICurrentUserQuestCommand;
 }

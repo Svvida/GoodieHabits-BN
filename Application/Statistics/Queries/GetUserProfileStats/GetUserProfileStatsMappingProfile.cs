@@ -14,8 +14,8 @@ namespace Application.Statistics.Queries.GetUserProfileStats
 
             config.NewConfig<UserProfile, UserProfileGoalStatsDto>()
                 .Map(dest => dest.CurrentTotal, src => src.ActiveGoals)
-                .Map(dest => dest.Completed, src => Math.Max(src.Account.UserGoals.Count(g => !g.IsExpired && g.IsAchieved), 0))
-                .Map(dest => dest.InProgress, src => Math.Max(src.ActiveGoals - src.Account.UserGoals.Count(g => !g.IsExpired && g.IsAchieved), 0));
+                .Map(dest => dest.Completed, src => Math.Max(src.UserGoals.Count(g => !g.IsExpired && g.IsAchieved), 0))
+                .Map(dest => dest.InProgress, src => Math.Max(src.ActiveGoals - src.UserGoals.Count(g => !g.IsExpired && g.IsAchieved), 0));
 
             config.NewConfig<UserProfile, UserProfileQuestStatsDto>()
                 .Map(dest => dest.CurrentTotal, src => src.ExistingQuests)

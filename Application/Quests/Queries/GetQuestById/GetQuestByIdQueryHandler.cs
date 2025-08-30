@@ -9,7 +9,7 @@ namespace Application.Quests.Queries.GetQuestById
     {
         public async Task<QuestDetailsDto?> Handle(GetQuestByIdQuery request, CancellationToken cancellationToken)
         {
-            var quest = await unitOfWork.Quests.GetQuestByIdAsync(request.QuestId, request.QuestType, true, cancellationToken);
+            var quest = await unitOfWork.Quests.GetQuestByIdAsync(request.QuestId, request.UserProfileId, request.QuestType, true, cancellationToken);
             if (quest is null)
                 return null;
 

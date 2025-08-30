@@ -21,9 +21,9 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasMaxLength(7);
 
-            builder.HasOne(ql => ql.Account)
+            builder.HasOne(ql => ql.UserProfile)
                 .WithMany(a => a.Labels)
-                .HasForeignKey(ql => ql.AccountId)
+                .HasForeignKey(ql => ql.UserProfileId)
                 .OnDelete(DeleteBehavior.NoAction); // Perform manual delete in repository when deleting account
         }
     }

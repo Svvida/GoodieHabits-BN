@@ -28,11 +28,6 @@ namespace Infrastructure.Persistence.Configuration
                 .HasMaxLength(100)
                 .HasConversion(email => email.ToLower(), email => email);
 
-            builder.Property(a => a.TimeZone)
-                .IsRequired()
-                .HasDefaultValue("Etc/UTC")
-                .HasMaxLength(32);
-
             builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");

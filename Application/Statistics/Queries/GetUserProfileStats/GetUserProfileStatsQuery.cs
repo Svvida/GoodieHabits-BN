@@ -2,5 +2,5 @@
 
 namespace Application.Statistics.Queries.GetUserProfileStats
 {
-    public record GetUserProfileStatsQuery(int AccountId) : IQuery<GetUserProfileStatsResponse>;
+    public record GetUserProfileStatsQuery(int UserProfileId) : IQuery<GetUserProfileStatsResponse>;
 }

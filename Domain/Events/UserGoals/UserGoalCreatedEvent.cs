@@ -1,4 +1,4 @@
 ﻿namespace Domain.Events.UserGoals
 {
-    public record UserGoalCreatedEvent(int AccountId);
+    public record UserGoalCreatedEvent(int UserProfileId);
 }

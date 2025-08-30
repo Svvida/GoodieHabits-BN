@@ -9,7 +9,7 @@ namespace Application.QuestLabels.Queries.GetUserLabels
     {
         public async Task<IEnumerable<QuestLabelDto>> Handle(GetUserLabelsQuery request, CancellationToken cancellationToken)
         {
-            var labels = await unitOfWork.QuestLabels.GetUserLabelsAsync(request.AccountId, true, cancellationToken).ConfigureAwait(false);
+            var labels = await unitOfWork.QuestLabels.GetUserLabelsAsync(request.UserProfileId, true, cancellationToken).ConfigureAwait(false);
             return mapper.Map<IEnumerable<QuestLabelDto>>(labels);
         }
     }

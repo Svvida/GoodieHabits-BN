@@ -9,7 +9,7 @@ namespace Domain.Calculators
     {
         public static IReadOnlyList<QuestOccurrenceWindow> GenerateWindows(Quest quest, DateTime fromUtc, DateTime toUtc)
         {
-            var userZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
+            var userZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone];
 
             return quest.QuestType switch
             {

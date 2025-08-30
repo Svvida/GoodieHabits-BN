@@ -3,7 +3,7 @@
 namespace Domain.Events.Quests
 {
     public record QuestCompletedEvent(
-        int AccountId,
+        int UserProfileId,
         int XpAwarded,
         bool IsGoalCompleted,
         bool IsFirstTimeCompleted,

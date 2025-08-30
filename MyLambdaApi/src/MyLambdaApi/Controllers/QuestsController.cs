@@ -1,7 +1,7 @@
 ﻿using Application.Common.Interfaces.Quests;
 using Application.Quests.Dtos;
-using Domain;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

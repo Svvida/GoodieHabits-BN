@@ -1,6 +1,6 @@
 ﻿using Application.Quests.Dtos;
-using Domain;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

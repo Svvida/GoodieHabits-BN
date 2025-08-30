@@ -19,14 +19,14 @@ namespace Application.Quests.Commands.CreateQuest
 
         public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            var account = await unitOfWork.Accounts.GetAccountWithProfileAsync(command.AccountId, cancellationToken)
-                ?? throw new NotFoundException($"Account with ID: {command.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(command.UserProfileId, cancellationToken)
+                ?? throw new NotFoundException($"User Profile with ID: {command.UserProfileId} not found.");
 
             DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
 
             var quest = Quest.Create(
                 title: command.Title,
-                account: account,
+                userProfile: userProfile,
                 questType: command.QuestType,
                 description: command.Description,
                 priority: EnumHelper.ParseNullable<PriorityEnum>(command.Priority),

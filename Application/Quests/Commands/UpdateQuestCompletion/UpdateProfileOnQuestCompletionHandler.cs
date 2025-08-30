@@ -13,8 +13,8 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
         public async Task Handle(DomainEventNotification<QuestCompletedEvent> wrappedNotification, CancellationToken cancellationToken = default)
         {
             var notification = wrappedNotification.DomainEvent;
-            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(notification.UserProfileId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Profile {notification.UserProfileId} not found.");
 
             userProfile.ApplyQuestCompletionRewards(notification.XpAwarded, notification.IsGoalCompleted, notification.IsFirstTimeCompleted, notification.ShouldAssignRewards, notification.QuestType);
         }
@@ -22,8 +22,8 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
         public async Task Handle(DomainEventNotification<QuestUncompletedEvent> wrappedNotification, CancellationToken cancellationToken = default)
         {
             var notification = wrappedNotification.DomainEvent;
-            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken).ConfigureAwait(false)
-                ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(notification.UserProfileId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Profile {notification.UserProfileId} not found.");
 
             userProfile.RevertQuestCompletion(notification.QuestType);
         }

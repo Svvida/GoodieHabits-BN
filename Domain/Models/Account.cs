@@ -14,10 +14,7 @@ namespace Domain.Models
         public string TimeZone { get; private set; } = "Etc/UTC";
         public string? ResetPasswordCode { get; private set; } = null;
         public DateTime? ResetPasswordCodeExpiresAt { get; private set; } = null;
-        public ICollection<Quest> Quests { get; set; } = [];
-        public ICollection<QuestLabel> Labels { get; set; } = [];
         public UserProfile Profile { get; set; } = null!;
-        public ICollection<UserGoal> UserGoals { get; set; } = [];
 
         protected Account() { }
 
@@ -25,11 +22,10 @@ namespace Domain.Models
         {
             HashPassword = hashPassword;
             Email = email;
-            TimeZone = timeZone;
 
             SetCreatedAt(DateTime.UtcNow);
 
-            Profile = new UserProfile(this);
+            Profile = new UserProfile(this, timeZone);
         }
 
         public static Account Create(string hashPassword, string email, string timeZone = "Etc/UTC")
@@ -53,13 +49,6 @@ namespace Domain.Models
             Email = email;
         }
 
-        public void UpdateTimeZone(string? timeZone)
-        {
-            if (string.IsNullOrWhiteSpace(timeZone))
-                throw new InvalidArgumentException("TimeZone cannot be null or whitespace.");
-            TimeZone = timeZone;
-        }
-
         public void UpdateHashPassword(string hashPassword)
         {
             if (string.IsNullOrWhiteSpace(hashPassword))
@@ -67,29 +56,6 @@ namespace Domain.Models
             HashPassword = hashPassword;
         }
 
-        public int ExpireGoals(DateTime nowUtc)
-        {
-            int expiredCount = 0;
-            foreach (var goal in UserGoals)
-            {
-                if (goal.Expire(nowUtc))
-                    expiredCount++;
-            }
-            Profile.IncrementExpiredGoals(expiredCount);
-            return expiredCount;
-        }
-
-        public int ResetQuests(DateTime nowUtc)
-        {
-            int resetCount = 0;
-            foreach (var quest in Quests)
-            {
-                if (quest.ResetCompletedStatus(nowUtc))
-                    resetCount++;
-            }
-            Profile.DecrementCompletedQuestsAfterReset(resetCount);
-            return resetCount;
-        }
 
         public string InitializePasswordReset(DateTime utcNow)
         {

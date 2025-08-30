@@ -1,9 +1,9 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Domain;
 using Domain.Interfaces.Authentication;
 using Domain.Models;
+using Domain.ValueObjects;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -17,6 +17,7 @@ namespace Infrastructure.Authentication
             var claims = new Claim[]
             {
                 new(JwtClaimTypes.AccountId, account.Id.ToString()),
+                new(JwtClaimTypes.UserProfileId, account.Profile.Id.ToString()),
                 new(JwtClaimTypes.Email, account.Email),
             };
 

@@ -9,14 +9,14 @@ namespace Infrastructure.Persistence.Repositories
     public class QuestRepository(AppDbContext context) : BaseRepository<Quest>(context), IQuestRepository
     {
         public async Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(
-            int accountId,
+            int userProfileId,
             DateTime todayStart,
             DateTime todayEnd,
             SeasonEnum currentSeason,
             CancellationToken cancellationToken = default)
         {
             var baseQuery = _context.Quests
-                .Where(q => q.AccountId == accountId)
+                .Where(q => q.UserProfileId == userProfileId)
                 .Where(q =>
                     q.QuestType == QuestTypeEnum.OneTime &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
@@ -58,12 +58,12 @@ namespace Infrastructure.Persistence.Repositories
         }
 
         public async Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(
-            int accountId,
+            int userProfileId,
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
             var query = _context.Quests
-                .Where(q => q.AccountId == accountId && q.QuestType == questType)
+                .Where(q => q.UserProfileId == userProfileId && q.QuestType == questType)
                 .Include(q => q.Quest_QuestLabels)
                     .ThenInclude(ql => ql.QuestLabel)
                 .AsNoTracking();
@@ -83,14 +83,13 @@ namespace Infrastructure.Persistence.Repositories
             return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdAsync(int questId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestByIdAsync(int questId, int userProfileId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default)
         {
             var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType);
+                .Where(q => q.Id == questId && q.QuestType == questType && q.UserProfileId == userProfileId);
 
             query = query
-                .Include(q => q.Account)
-                     .ThenInclude(a => a.Profile)
+                .Include(q => q.UserProfile)
                 .Include(q => q.Quest_QuestLabels)
                     .ThenInclude(ql => ql.QuestLabel);
 
@@ -119,8 +118,7 @@ namespace Infrastructure.Persistence.Repositories
 
             query = query
                 .Include(q => q.QuestOccurrences)
-                .Include(q => q.Account)
-                     .ThenInclude(a => a.Profile);
+                .Include(q => q.UserProfile);
 
             if (questType == QuestTypeEnum.Daily)
                 query = query.Include(q => q.Statistics);
@@ -134,15 +132,14 @@ namespace Infrastructure.Persistence.Repositories
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdForUpdateAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestByIdForUpdateAsync(int questId, int userProfileId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
         {
             var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType);
+                .Where(q => q.Id == questId && q.QuestType == questType && q.UserProfileId == userProfileId);
 
             query = query
                 .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
-                .Include(q => q.Account)
-                     .ThenInclude(a => a.Profile)
+                .Include(q => q.UserProfile)
                 .Include(q => q.Quest_QuestLabels)
                     .ThenInclude(ql => ql.QuestLabel);
 
@@ -157,43 +154,6 @@ namespace Infrastructure.Persistence.Repositories
 
 
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task<Quest?> GetQuestForDisplayAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
-        {
-            var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType)
-                .AsNoTracking()
-                .Include(q => q.Statistics)
-                .Include(q => q.Quest_QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel)
-                .AsQueryable();
-
-            if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days);
-            if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days);
-            if (questType == QuestTypeEnum.Seasonal)
-                query = query.Include(q => q.SeasonalQuest_Season);
-
-            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsAsync(bool asNoTracking, CancellationToken cancellationToken = default)
-        {
-            var query = _context.Quests
-                .Include(q => q.Account)
-                .Include(q => q.QuestOccurrences)
-                .Include(q => q.WeeklyQuest_Days)
-                .Include(q => q.MonthlyQuest_Days)
-                    .Where(q => q.QuestType == QuestTypeEnum.Daily ||
-                                q.QuestType == QuestTypeEnum.Weekly ||
-                                q.QuestType == QuestTypeEnum.Monthly);
-
-            if (asNoTracking)
-                query = query.AsNoTracking();
-
-            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(DateTime utcNow, CancellationToken cancellationToken = default)
@@ -224,7 +184,7 @@ namespace Infrastructure.Persistence.Repositories
                 select quest;
 
             return await query
-                .Include(q => q.Account)
+                .Include(q => q.UserProfile)
                 .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
@@ -234,27 +194,27 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<bool> IsQuestOwnedByUserAsync(
             int questId,
-            int accountId,
+            int userProfileId,
             CancellationToken cancellationToken = default)
         {
             return await _context.Quests
                 .AnyAsync(q => q.Id == questId &&
-                        q.AccountId == accountId,
+                        q.UserProfileId == userProfileId,
                         cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int accountId, DateTime now, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int userProfileId, DateTime now, CancellationToken cancellationToken = default)
         {
             var activeUserGoalsIds = await _context.UserGoals
-                .Where(g => g.AccountId == accountId && !g.IsExpired)
+                .Where(g => g.UserProfileId == userProfileId && !g.IsExpired)
                 .AsNoTracking()
                 .Select(g => g.QuestId)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return await _context.Quests
-                .Where(q => q.AccountId == accountId &&
+                .Where(q => q.UserProfileId == userProfileId &&
                             !q.IsCompleted &&
                             (q.EndDate ?? DateTime.MaxValue) > now &&
                             !activeUserGoalsIds.Contains(q.Id))
@@ -265,22 +225,21 @@ namespace Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public async Task<IEnumerable<Quest>> GetQuestsEligibleForResetAsync(CancellationToken cancellationToken = default)
+
+        public async Task<Quest?> GetQuestWithUserProfileAsync(int questId, int userProfileId, CancellationToken cancellationToken = default)
         {
             return await _context.Quests
-                .Where(q => q.IsCompleted &&
-                       (q.EndDate ?? DateTime.MaxValue) >= DateTime.UtcNow &&
-                       q.NextResetAt.HasValue && q.NextResetAt <= DateTime.UtcNow)
-                .ToListAsync(cancellationToken)
+                .Include(q => q.UserProfile)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Id == questId && q.UserProfileId == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestWithAccountAsync(int questId, int accountId, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetUserQuestByIdAsync(int questId, int userProfileId, CancellationToken cancellationToken = default)
         {
             return await _context.Quests
-                .Include(q => q.Account)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(q => q.Id == questId && q.AccountId == accountId, cancellationToken)
+                .FirstOrDefaultAsync(q => q.Id == questId && q.UserProfileId == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

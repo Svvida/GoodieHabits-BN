@@ -2,7 +2,7 @@
 {
     public record QuestDeletedEvent(
         int QuestId,
-        int AccountId,
+        int UserProfileId,
         bool IsQuestCompleted,
         bool IsQuestEverCompleted);
 }

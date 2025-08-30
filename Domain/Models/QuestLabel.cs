@@ -6,18 +6,18 @@ namespace Domain.Models
     public class QuestLabel : EntityBase
     {
         public int Id { get; set; }
-        public int AccountId { get; set; }
+        public int UserProfileId { get; set; }
         public string Value { get; private set; } = null!;
         public string BackgroundColor { get; private set; } = null!;
 
-        public Account Account { get; set; } = null!;
+        public UserProfile UserProfile { get; set; } = null!;
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = [];
 
         protected QuestLabel() { }
-        private QuestLabel(int accountId, string value, string backgroundColor)
+        private QuestLabel(int userProfileId, string value, string backgroundColor)
         {
-            if (accountId <= 0)
-                throw new InvalidArgumentException("AccountId must be greater than zero.");
+            if (userProfileId <= 0)
+                throw new InvalidArgumentException("UserProfileId must be greater than zero.");
 
             if (string.IsNullOrWhiteSpace(value))
                 throw new InvalidArgumentException("Value cannot be null or whitespace.");
@@ -25,17 +25,17 @@ namespace Domain.Models
             if (string.IsNullOrWhiteSpace(backgroundColor) || backgroundColor.Length != 7)
                 throw new InvalidArgumentException("BackgroundColor must be a valid hex color code.");
 
-            AccountId = accountId;
+            UserProfileId = userProfileId;
             Value = value;
             BackgroundColor = backgroundColor;
         }
 
         public static QuestLabel Create(
-            int accountId,
+            int userProfileId,
             string value,
             string backgroundColor)
         {
-            return new QuestLabel(accountId, value, backgroundColor);
+            return new QuestLabel(userProfileId, value, backgroundColor);
         }
 
         public void UpdateValue(string value)
