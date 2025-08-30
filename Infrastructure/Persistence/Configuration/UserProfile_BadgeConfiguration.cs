@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.ToTable("UserProfile_Badges");
 
             builder.HasKey(upb => new { upb.UserProfileId, upb.BadgeId });
-            builder.HasIndex(upb => new { upb.UserProfileId, upb.BadgeId }).IsUnique();
+            builder.HasIndex(upb => new { upb.UserProfileId, upb.EarnedAt });
 
             builder.Property(upb => upb.EarnedAt)
                 .IsRequired()
@@ -25,7 +25,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasOne(upb => upb.Badge)
                 .WithMany(b => b.UserProfile_Badges)
                 .HasForeignKey(upb => upb.BadgeId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict); // Prevent accidental deletion of badges that are in use
         }
     }
 }
