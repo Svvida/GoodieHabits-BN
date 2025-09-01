@@ -7,6 +7,7 @@ using Application.Auth.Commands.Register;
 using Application.Common.Behaviors;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.Email;
+using Application.Common.Interfaces.Notifications;
 using Application.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
@@ -18,6 +19,7 @@ using FluentValidation;
 using Infrastructure.Authentication;
 using Infrastructure.Email;
 using Infrastructure.Email.Senders;
+using Infrastructure.Notifications;
 using Infrastructure.Persistence;
 using Infrastructure.Photos;
 using Infrastructure.Services;
@@ -26,6 +28,7 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -180,6 +183,7 @@ namespace Api
             builder.Services.AddScoped<IForgotPasswordEmailSender, ForgotPasswordEmailSender>();
             builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
             builder.Services.AddScoped<IUrlBuilder, CloudinaryUrlBuilder>();
+            builder.Services.AddSingleton<INotificationSender, SignalRNotificationSender>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
@@ -200,6 +204,11 @@ namespace Api
                 cfg.RegisterServicesFromAssembly(applicationAssembly);
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
+
+            // Register SignalR
+            builder.Services.AddSignalR();
+            // Custom provider as we don't use 'sub' claim
+            builder.Services.AddSingleton<IUserIdProvider, UserProfileIdProvider>();
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -253,6 +262,22 @@ namespace Api
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:AccessToken:Key"]!)),
                         ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
                     };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hubs/notifications")))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             // Register Token Handler
@@ -275,6 +300,8 @@ namespace Api
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapHub<NotificationHub>("/api/hubs/notificaions");
 
             app.MapControllers();
 
