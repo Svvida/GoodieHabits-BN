@@ -32,5 +32,10 @@ namespace Domain.Models
         {
             return new Notification(userProfileId, type, title, message, payloadJson);
         }
+
+        public void MarkAsRead()
+        {
+            IsRead = true;
+        }
     }
 }

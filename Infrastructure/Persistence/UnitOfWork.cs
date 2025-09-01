@@ -13,12 +13,14 @@ namespace Infrastructure.Persistence
         private IUserGoalRepository? _userGoalRepository;
         private IQuestRepository? _questRepository;
         private IQuestLabelRepository? _questLabelRepository;
+        private INotificationRepository? _notificationRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
         public IUserGoalRepository UserGoals => _userGoalRepository ??= new UserGoalRepository(_context);
         public IQuestRepository Quests => _questRepository ??= new QuestRepository(_context);
         public IQuestLabelRepository QuestLabels => _questLabelRepository ??= new QuestLabelRepository(_context);
+        public INotificationRepository Notifications => _notificationRepository ??= new NotificationRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
