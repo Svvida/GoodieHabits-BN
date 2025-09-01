@@ -34,6 +34,7 @@ namespace Domain.Models
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public ICollection<UserGoal> UserGoals { get; set; } = [];
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];
+        public ICollection<Notification> Notifications { get; set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string timeZone = "Etc/Utc")

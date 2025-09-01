@@ -23,6 +23,7 @@ namespace Infrastructure.Persistence
         public DbSet<UserGoal> UserGoals { get; set; }
         public DbSet<QuestStatistics> QuestStatistics { get; set; }
         public DbSet<QuestOccurrence> QuestOccurrences { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public override int SaveChanges()
         {
