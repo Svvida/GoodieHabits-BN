@@ -22,8 +22,8 @@ namespace Api.Controllers
             return Ok(notifications);
         }
 
-        [HttpPatch("{id}/mark-read")]
-        public async Task<IActionResult> MarkNotificationAsReadAsync(int id, CancellationToken cancellationToken = default)
+        [HttpPatch("{id:guid}/mark-read")]
+        public async Task<IActionResult> MarkNotificationAsReadAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var command = new MarkNotificationAsReadCommand(id, JwtHelpers.GetCurrentUserProfileId(User));
 

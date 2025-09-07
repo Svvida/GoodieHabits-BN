@@ -14,6 +14,7 @@ namespace Infrastructure.Persistence
         private IQuestRepository? _questRepository;
         private IQuestLabelRepository? _questLabelRepository;
         private INotificationRepository? _notificationRepository;
+        private IBadgeRepository? _badgeRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
@@ -21,6 +22,7 @@ namespace Infrastructure.Persistence
         public IQuestRepository Quests => _questRepository ??= new QuestRepository(_context);
         public IQuestLabelRepository QuestLabels => _questLabelRepository ??= new QuestLabelRepository(_context);
         public INotificationRepository Notifications => _notificationRepository ??= new NotificationRepository(_context);
+        public IBadgeRepository Badges => _badgeRepository ??= new BadgeRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

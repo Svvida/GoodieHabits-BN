@@ -10,6 +10,7 @@ namespace Infrastructure.Persistence.Configuration
         {
             builder.ToTable("Notifications");
             builder.HasKey(n => n.Id);
+            builder.HasIndex(n => new { n.Id, n.UserProfileId });
 
             builder.Property(n => n.UserProfileId)
                 .IsRequired();

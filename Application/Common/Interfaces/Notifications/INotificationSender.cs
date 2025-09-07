@@ -4,6 +4,6 @@ namespace Application.Common.Interfaces.Notifications
 {
     public interface INotificationSender
     {
-        Task SendNotificationAsync(int userProfileId, NotificationDto notification);
+        Task SendNotificationAsync(int userProfileId, NotificationDto notification, CancellationToken cancellationToken = default);
     }
 }

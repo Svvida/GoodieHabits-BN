@@ -1,4 +1,4 @@
-﻿using Application.Common;
+﻿using Application.Badges;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -11,7 +11,7 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
 {
     public class UpdateQuestCompletionCommandHandler(
         IUnitOfWork unitOfWork,
-        IPublisher publisher,
+        IBadgeAwardingService badgeAwardingService,
         ILogger<UpdateQuestCompletionCommandHandler> logger) : IRequestHandler<UpdateQuestCompletionCommand, Unit>
     {
         public async Task<Unit> Handle(UpdateQuestCompletionCommand command, CancellationToken cancellationToken = default)
@@ -32,18 +32,12 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             if (command.IsCompleted)
             {
                 quest.Complete(nowUtc.ToDateTimeUtc(), ShouldAssignRewards(quest, nowUtc));
+                await badgeAwardingService.CheckAndAwardBadgesAsync(BadgeTriggerEnum.QuestCompleted, quest.UserProfile, quest, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 quest.Uncomplete(nowUtc.ToDateTimeUtc());
             }
-
-            foreach (var domainEvent in quest.DomainEvents)
-            {
-                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
-            }
-            quest.ClearDomainEvents();
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogDebug("Quest {QuestId} completion processed", quest.Id);

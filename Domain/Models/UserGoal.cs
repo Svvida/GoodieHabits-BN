@@ -1,6 +1,5 @@
 ﻿using Domain.Common;
 using Domain.Enums;
-using Domain.Events.UserGoals;
 using Domain.Exceptions;
 
 namespace Domain.Models
@@ -29,8 +28,6 @@ namespace Domain.Models
             GoalType = goalType;
             EndsAt = endsAt;
             XpBonus = xpBonus;
-
-            AddDomainEvent(new UserGoalCreatedEvent(userProfileId));
         }
 
         public static UserGoal Create(int questId, int userProfileId, GoalTypeEnum goalType, DateTime endsAt, int xpBonus)

@@ -1,19 +1,19 @@
-﻿using Application.Quests.Dtos;
+﻿using Application.Badges;
+using Application.Quests.Dtos;
 using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Models;
-using MediatR;
 
 namespace Application.Quests.Commands.CreateQuest.Handlers
 {
     public class CreateSeasonalQuestCommandHandler(
         IUnitOfWork unitOfWork,
-        IPublisher publisher,
-        IQuestMapper questMappingService)
+        IQuestMapper questMappingService,
+        IBadgeAwardingService badgeAwardingService)
         : CreateQuestCommandHandler<CreateSeasonalQuestCommand, SeasonalQuestDetailsDto>(
             unitOfWork,
-            publisher,
-            questMappingService)
+            questMappingService,
+            badgeAwardingService)
     {
         protected override Task HandleQuestSpecificsAsync(Quest quest, CreateSeasonalQuestCommand command, CancellationToken cancellationToken)
         {
