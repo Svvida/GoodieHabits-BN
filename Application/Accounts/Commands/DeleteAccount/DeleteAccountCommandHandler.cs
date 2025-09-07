@@ -25,6 +25,8 @@ namespace Application.Accounts.Commands.DeleteAccount
 
             unitOfWork.Accounts.Remove(account);
 
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             return Unit.Value;
         }
     }

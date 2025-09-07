@@ -12,5 +12,6 @@ namespace Domain.Interfaces.Repositories
         Task<UserProfile?> GetUserProfileToWipeoutDataAsync(int accountId, CancellationToken cancellationToken = default);
         Task<IEnumerable<UserProfile>> GetProfilesWithGoalsToExpireAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
         Task<IEnumerable<UserProfile>> GetProfilesWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
+        Task<UserProfile?> GetUserProfileWithBadgesAsync(int userProfileId, CancellationToken cancellationToken = default);
     }
 }

@@ -11,7 +11,6 @@ namespace Domain.Models
         public string? Login { get; private set; } = null;
         public string HashPassword { get; private set; } = null!;
         public string Email { get; private set; } = null!;
-        public string TimeZone { get; private set; } = "Etc/UTC";
         public string? ResetPasswordCode { get; private set; } = null;
         public DateTime? ResetPasswordCodeExpiresAt { get; private set; } = null;
         public UserProfile Profile { get; set; } = null!;

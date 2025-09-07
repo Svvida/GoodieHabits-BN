@@ -118,7 +118,9 @@ namespace Infrastructure.Persistence.Repositories
 
             query = query
                 .Include(q => q.QuestOccurrences)
-                .Include(q => q.UserProfile);
+                .Include(q => q.UserProfile)
+                    .ThenInclude(up => up.UserProfile_Badges)
+                        .ThenInclude(upb => upb.Badge);
 
             if (questType == QuestTypeEnum.Daily)
                 query = query.Include(q => q.Statistics);
@@ -230,7 +232,8 @@ namespace Infrastructure.Persistence.Repositories
         {
             return await _context.Quests
                 .Include(q => q.UserProfile)
-                .AsNoTracking()
+                    .ThenInclude(up => up.UserProfile_Badges)
+                        .ThenInclude(upb => upb.Badge)
                 .FirstOrDefaultAsync(q => q.Id == questId && q.UserProfileId == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }

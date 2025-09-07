@@ -4,8 +4,11 @@ using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Middlewares;
 using Application.Auth.Commands.Register;
+using Application.Badges;
+using Application.Badges.Strategies;
 using Application.Common.Behaviors;
 using Application.Common.Interfaces;
+using Application.Common.Interfaces.Badges;
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Notifications;
 using Application.Quests;
@@ -104,6 +107,17 @@ namespace Api
             //        });
             //});
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("SignalRCors", policy =>
+                {
+                    policy.SetIsOriginAllowed(origin => true) // Allow any origin since it is mobile app API
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); // This is crucial for SignalR
+                });
+            });
+
             //Add Controllers
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -184,6 +198,27 @@ namespace Api
             builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
             builder.Services.AddScoped<IUrlBuilder, CloudinaryUrlBuilder>();
             builder.Services.AddSingleton<INotificationSender, SignalRNotificationSender>();
+
+            // Register Badge awarding strategies
+            // Orchestrator
+            builder.Services.AddScoped<IBadgeAwardingService, BadgeAwardingService>();
+            // Strategies
+            builder.Services.AddScoped<IBadgeAwardingStrategy, BalancedHeroBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, Complete500QuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteDailySevenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteDailyThirtyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteMonthlyTwelveBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, Create100QuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CreateFirstQuestBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CreateTwentyQuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, FailureComebackBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteFiftyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteFirstBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteTenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteYearlyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateFirstBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateTenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, StreakRecoveryBadgeStrategy>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
@@ -267,18 +302,31 @@ namespace Api
                     {
                         OnMessageReceived = context =>
                         {
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+
                             var accessToken = context.Request.Query["access_token"];
                             var path = context.HttpContext.Request.Path;
 
-                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hubs/notifications")))
+                            logger.LogDebug("--- JWT DEBUG --- OnMessageReceived called for path: {Path}", path);
+                            logger.LogDebug("--- JWT DEBUG --- Access token present: {TokenPresent}", !string.IsNullOrEmpty(accessToken));
+
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/hubs/notifications"))
                             {
                                 context.Token = accessToken;
+                                logger.LogDebug("--- JWT DEBUG --- Token set for SignalR connection");
+                            }
+                            else
+                            {
+                                logger.LogWarning("--- JWT DEBUG --- Token NOT set. Path: {Path}, Token empty: {TokenEmpty}",
+                                    path, string.IsNullOrEmpty(accessToken));
                             }
 
                             return Task.CompletedTask;
                         }
                     };
                 });
+
+            builder.Services.AddAuthorization();
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
@@ -296,12 +344,13 @@ namespace Api
 
             app.UseHttpsRedirection();
             //app.UseCors("SwaggerCors");
+            app.UseCors("SignalRCors");
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapHub<NotificationHub>("/api/hubs/notificaions");
+            app.MapHub<NotificationHub>("/api/hubs/notifications");
 
             app.MapControllers();
 

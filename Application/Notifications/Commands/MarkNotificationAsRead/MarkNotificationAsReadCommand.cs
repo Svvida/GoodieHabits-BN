@@ -4,5 +4,5 @@ using Application.Common.Interfaces;
 
 namespace Application.Notifications.Commands.MarkNotificationAsRead
 {
-    public record MarkNotificationAsReadCommand(int NotificationId, int UserProfileId) : ICommand;
+    public record MarkNotificationAsReadCommand(Guid NotificationId, int UserProfileId) : ICommand;
 }

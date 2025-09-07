@@ -1,18 +1,17 @@
-﻿using Application.Quests.Commands.CreateQuest;
+﻿using Application.Badges;
 using Application.Quests.Dtos;
 using Domain.Interfaces;
-using MediatR;
 
 namespace Application.Quests.Commands.CreateQuest.Handlers
 {
     public class CreateDailyQuestCommandHandler(
         IUnitOfWork unitOfWork,
-        IPublisher publisher,
-        IQuestMapper questMappingService)
+        IQuestMapper questMappingService,
+        IBadgeAwardingService badgeAwardingService)
         : CreateQuestCommandHandler<CreateDailyQuestCommand, DailyQuestDetailsDto>(
             unitOfWork,
-            publisher,
-            questMappingService)
+            questMappingService,
+            badgeAwardingService)
     {
     }
 }

@@ -65,5 +65,14 @@ namespace Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<UserProfile?> GetUserProfileWithBadgesAsync(int userProfileId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .Include(up => up.UserProfile_Badges)
+                    .ThenInclude(upb => upb.Badge)
+                .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

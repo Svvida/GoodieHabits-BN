@@ -11,8 +11,6 @@ namespace Application.Notifications.Commands.MarkNotificationAsRead
                 .GreaterThan(0).WithMessage("UserProfileId must be greater than 0.");
 
             RuleFor(x => x.NotificationId)
-                .Cascade(CascadeMode.Stop)
-                .GreaterThan(0).WithMessage("NotificationId must be greater than 0.")
                 .MustAsync(async (command, notificationId, cancellationToken) =>
                 {
                     return await unitOfWork.Notifications.IsUserNotificationExistsAsync(notificationId, command.UserProfileId, cancellationToken).ConfigureAwait(false);

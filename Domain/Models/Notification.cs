@@ -4,7 +4,7 @@ namespace Domain.Models
 {
     public class Notification
     {
-        public int Id { get; private set; }
+        public Guid Id { get; private set; }
         public int UserProfileId { get; private set; }
         public NotificationTypeEnum Type { get; private set; }
         public string Title { get; private set; } = null!;
@@ -17,8 +17,9 @@ namespace Domain.Models
 
         protected Notification() { } // For EF Core
 
-        private Notification(int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
+        private Notification(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
         {
+            Id = id;
             UserProfileId = userProfileId;
             Type = type;
             Title = title;
@@ -28,9 +29,9 @@ namespace Domain.Models
             CreatedAt = DateTime.UtcNow;
         }
 
-        public static Notification Create(int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
+        public static Notification Create(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
         {
-            return new Notification(userProfileId, type, title, message, payloadJson);
+            return new Notification(id, userProfileId, type, title, message, payloadJson);
         }
 
         public void MarkAsRead()

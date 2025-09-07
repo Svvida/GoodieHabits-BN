@@ -1,4 +1,4 @@
-﻿using Application.Common;
+﻿using Application.Badges;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -8,7 +8,7 @@ using NodaTime;
 
 namespace Application.UserGoals.Commands.CreateUserGoal
 {
-    public class CreateUserGoalCommandHandler(IUnitOfWork unitOfWork, IPublisher publisher) : IRequestHandler<CreateUserGoalCommand, Unit>
+    public class CreateUserGoalCommandHandler(IUnitOfWork unitOfWork, IBadgeAwardingService badgeAwardingService) : IRequestHandler<CreateUserGoalCommand, Unit>
     {
         public async Task<Unit> Handle(CreateUserGoalCommand request, CancellationToken cancellationToken)
         {
@@ -30,16 +30,12 @@ namespace Application.UserGoals.Commands.CreateUserGoal
             };
 
             var userGoal = UserGoal.Create(quest.Id, quest.UserProfileId, goalType, endsAtUtc, bonusXp);
-
-            foreach (var domainEvent in userGoal.DomainEvents)
-            {
-                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
-            }
-
-            userGoal.ClearDomainEvents();
+            quest.UserProfile.UpdateAfterUserGoalCreation();
 
             await unitOfWork.UserGoals.AddAsync(userGoal, cancellationToken).ConfigureAwait(false);
+
+            await badgeAwardingService.CheckAndAwardBadgesAsync(BadgeTriggerEnum.GoalCreated, quest.UserProfile, null, cancellationToken).ConfigureAwait(false);
+
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return Unit.Value;

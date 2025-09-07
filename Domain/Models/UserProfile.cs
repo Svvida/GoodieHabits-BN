@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.Events.Badges;
 using Domain.Exceptions;
 using NodaTime;
 
@@ -193,6 +194,15 @@ namespace Domain.Models
             }
             DecrementCompletedQuestsAfterReset(resetCount);
             return resetCount;
+        }
+
+        public void AwardBadge(Badge badge, DateTime utcNow)
+        {
+            if (UserProfile_Badges.Any(upb => upb.BadgeId == badge.Id))
+                return; // Badge already awarded
+            UserProfile_Badges.Add(new UserProfile_Badge(this, badge, utcNow));
+
+            AddDomainEvent(new BadgeAwardedEvent(Id, badge));
         }
     }
 }

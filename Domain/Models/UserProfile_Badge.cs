@@ -15,5 +15,12 @@
             BadgeId = badgeId;
             EarnedAt = utcNow;
         }
+
+        public UserProfile_Badge(UserProfile userProfile, Badge badge, DateTime utcNow)
+        {
+            UserProfile = userProfile ?? throw new ArgumentNullException(nameof(userProfile));
+            Badge = badge ?? throw new ArgumentNullException(nameof(badge));
+            EarnedAt = utcNow;
+        }
     }
 }

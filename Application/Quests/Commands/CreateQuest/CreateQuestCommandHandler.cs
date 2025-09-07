@@ -1,4 +1,5 @@
-﻿using Application.Common;
+﻿using Application.Badges;
+using Application.Common;
 using Application.Quests.Dtos;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -11,15 +12,15 @@ namespace Application.Quests.Commands.CreateQuest
 {
     public class CreateQuestCommandHandler<TCommand, TResponse>(
         IUnitOfWork unitOfWork,
-        IPublisher publisher,
-        IQuestMapper questMappingService)
+        IQuestMapper questMappingService,
+        IBadgeAwardingService badgeAwardingService)
         : IRequestHandler<TCommand, TResponse>
         where TCommand : CreateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto
     {
 
         public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(command.UserProfileId, cancellationToken)
+            var userProfile = await unitOfWork.UserProfiles.GetUserProfileWithBadgesAsync(command.UserProfileId, cancellationToken)
                 ?? throw new NotFoundException($"User Profile with ID: {command.UserProfileId} not found.");
 
             DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
@@ -49,13 +50,9 @@ namespace Application.Quests.Commands.CreateQuest
                 quest.InitializeOccurrences(nowUtc);
             }
 
-            foreach (var domainEvent in quest.DomainEvents)
-            {
-                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
-            }
+            userProfile.UpdateAfterQuestCreation();
 
-            quest.ClearDomainEvents();
+            await badgeAwardingService.CheckAndAwardBadgesAsync(BadgeTriggerEnum.QuestCreated, userProfile, null, cancellationToken).ConfigureAwait(false);
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
