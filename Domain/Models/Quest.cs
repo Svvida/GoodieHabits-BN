@@ -285,16 +285,13 @@ namespace Domain.Models
             if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
                 return;
 
-            if (StartDate.HasValue && StartDate > utcNow)
-                return;
-
             DateTime fromDate = StartDate ?? CreatedAt;
             GenerateAndAddWindows(fromDate, utcNow);
         }
 
         private int GenerateAndAddWindows(DateTime fromDate, DateTime toDate)
         {
-            if (fromDate >= toDate)
+            if (fromDate > toDate)
                 return 0;
 
             var windows = QuestWindowCalculator.GenerateWindows(this, fromDate, toDate);
