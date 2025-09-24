@@ -23,6 +23,8 @@ namespace Application.Accounts.Commands.WipeoutData
             var labelsToDelete = userProfile.Labels.ToList();
             unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
 
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             return Unit.Value;
         }
     }

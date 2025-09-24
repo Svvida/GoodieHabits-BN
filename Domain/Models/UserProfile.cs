@@ -38,11 +38,12 @@ namespace Domain.Models
         public ICollection<Notification> Notifications { get; set; } = [];
 
         public UserProfile() { }
-        public UserProfile(Account account, string timeZone = "Etc/Utc")
+        public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
         {
             Account = account ?? throw new InvalidArgumentException("Account cannot be null.");
             TimeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone)?.Id
                 ?? throw new Exceptions.InvalidTimeZoneException(Id, timeZone);
+            Nickname = nickname ?? throw new InvalidArgumentException("Nickname cannot be null.");
         }
 
         public void UpdateTimeZone(string? timeZone)
@@ -55,14 +56,20 @@ namespace Domain.Models
 
         public void WipeoutData()
         {
-            Avatar = null;
             Bio = null;
             TotalXp = 0;
+
+            // Stats for quests
             CompletedQuests = 0;
+            CompletedDailyQuests = 0;
+            CompletedWeeklyQuests = 0;
+            CompletedMonthlyQuests = 0;
             TotalQuests = 0;
             ExistingQuests = 0;
             CurrentlyCompletedExistingQuests = 0;
             EverCompletedExistingQuests = 0;
+
+            // Stats for goals
             CompletedGoals = 0;
             ExpiredGoals = 0;
             TotalGoals = 0;

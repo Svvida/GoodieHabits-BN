@@ -17,9 +17,9 @@ namespace Application.Auth.Commands.Register
         {
             var hashedPassword = passwordHasher.HashPassword(null!, request.Password);
 
-            var account = Account.Create(hashPassword: hashedPassword, email: request.Email, timeZone: request.TimeZoneId ?? "Etc/UTC");
+            var nickname = await nicknameGenerator.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false);
 
-            account.Profile.UpdateNickname(await nicknameGenerator.GenerateUniqueNicknameAsync(cancellationToken).ConfigureAwait(false));
+            var account = Account.Create(hashPassword: hashedPassword, email: request.Email, nickname: nickname, timeZone: request.TimeZoneId ?? "Etc/UTC");
 
             await unitOfWork.Accounts.AddAsync(account, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

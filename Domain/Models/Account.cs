@@ -17,23 +17,25 @@ namespace Domain.Models
 
         protected Account() { }
 
-        private Account(string hashPassword, string email, string timeZone)
+        private Account(string hashPassword, string email, string nickname, string timeZone)
         {
             HashPassword = hashPassword;
             Email = email;
 
             SetCreatedAt(DateTime.UtcNow);
 
-            Profile = new UserProfile(this, timeZone);
+            Profile = new UserProfile(this, nickname, timeZone);
         }
 
-        public static Account Create(string hashPassword, string email, string timeZone = "Etc/UTC")
+        public static Account Create(string hashPassword, string email, string nickname, string timeZone = "Etc/UTC")
         {
             if (string.IsNullOrWhiteSpace(hashPassword))
                 throw new InvalidArgumentException("HashPassword cannot be null or whitespace.");
             if (string.IsNullOrWhiteSpace(email))
                 throw new InvalidArgumentException("Email cannot be null or whitespace.");
-            return new Account(hashPassword, email, timeZone);
+            if (string.IsNullOrWhiteSpace(nickname))
+                throw new InvalidArgumentException("Nickname cannot be null or whitespace.");
+            return new Account(hashPassword, email, nickname, timeZone);
         }
 
         public void UpdateLogin(string? login)
