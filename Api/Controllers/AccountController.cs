@@ -85,7 +85,7 @@ namespace Api.Controllers
             DeleteAccountRequest request,
             CancellationToken cancellationToken = default)
         {
-            var command = mapper.Map<DeleteAccountCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            var command = mapper.Map<DeleteAccountCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User), UserProfileId = JwtHelpers.GetCurrentUserProfileId(User) };
             await sender.Send(command, cancellationToken);
             return NoContent();
         }

@@ -307,18 +307,9 @@ namespace Api
                             var accessToken = context.Request.Query["access_token"];
                             var path = context.HttpContext.Request.Path;
 
-                            logger.LogDebug("--- JWT DEBUG --- OnMessageReceived called for path: {Path}", path);
-                            logger.LogDebug("--- JWT DEBUG --- Access token present: {TokenPresent}", !string.IsNullOrEmpty(accessToken));
-
                             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/hubs/notifications"))
                             {
                                 context.Token = accessToken;
-                                logger.LogDebug("--- JWT DEBUG --- Token set for SignalR connection");
-                            }
-                            else
-                            {
-                                logger.LogWarning("--- JWT DEBUG --- Token NOT set. Path: {Path}, Token empty: {TokenEmpty}",
-                                    path, string.IsNullOrEmpty(accessToken));
                             }
 
                             return Task.CompletedTask;

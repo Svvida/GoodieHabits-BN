@@ -2,5 +2,5 @@
 
 namespace Application.Accounts.Commands.RequestPasswordReset
 {
-    public record RequestPasswordResetCommand(string Email) : ICommand;
+    public record RequestPasswordResetCommand(string? Email) : ICommand;
 }
