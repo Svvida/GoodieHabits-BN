@@ -18,13 +18,13 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<UserProfile?> GetUserProfileWithGoalsAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<UserProfile?> GetUserProfileWithGoalsAsync(int userProfileId, CancellationToken cancellationToken = default)
         {
             return await _context.UserProfiles
                 .AsNoTracking()
                 .Include(u => u.UserGoals)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.AccountId == accountId, cancellationToken)
+                .FirstOrDefaultAsync(u => u.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -37,14 +37,14 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<UserProfile?> GetUserProfileToWipeoutDataAsync(int accountId, CancellationToken cancellationToken = default)
+        public async Task<UserProfile?> GetUserProfileToWipeoutDataAsync(int userProfileId, CancellationToken cancellationToken = default)
         {
             return await _context.UserProfiles
                 .Include(u => u.Account)
                 .Include(u => u.Labels)
                 .Include(u => u.UserProfile_Badges)
                 .Include(u => u.Quests)
-                .FirstOrDefaultAsync(u => u.AccountId == accountId, cancellationToken)
+                .FirstOrDefaultAsync(u => u.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
