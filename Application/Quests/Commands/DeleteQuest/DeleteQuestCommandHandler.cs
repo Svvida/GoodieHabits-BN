@@ -9,7 +9,7 @@ namespace Application.Quests.Commands.DeleteQuest
     {
         public async Task<Unit> Handle(DeleteQuestCommand command, CancellationToken cancellationToken)
         {
-            var quest = await unitOfWork.Quests.GetByIdAsync(command.QuestId, cancellationToken)
+            var quest = await unitOfWork.Quests.GetUserQuestByIdAsync(command.QuestId, command.UserProfileId, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {command.QuestId} not found.");
 
             quest.Delete();

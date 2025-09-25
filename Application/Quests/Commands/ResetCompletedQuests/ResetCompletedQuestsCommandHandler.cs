@@ -10,24 +10,24 @@ namespace Application.Quests.Commands.ResetCompletedQuests
         public async Task<int> Handle(ResetCompletedQuestsCommand request, CancellationToken cancellationToken)
         {
             DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            var accounts = await unitOfWork.Accounts.GetAccountsWithQuestsToResetAsync(nowUtc, cancellationToken).ConfigureAwait(false);
+            var profiles = await unitOfWork.UserProfiles.GetProfilesWithQuestsToResetAsync(nowUtc, cancellationToken).ConfigureAwait(false);
 
-            if (!accounts.Any())
+            if (!profiles.Any())
             {
                 logger.LogInformation("No quests eligible for reset at this time.");
                 return 0;
             }
 
             int totalResetQuests = 0;
-            foreach (var account in accounts)
+            foreach (var profile in profiles)
             {
-                int resetQuestsForAccount = account.ResetQuests(nowUtc);
+                int resetQuestsForAccount = profile.ResetQuests(nowUtc);
                 totalResetQuests += resetQuestsForAccount;
                 if (resetQuestsForAccount > 0)
-                    logger.LogInformation("Account {AccountId} has {ResetQuests} reset quests.", account.Id, resetQuestsForAccount);
+                    logger.LogInformation("User Profile {ProfileId} has {ResetQuests} reset quests.", profile.Id, resetQuestsForAccount);
             }
 
-            logger.LogInformation("Total of {TotalQuests} quests reset across {AccountCount} accounts.", totalResetQuests, accounts.Count());
+            logger.LogInformation("Total of {TotalQuests} quests reset across {ProfilesCount} profiles.", totalResetQuests, profiles.Count());
 
             return await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

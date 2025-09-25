@@ -4,9 +4,13 @@ using Api.BackgroundTasks;
 using Api.Converters;
 using Api.Middlewares;
 using Application.Auth.Commands.Register;
+using Application.Badges;
+using Application.Badges.Strategies;
 using Application.Common.Behaviors;
 using Application.Common.Interfaces;
+using Application.Common.Interfaces.Badges;
 using Application.Common.Interfaces.Email;
+using Application.Common.Interfaces.Notifications;
 using Application.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
@@ -18,6 +22,7 @@ using FluentValidation;
 using Infrastructure.Authentication;
 using Infrastructure.Email;
 using Infrastructure.Email.Senders;
+using Infrastructure.Notifications;
 using Infrastructure.Persistence;
 using Infrastructure.Photos;
 using Infrastructure.Services;
@@ -26,6 +31,7 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -100,6 +106,17 @@ namespace Api
             //                .AllowAnyMethod();
             //        });
             //});
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("SignalRCors", policy =>
+                {
+                    policy.SetIsOriginAllowed(origin => true) // Allow any origin since it is mobile app API
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); // This is crucial for SignalR
+                });
+            });
 
             //Add Controllers
             builder.Services.AddControllers()
@@ -180,6 +197,28 @@ namespace Api
             builder.Services.AddScoped<IForgotPasswordEmailSender, ForgotPasswordEmailSender>();
             builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
             builder.Services.AddScoped<IUrlBuilder, CloudinaryUrlBuilder>();
+            builder.Services.AddSingleton<INotificationSender, SignalRNotificationSender>();
+
+            // Register Badge awarding strategies
+            // Orchestrator
+            builder.Services.AddScoped<IBadgeAwardingService, BadgeAwardingService>();
+            // Strategies
+            builder.Services.AddScoped<IBadgeAwardingStrategy, BalancedHeroBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, Complete500QuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteDailySevenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteDailyThirtyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CompleteMonthlyTwelveBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, Create100QuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CreateFirstQuestBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, CreateTwentyQuestsBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, FailureComebackBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteFiftyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteFirstBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteTenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCompleteYearlyBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateFirstBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateTenBadgeStrategy>();
+            builder.Services.AddScoped<IBadgeAwardingStrategy, StreakRecoveryBadgeStrategy>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
@@ -200,6 +239,11 @@ namespace Api
                 cfg.RegisterServicesFromAssembly(applicationAssembly);
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
+
+            // Register SignalR
+            builder.Services.AddSignalR();
+            // Custom provider as we don't use 'sub' claim
+            builder.Services.AddSingleton<IUserIdProvider, UserProfileIdProvider>();
 
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -253,7 +297,27 @@ namespace Api
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:AccessToken:Key"]!)),
                         ClockSkew = TimeSpan.FromSeconds(30) // 30s tolerance for the expiration date
                     };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/hubs/notifications"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
+
+            builder.Services.AddAuthorization();
 
             // Register Token Handler
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
@@ -271,10 +335,13 @@ namespace Api
 
             app.UseHttpsRedirection();
             //app.UseCors("SwaggerCors");
+            app.UseCors("SignalRCors");
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapHub<NotificationHub>("/api/hubs/notifications");
 
             app.MapControllers();
 

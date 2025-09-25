@@ -15,9 +15,16 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(b => b.Type).IsUnique();
 
             builder.Property(b => b.Type)
-                .IsRequired();
+                .IsRequired()
+                .HasConversion<string>();
 
             builder.Property(b => b.Text)
+                .IsRequired();
+
+            builder.Property(b => b.Description)
+                .IsRequired();
+
+            builder.Property(b => b.ColorHex)
                 .IsRequired();
         }
     }

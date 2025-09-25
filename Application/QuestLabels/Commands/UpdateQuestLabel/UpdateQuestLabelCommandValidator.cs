@@ -21,9 +21,9 @@ namespace Application.QuestLabels.Commands.UpdateQuestLabel
                 .MaximumLength(25).WithMessage("Value must not exceed {MaxLength} characters")
                 .MustAsync(async (command, value, cancellationToken) =>
                 {
-                    return await unitOfWork.QuestLabels.IsLabelValueUniqueForUser(value, command.AccountId, cancellationToken);
+                    return await unitOfWork.QuestLabels.IsLabelValueUniqueForUser(value, command.UserProfileId, cancellationToken);
                 })
-                .WithMessage("A label with value '{PropertyValue}' already exists for this account.");
+                .WithMessage("A label with value '{PropertyValue}' already exists for this user.");
 
             RuleFor(cmd => cmd.BackgroundColor)
                 .NotEmpty().WithMessage("Background Color is required")

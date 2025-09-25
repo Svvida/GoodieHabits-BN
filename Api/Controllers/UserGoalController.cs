@@ -26,7 +26,7 @@ namespace Api.Controllers
             [FromBody] CreateUserGoalRequest request,
             CancellationToken cancellationToken = default)
         {
-            var command = mapper.Map<CreateUserGoalCommand>(request) with { AccountId = JwtHelpers.GetCurrentUserId(User) };
+            var command = mapper.Map<CreateUserGoalCommand>(request) with { UserProfileId = JwtHelpers.GetCurrentUserProfileId(User) };
             await sender.Send(command, cancellationToken);
             return Ok();
         }
@@ -42,10 +42,8 @@ namespace Api.Controllers
                 return BadRequest($"Invalid goal type: {goaltype}. Valid values are Daily, Weekly, Monthly, Yearly.");
             }
 
-            var accountId = JwtHelpers.GetCurrentUserId(User);
-
             var query = new GetActiveGoalByTypeQuery(
-                accountId,
+                JwtHelpers.GetCurrentUserProfileId(User),
                 goalTypeEnum);
 
             var result = await sender.Send(query, cancellationToken);
@@ -60,10 +58,10 @@ namespace Api.Controllers
         [Route("{id}/completion")]
         public async Task<IActionResult> CompleteUserGoal(int id, [FromBody] UpdateQuestCompletionRequest request, CancellationToken cancellationToken = default)
         {
-            var quest = await unitOfWork.Quests.GetByIdAsync(id, cancellationToken);
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            var userProfileId = JwtHelpers.GetCurrentUserProfileId(User);
+            var quest = await unitOfWork.Quests.GetUserQuestByIdAsync(id, userProfileId, cancellationToken);
 
-            if (quest is null || quest.AccountId != accountId)
+            if (quest is null)
             {
                 return NotFound(new ProblemDetails
                 {
@@ -76,7 +74,7 @@ namespace Api.Controllers
             var command = mapper.Map<UpdateQuestCompletionCommand>(request) with
             {
                 QuestId = id,
-                AccountId = accountId,
+                UserProfileId = userProfileId,
                 QuestType = quest.QuestType
             };
 

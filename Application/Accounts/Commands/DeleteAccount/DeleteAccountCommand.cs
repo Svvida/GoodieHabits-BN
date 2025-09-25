@@ -2,5 +2,5 @@
 
 namespace Application.Accounts.Commands.DeleteAccount
 {
-    public record DeleteAccountCommand(string Password, string ConfirmPassword, int AccountId) : ICommand;
+    public record DeleteAccountCommand(string Password, string ConfirmPassword, int AccountId, int UserProfileId) : ICommand;
 }

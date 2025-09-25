@@ -10,24 +10,24 @@ namespace Application.UserGoals.Commands.ExpireGoals
         public async Task<int> Handle(ExpireGoalsCommand command, CancellationToken cancellationToken)
         {
             var nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            var accounts = await unitOfWork.Accounts.GetAccountsWithGoalsToExpireAsync(nowUtc, cancellationToken).ConfigureAwait(false);
+            var profiles = await unitOfWork.UserProfiles.GetProfilesWithGoalsToExpireAsync(nowUtc, cancellationToken).ConfigureAwait(false);
 
-            if (!accounts.Any())
+            if (!profiles.Any())
             {
                 logger.LogInformation("No goals to expire at this time.");
                 return 0;
             }
 
             int totalExpiredGoals = 0;
-            foreach (var account in accounts)
+            foreach (var profile in profiles)
             {
-                int expiredGoalsForAccount = account.ExpireGoals(nowUtc);
+                int expiredGoalsForAccount = profile.ExpireGoals(nowUtc);
                 totalExpiredGoals += expiredGoalsForAccount;
                 if (expiredGoalsForAccount > 0)
-                    logger.LogInformation("Account {AccountId} has {ExpiredGoals} newly expired goals.", account.Id, expiredGoalsForAccount);
+                    logger.LogInformation("User Profile {ProfileId} has {ExpiredGoals} newly expired goals.", profile.Id, expiredGoalsForAccount);
             }
 
-            logger.LogInformation("Total of {TotalGoals} goals expired across {AccountCount} accounts.", totalExpiredGoals, accounts.Count());
+            logger.LogInformation("Total of {TotalGoals} goals expired across {ProfilesCount} profiles.", totalExpiredGoals, profiles.Count());
 
             return await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

@@ -11,8 +11,8 @@ namespace Application.Quests.Commands.DeleteQuest
         public async Task Handle(DomainEventNotification<QuestDeletedEvent> wrapperNotification, CancellationToken cancellationToken = default)
         {
             var notification = wrapperNotification.DomainEvent;
-            var userProfile = await unitOfWork.UserProfiles.GetByAccountIdAsync(notification.AccountId, cancellationToken)
-                ?? throw new NotFoundException($"Profile for account {notification.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(notification.UserProfileId, cancellationToken)
+                ?? throw new NotFoundException($"Profile {notification.UserProfileId} not found.");
 
             var wasQuestActiveGoal = await unitOfWork.UserGoals.IsQuestActiveGoalAsync(notification.QuestId, cancellationToken)
                 .ConfigureAwait(false);

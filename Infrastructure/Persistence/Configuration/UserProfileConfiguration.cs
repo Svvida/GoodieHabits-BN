@@ -14,6 +14,11 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(p => p.AccountId).IsUnique();
             builder.HasIndex(p => p.Nickname).IsUnique();
 
+            builder.Property(a => a.TimeZone)
+                .IsRequired()
+                .HasDefaultValue("Etc/UTC")
+                .HasMaxLength(100);
+
             builder.Property(p => p.Nickname)
                 .IsRequired(true)
                 .HasMaxLength(30);
@@ -30,6 +35,18 @@ namespace Infrastructure.Persistence.Configuration
                 .HasDefaultValue(0);
 
             builder.Property(p => p.CompletedQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedDailyQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedWeeklyQuests)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.CompletedMonthlyQuests)
                 .IsRequired()
                 .HasDefaultValue(0);
 

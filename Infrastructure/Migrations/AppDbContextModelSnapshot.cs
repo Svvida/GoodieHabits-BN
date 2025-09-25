@@ -55,13 +55,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("ResetPasswordCodeExpiresAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("TimeZone")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasDefaultValue("Etc/UTC");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -85,18 +78,21 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("ColorHex")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -104,6 +100,168 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Badges", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ColorHex = "#008000",
+                            Description = "One week of daily quests in a row!",
+                            Text = "Daily Streak: 7",
+                            Type = "CompleteDailySeven"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ColorHex = "#008000",
+                            Description = "A whole month of consistency. The fire never went out.",
+                            Text = "Daily Streak: 30",
+                            Type = "CompleteDailyThirty"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ColorHex = "#008000",
+                            Description = "Completed a monthly quest every month for a full year.",
+                            Text = "Cycle Breaker",
+                            Type = "CompleteMonthlyTwelve"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ColorHex = "#008000",
+                            Description = "500 quests completed. Legendary endurance!",
+                            Text = "Quest Master",
+                            Type = "Complete500Quests"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ColorHex = "#ffbf00",
+                            Description = "You set your very first goal.",
+                            Text = "Dreamer",
+                            Type = "GoalCreateFirst"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ColorHex = "#ffbf00",
+                            Description = "You drafted 10 goals to challenge yourself.",
+                            Text = "Planner",
+                            Type = "GoalCreateTen"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ColorHex = "#ffbf00",
+                            Description = "Your first goal completed. The journey begins.",
+                            Text = "Achiever",
+                            Type = "GoalCompleteFirst"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ColorHex = "#ffbf00",
+                            Description = "10 goals done. Determination proven.",
+                            Text = "Goal Getter",
+                            Type = "GoalCompleteTen"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ColorHex = "#ffbf00",
+                            Description = "50 goals achieved. You’ve come a long way.",
+                            Text = "Vision Realized",
+                            Type = "GoalCompleteFifty"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ColorHex = "#ffd700",
+                            Description = "Completed a yearly goal. True perseverance.",
+                            Text = "Yearly Champion",
+                            Type = "GoalCompleteYearly"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            ColorHex = "#0000ff",
+                            Description = "Your adventure begins with the very first quest.",
+                            Text = "First Quest!",
+                            Type = "CreateFirstQuest"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            ColorHex = "#0000ff",
+                            Description = "Twenty quests written into your story.",
+                            Text = "Quest Scribe",
+                            Type = "CreateTwentyQuests"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            ColorHex = "#0000ff",
+                            Description = "100 quests forged. A true architect of challenges.",
+                            Text = "Quest Factory",
+                            Type = "Create100Quests"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            ColorHex = "#6a0dad",
+                            Description = "Your first companion on the journey.",
+                            Text = "Ally Found",
+                            Type = "MakeOneFriend"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            ColorHex = "#6a0dad",
+                            Description = "Five allies joined your party.",
+                            Text = "Band of Allies",
+                            Type = "MakeFiveFriends"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            ColorHex = "#6a0dad",
+                            Description = "Ten friends along the way.",
+                            Text = "Social Starter",
+                            Type = "MakeTenFriends"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            ColorHex = "#6a0dad",
+                            Description = "Twenty friends — your guild thrives.",
+                            Text = "Party Leader",
+                            Type = "MakeTwentyFriends"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            ColorHex = "#ff0000",
+                            Description = "Failed 10 times, but always rose again.",
+                            Text = "Phoenix",
+                            Type = "FailureComeback"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            ColorHex = "#ff0000",
+                            Description = "Lost your streak, but started again. That’s true grit.",
+                            Text = "Gritty Hero",
+                            Type = "StreakRecovery"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            ColorHex = "#c0c0c0",
+                            Description = "Completed 10 daily, 10 weekly, and 10 monthly quests.",
+                            Text = "Balanced Hero",
+                            Type = "BalancedHero"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Models.MonthlyQuest_Days", b =>
@@ -131,6 +289,43 @@ namespace Infrastructure.Migrations
                     b.ToTable("MonthlyQuest_Days", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Domain.Models.Quest", b =>
                 {
                     b.Property<int>("Id")
@@ -138,9 +333,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -193,6 +385,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("WasEverCompleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -200,11 +395,11 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("QuestType");
 
-                    b.HasIndex("AccountId", "QuestType");
+                    b.HasIndex("UserProfileId");
+
+                    b.HasIndex("UserProfileId", "QuestType");
 
                     b.ToTable("Quests", (string)null);
                 });
@@ -217,9 +412,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
-
                     b.Property<string>("BackgroundColor")
                         .IsRequired()
                         .HasMaxLength(7)
@@ -231,6 +423,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(25)
@@ -238,7 +433,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("UserProfileId");
 
                     b.HasIndex("Value");
 
@@ -376,9 +571,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("AchievedAt")
                         .HasColumnType("datetime2");
 
@@ -406,6 +598,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
 
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
                     b.Property<int>("XpBonus")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -417,9 +612,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("QuestId");
 
-                    b.HasIndex("AccountId", "IsAchieved", "IsExpired");
+                    b.HasIndex("UserProfileId", "IsAchieved", "IsExpired");
 
-                    b.HasIndex("AccountId", "IsExpired", "QuestId");
+                    b.HasIndex("UserProfileId", "IsExpired", "QuestId");
 
                     b.ToTable("UserGoals", (string)null);
                 });
@@ -447,12 +642,27 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<int>("CompletedDailyQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("CompletedGoals")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<int>("CompletedMonthlyQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("CompletedQuests")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("CompletedWeeklyQuests")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
@@ -486,6 +696,13 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("Etc/UTC");
 
                     b.Property<int>("TotalGoals")
                         .ValueGeneratedOnAdd()
@@ -533,8 +750,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BadgeId");
 
-                    b.HasIndex("UserProfileId", "BadgeId")
-                        .IsUnique();
+                    b.HasIndex("UserProfileId", "EarnedAt");
 
                     b.ToTable("UserProfile_Badges", (string)null);
                 });
@@ -571,26 +787,37 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest");
                 });
 
-            modelBuilder.Entity("Domain.Models.Quest", b =>
+            modelBuilder.Entity("Domain.Models.Notification", b =>
                 {
-                    b.HasOne("Domain.Models.Account", "Account")
-                        .WithMany("Quests")
-                        .HasForeignKey("AccountId")
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Account");
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.Quest", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("Quests")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Domain.Models.QuestLabel", b =>
                 {
-                    b.HasOne("Domain.Models.Account", "Account")
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
                         .WithMany("Labels")
-                        .HasForeignKey("AccountId")
+                        .HasForeignKey("UserProfileId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Account");
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Domain.Models.QuestOccurrence", b =>
@@ -647,21 +874,21 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.UserGoal", b =>
                 {
-                    b.HasOne("Domain.Models.Account", "Account")
-                        .WithMany("UserGoals")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Domain.Models.Quest", "Quest")
                         .WithMany("UserGoal")
                         .HasForeignKey("QuestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Account");
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("UserGoals")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Quest");
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
@@ -680,7 +907,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Models.Badge", "Badge")
                         .WithMany("UserProfile_Badges")
                         .HasForeignKey("BadgeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Models.UserProfile", "UserProfile")
@@ -707,14 +934,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.Account", b =>
                 {
-                    b.Navigation("Labels");
-
                     b.Navigation("Profile")
                         .IsRequired();
-
-                    b.Navigation("Quests");
-
-                    b.Navigation("UserGoals");
                 });
 
             modelBuilder.Entity("Domain.Models.Badge", b =>
@@ -746,6 +967,14 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
+                    b.Navigation("Labels");
+
+                    b.Navigation("Notifications");
+
+                    b.Navigation("Quests");
+
+                    b.Navigation("UserGoals");
+
                     b.Navigation("UserProfile_Badges");
                 });
 #pragma warning restore 612, 618

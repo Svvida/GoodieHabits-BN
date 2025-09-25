@@ -9,7 +9,7 @@ namespace Domain.Models
     public class Quest : EntityBase
     {
         public int Id { get; set; }
-        public int AccountId { get; set; }
+        public int UserProfileId { get; set; }
         public QuestTypeEnum QuestType { get; private set; }
         public string Title { get; private set; } = null!;
         public string? Description { get; private set; } = null;
@@ -24,7 +24,7 @@ namespace Domain.Models
         public DifficultyEnum? Difficulty { get; private set; } = null;
         public TimeOnly? ScheduledTime { get; private set; } = null;
 
-        public Account Account { get; set; } = null!;
+        public UserProfile UserProfile { get; set; } = null!;
         public ICollection<Quest_QuestLabel> Quest_QuestLabels { get; set; } = [];
         public MonthlyQuest_Days? MonthlyQuest_Days { get; set; } = null;
         public ICollection<WeeklyQuest_Day> WeeklyQuest_Days { get; set; } = [];
@@ -37,7 +37,7 @@ namespace Domain.Models
         protected Quest() { }
         private Quest(
             string title,
-            Account account,
+            UserProfile userProfile,
             QuestTypeEnum questType,
             DateTime nowUtc,
             string? description = null,
@@ -50,8 +50,8 @@ namespace Domain.Models
             HashSet<int>? labelIds = null)
         {
             Title = title ?? throw new InvalidArgumentException("Quest title cannot be null or empty.");
-            Account = account ?? throw new InvalidArgumentException("Account cannot be null.");
-            AccountId = account.Id;
+            UserProfile = userProfile ?? throw new InvalidArgumentException("User Profile cannot be null.");
+            UserProfileId = userProfile.Id;
             QuestType = questType;
             Description = description;
             Priority = priority;
@@ -76,14 +76,11 @@ namespace Domain.Models
                 InitializeOccurrences(nowUtc);
                 SetNextResetAt();
             }
-
-            // Raise domain event for quest creation
-            AddDomainEvent(new QuestCreatedEvent(AccountId, title, questType));
         }
 
         public static Quest Create(
             string title,
-            Account account,
+            UserProfile userProfile,
             QuestTypeEnum questType,
             DateTime nowUtc,
             string? description = null,
@@ -95,7 +92,7 @@ namespace Domain.Models
             TimeOnly? scheduledTime = null,
             HashSet<int>? labelIds = null)
         {
-            return new Quest(title, account, questType, nowUtc, description, priority, emoji,
+            return new Quest(title, userProfile, questType, nowUtc, description, priority, emoji,
                            startDate, endDate, difficulty, scheduledTime, labelIds);
         }
 
@@ -200,7 +197,7 @@ namespace Domain.Models
 
             xpGained += shouldAssignRewards ? 10 : 0; // Base XP for quest completion
 
-            AddDomainEvent(new QuestCompletedEvent(AccountId, xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards));
+            UserProfile.ApplyQuestCompletionRewards(xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards, QuestType);
         }
 
         public void Uncomplete(DateTime utcNow)
@@ -218,7 +215,7 @@ namespace Domain.Models
 
             // We don't reset goals since handler prevent uncompleting if quest is active goal
 
-            AddDomainEvent(new QuestUncompletedEvent(AccountId));
+            UserProfile.RevertQuestCompletion(QuestType);
         }
 
         public QuestOccurrence AddOccurrence(DateTime start, DateTime end)
@@ -257,7 +254,7 @@ namespace Domain.Models
 
         public void Delete()
         {
-            AddDomainEvent(new QuestDeletedEvent(Id, AccountId, IsCompleted, WasEverCompleted));
+            AddDomainEvent(new QuestDeletedEvent(Id, UserProfileId, IsCompleted, WasEverCompleted));
         }
 
         public bool ResetCompletedStatus(DateTime nowUtc)
@@ -288,16 +285,13 @@ namespace Domain.Models
             if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
                 return;
 
-            if (StartDate.HasValue && StartDate > utcNow)
-                return;
-
             DateTime fromDate = StartDate ?? CreatedAt;
             GenerateAndAddWindows(fromDate, utcNow);
         }
 
         private int GenerateAndAddWindows(DateTime fromDate, DateTime toDate)
         {
-            if (fromDate >= toDate)
+            if (fromDate > toDate)
                 return 0;
 
             var windows = QuestWindowCalculator.GenerateWindows(this, fromDate, toDate);

@@ -1,4 +1,4 @@
-﻿using Application.Common;
+﻿using Application.Badges;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -8,16 +8,16 @@ using NodaTime;
 
 namespace Application.UserGoals.Commands.CreateUserGoal
 {
-    public class CreateUserGoalCommandHandler(IUnitOfWork unitOfWork, IPublisher publisher) : IRequestHandler<CreateUserGoalCommand, Unit>
+    public class CreateUserGoalCommandHandler(IUnitOfWork unitOfWork, IBadgeAwardingService badgeAwardingService) : IRequestHandler<CreateUserGoalCommand, Unit>
     {
         public async Task<Unit> Handle(CreateUserGoalCommand request, CancellationToken cancellationToken)
         {
             GoalTypeEnum goalType = Enum.Parse<GoalTypeEnum>(request.GoalType, true);
 
-            var quest = await unitOfWork.Quests.GetQuestWithAccountAsync(request.QuestId, request.AccountId, cancellationToken)
+            var quest = await unitOfWork.Quests.GetQuestWithUserProfileAsync(request.QuestId, request.UserProfileId, cancellationToken)
                 ?? throw new NotFoundException($"Quest with ID {request.QuestId} not found.");
 
-            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone];
+            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone];
             DateTime endsAtUtc = CalculateGoalEndTime(goalType, userTimeZone);
 
             var bonusXp = goalType switch
@@ -29,17 +29,13 @@ namespace Application.UserGoals.Commands.CreateUserGoal
                 _ => throw new InvalidArgumentException($"Invalid goal type: {goalType}."),
             };
 
-            var userGoal = UserGoal.Create(quest.Id, request.AccountId, goalType, endsAtUtc, bonusXp);
-
-            foreach (var domainEvent in userGoal.DomainEvents)
-            {
-                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
-            }
-
-            userGoal.ClearDomainEvents();
+            var userGoal = UserGoal.Create(quest.Id, quest.UserProfileId, goalType, endsAtUtc, bonusXp);
+            quest.UserProfile.UpdateAfterUserGoalCreation();
 
             await unitOfWork.UserGoals.AddAsync(userGoal, cancellationToken).ConfigureAwait(false);
+
+            await badgeAwardingService.CheckAndAwardBadgesAsync(BadgeTriggerEnum.GoalCreated, quest.UserProfile, null, cancellationToken).ConfigureAwait(false);
+
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return Unit.Value;

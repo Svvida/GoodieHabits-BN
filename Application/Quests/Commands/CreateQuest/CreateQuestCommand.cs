@@ -15,7 +15,7 @@ namespace Application.Quests.Commands.CreateQuest
         public string? Difficulty { get; init; } = null;
         public TimeOnly? ScheduledTime { get; init; } = null;
         public HashSet<int> Labels { get; init; } = [];
-        public int AccountId { get; init; }
+        public int UserProfileId { get; init; }
         public QuestTypeEnum QuestType { get; init; }
     }
 

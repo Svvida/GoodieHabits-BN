@@ -43,10 +43,8 @@ namespace Application.Quests.Commands.CreateQuest.Validators
             RuleFor(x => x.Labels)
                 .MustAsync(async (dto, labels, cancellationToken) =>
             {
-                var accountId = dto.AccountId;
-
                 var labelsCount = await unitOfWork.QuestLabels
-                    .CountOwnedLabelsAsync(labels, accountId, cancellationToken)
+                    .CountOwnedLabelsAsync(labels, dto.UserProfileId, cancellationToken)
                     .ConfigureAwait(false);
 
                 return labelsCount == labels.Count;

@@ -7,5 +7,8 @@
         public int CurrentTotal { get; set; }
         public int CurrentEverCompleted { get; set; }
         public int CurrentCompleted { get; set; }
+        public int CompletedDaily { get; set; }
+        public int CompletedWeekly { get; set; }
+        public int CompletedMonthly { get; set; }
     }
 }

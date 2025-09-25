@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
-using Domain;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 
 namespace Api.Helpers
 {
@@ -14,6 +14,16 @@ namespace Api.Helpers
                 throw new UnauthorizedException("Invalid access token: missing account identifier.");
             }
             return accountId;
+        }
+
+        public static int GetCurrentUserProfileId(this ClaimsPrincipal user)
+        {
+            string? userProfileIdString = user.FindFirst(JwtClaimTypes.UserProfileId)?.Value;
+            if (string.IsNullOrWhiteSpace(userProfileIdString) || !int.TryParse(userProfileIdString, out int userProfileId))
+            {
+                throw new UnauthorizedException("Invalid access token: missing user profile identifier.");
+            }
+            return userProfileId;
         }
     }
 }

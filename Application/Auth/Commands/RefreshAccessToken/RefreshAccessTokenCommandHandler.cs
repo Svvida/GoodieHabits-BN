@@ -1,8 +1,8 @@
 ﻿using System.Security.Claims;
-using Domain;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Interfaces.Authentication;
+using Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -23,7 +23,7 @@ namespace Application.Auth.Commands.RefreshAccessToken
                 // The accountId claim is missing or not a valid integer.
                 throw new UnauthorizedException("Invalid token claims.");
 
-            var account = await unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken)
+            var account = await unitOfWork.Accounts.GetAccountWithProfileAsync(accountId, cancellationToken)
                 ?? throw new UnauthorizedException("Invalid token.");
 
             if (!string.IsNullOrWhiteSpace(request.TimeZoneId))
@@ -31,12 +31,14 @@ namespace Application.Auth.Commands.RefreshAccessToken
                 var normalizedTimeZone = request.TimeZoneId.Trim();
 
                 if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(normalizedTimeZone) is null)
+                {
                     logger.LogWarning("Invalid time zone '{TimeZone}' received for user {UserId}.", normalizedTimeZone, account.Id);
+                }
                 else
                 {
-                    if (!string.Equals(account.TimeZone, normalizedTimeZone, StringComparison.Ordinal))
+                    if (!string.Equals(account.Profile.TimeZone, normalizedTimeZone, StringComparison.Ordinal))
                     {
-                        account.UpdateTimeZone(normalizedTimeZone);
+                        account.Profile.UpdateTimeZone(normalizedTimeZone);
                         await unitOfWork.SaveChangesAsync(cancellationToken);
                         logger.LogInformation("Updated timezone for user {UserId} to {TimeZone}.", account.Id, normalizedTimeZone);
                     }

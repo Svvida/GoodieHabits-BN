@@ -16,7 +16,7 @@ namespace Application.Accounts.Commands.DeleteAccount
                 throw new UnauthorizedException("Invalid credentials provided.");
 
             // First fetch and delete labels to avoid db conflict. Needs to be done separately because doing so in one operation violates non nullability on AccountId
-            var labelsToDelete = await unitOfWork.QuestLabels.GetUserLabelsAsync(request.AccountId, false, cancellationToken).ConfigureAwait(false);
+            var labelsToDelete = await unitOfWork.QuestLabels.GetUserLabelsAsync(request.UserProfileId, false, cancellationToken).ConfigureAwait(false);
             if (labelsToDelete.Any())
             {
                 unitOfWork.QuestLabels.RemoveRange(labelsToDelete);
@@ -24,6 +24,8 @@ namespace Application.Accounts.Commands.DeleteAccount
             }
 
             unitOfWork.Accounts.Remove(account);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return Unit.Value;
         }

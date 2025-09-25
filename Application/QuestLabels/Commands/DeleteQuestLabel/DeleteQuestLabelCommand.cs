@@ -2,5 +2,5 @@
 
 namespace Application.QuestLabels.Commands.DeleteQuestLabel
 {
-    public record DeleteQuestLabelCommand(int Id, int AccountId) : ICommand, ICurrentUserQuestLabelCommand;
+    public record DeleteQuestLabelCommand(int Id, int UserProfileId) : ICommand, ICurrentUserQuestLabelCommand;
 }

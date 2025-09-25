@@ -10,7 +10,7 @@ namespace Application.QuestLabels.Commands.CreateQuestLabel
         public async Task<CreateQuestLabelResponse> Handle(CreateQuestLabelCommand request, CancellationToken cancellationToken)
         {
             var label = QuestLabel.Create(
-                accountId: request.AccountId,
+                userProfileId: request.UserProfileId,
                 value: request.Value,
                 backgroundColor: request.BackgroundColor);
 

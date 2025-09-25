@@ -13,14 +13,14 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasKey(q => q.Id);
 
             builder.HasIndex(q => q.QuestType);
-            builder.HasIndex(q => q.AccountId);
-            builder.HasIndex(q => new { q.AccountId, q.QuestType });
+            builder.HasIndex(q => q.UserProfileId);
+            builder.HasIndex(q => new { q.UserProfileId, q.QuestType });
 
             builder.Property(q => q.QuestType)
                 .IsRequired()
                 .HasConversion<string>();
 
-            builder.Property(q => q.AccountId)
+            builder.Property(q => q.UserProfileId)
                 .IsRequired();
 
             builder.Property(q => q.Title)
@@ -72,9 +72,9 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(q => q.ScheduledTime)
                 .IsRequired(false);
 
-            builder.HasOne(q => q.Account)
+            builder.HasOne(q => q.UserProfile)
                 .WithMany(a => a.Quests)
-                .HasForeignKey(q => q.AccountId)
+                .HasForeignKey(q => q.UserProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

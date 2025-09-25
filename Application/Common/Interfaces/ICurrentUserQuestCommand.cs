@@ -2,7 +2,7 @@
 {
     public interface ICurrentUserQuestCommand
     {
-        int AccountId { get; }
+        int UserProfileId { get; }
         int QuestId { get; }
     }
 }

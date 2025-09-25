@@ -9,7 +9,7 @@ namespace Application.Quests.Queries.GetQuestsByType
     {
         public async Task<IEnumerable<QuestDetailsDto>> Handle(GetQuestsByTypeQuery request, CancellationToken cancellationToken = default)
         {
-            var quests = await unitOfWork.Quests.GetQuestsByTypeForDisplayAsync(request.AccountId, request.QuestType, cancellationToken)
+            var quests = await unitOfWork.Quests.GetQuestsByTypeForDisplayAsync(request.UserProfileId, request.QuestType, cancellationToken)
                 .ConfigureAwait(false);
 
             return quests.Select(questMapper.MapToDto);

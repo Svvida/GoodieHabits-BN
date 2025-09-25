@@ -43,7 +43,7 @@ namespace Application.UserGoals.Commands.CreateUserGoal
                     if (!Enum.TryParse<GoalTypeEnum>(cmd.GoalType, true, out var goalType))
                         return true;
 
-                    var activeGoalsCount = await unitOfWork.UserGoals.GetActiveGoalsCountByTypeAsync(cmd.AccountId, goalType, cancellationToken).ConfigureAwait(false);
+                    var activeGoalsCount = await unitOfWork.UserGoals.GetActiveGoalsCountByTypeAsync(cmd.UserProfileId, goalType, cancellationToken).ConfigureAwait(false);
 
                     return activeGoalsCount < 1;
                 })

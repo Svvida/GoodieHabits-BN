@@ -30,7 +30,7 @@ namespace Api.Controllers
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var query = new GetQuestByIdQuery(id, questType, JwtHelpers.GetCurrentUserId(User));
+            var query = new GetQuestByIdQuery(id, questType, JwtHelpers.GetCurrentUserProfileId(User));
             var questDto = await sender.Send(query, cancellationToken);
 
             if (questDto is null)
@@ -51,9 +51,7 @@ namespace Api.Controllers
             QuestTypeEnum questType,
             CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
-
-            var query = new GetQuestsByTypeQuery(accountId, questType);
+            var query = new GetQuestsByTypeQuery(JwtHelpers.GetCurrentUserProfileId(User), questType);
 
             var quests = await sender.Send(query, cancellationToken);
             return Ok(quests);
@@ -66,7 +64,7 @@ namespace Api.Controllers
             QuestTypeEnum questType,
             CancellationToken cancellationToken)
         {
-            var command = new DeleteQuestCommand(id, JwtHelpers.GetCurrentUserId(User));
+            var command = new DeleteQuestCommand(id, JwtHelpers.GetCurrentUserProfileId(User));
 
             await sender.Send(command, cancellationToken);
 
@@ -75,7 +73,7 @@ namespace Api.Controllers
         [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetActiveQuests(CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            var accountId = JwtHelpers.GetCurrentUserProfileId(User);
 
             var query = new GetActiveQuestsQuery(accountId, cancellationToken);
 
@@ -87,7 +85,7 @@ namespace Api.Controllers
         [HttpGet("eligible-for-goal")]
         public async Task<ActionResult<IEnumerable<QuestDetailsDto>>> GetQuestsEligibleForGoal(CancellationToken cancellationToken = default)
         {
-            var accountId = JwtHelpers.GetCurrentUserId(User);
+            var accountId = JwtHelpers.GetCurrentUserProfileId(User);
             var query = new GetQuestsEligibleForGoalQuery(accountId, cancellationToken);
             var quests = await sender.Send(query, cancellationToken);
             return Ok(quests);
@@ -104,7 +102,7 @@ namespace Api.Controllers
             {
                 QuestId = id,
                 QuestType = questType,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
             await sender.Send(command, cancellationToken);
             return NoContent();
@@ -120,7 +118,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateOneTimeQuestCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var createdQuest = await sender.Send(command, cancellationToken);
@@ -143,7 +141,7 @@ namespace Api.Controllers
             var updateDto = mapper.Map<UpdateOneTimeQuestCommand>(request) with
             {
                 QuestId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var updatedQuest = await sender.Send(updateDto, cancellationToken);
@@ -159,7 +157,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateDailyQuestCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var createdQuest = await sender.Send(command, cancellationToken);
@@ -182,7 +180,7 @@ namespace Api.Controllers
             var updateDto = mapper.Map<UpdateDailyQuestCommand>(request) with
             {
                 QuestId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var updatedQuest = await sender.Send(updateDto, cancellationToken);
@@ -198,7 +196,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateWeeklyQuestCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var createdQuest = await sender.Send(command, cancellationToken);
@@ -221,7 +219,7 @@ namespace Api.Controllers
             var updateDto = mapper.Map<UpdateWeeklyQuestCommand>(request) with
             {
                 QuestId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var updatedQuest = await sender.Send(updateDto, cancellationToken);
@@ -237,7 +235,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateMonthlyQuestCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var createdQuest = await sender.Send(command, cancellationToken);
@@ -260,7 +258,7 @@ namespace Api.Controllers
             var updateDto = mapper.Map<UpdateMonthlyQuestCommand>(request) with
             {
                 QuestId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var updatedQuest = await sender.Send(updateDto, cancellationToken);
@@ -276,7 +274,7 @@ namespace Api.Controllers
         {
             var command = mapper.Map<CreateSeasonalQuestCommand>(request) with
             {
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var createdQuest = await sender.Send(command, cancellationToken);
@@ -299,7 +297,7 @@ namespace Api.Controllers
             var updateDto = mapper.Map<UpdateSeasonalQuestCommand>(request) with
             {
                 QuestId = id,
-                AccountId = JwtHelpers.GetCurrentUserId(User)
+                UserProfileId = JwtHelpers.GetCurrentUserProfileId(User)
             };
 
             var updatedQuest = await sender.Send(updateDto, cancellationToken);

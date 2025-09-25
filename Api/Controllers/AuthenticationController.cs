@@ -16,7 +16,7 @@ namespace Api.Controllers
         [Route("auth/login")]
         [AllowAnonymous]
         public async Task<ActionResult<LoginResponse>> Login(
-            [FromBody] LoginRequest request,
+            LoginCommand request,
             CancellationToken cancellationToken = default)
         {
             var command = mapper.Map<LoginCommand>(request);

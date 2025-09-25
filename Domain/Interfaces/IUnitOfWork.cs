@@ -9,6 +9,8 @@ namespace Domain.Interfaces
         IUserGoalRepository UserGoals { get; }
         IQuestRepository Quests { get; }
         IQuestLabelRepository QuestLabels { get; }
+        INotificationRepository Notifications { get; }
+        IBadgeRepository Badges { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

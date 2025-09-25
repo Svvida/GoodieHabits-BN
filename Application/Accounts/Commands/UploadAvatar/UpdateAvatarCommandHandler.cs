@@ -12,12 +12,12 @@ namespace Application.Accounts.Commands.UploadAvatar
     {
         public async Task<UploadAvatarResponse> Handle(UploadAvatarCommand request, CancellationToken cancellationToken)
         {
-            var account = await unitOfWork.Accounts.GetAccountWithProfileAsync(request.AccountId, cancellationToken)
-                ?? throw new NotFoundException($"Account with ID {request.AccountId} not found.");
+            var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(request.UserProfileId, cancellationToken).ConfigureAwait(false)
+                ?? throw new NotFoundException($"Account with ID {request.UserProfileId} not found.");
 
-            var publicId = await cloudinaryPhotoService.UploadPhotoAsync(request.FileStream, request.FileName, request.AccountId);
+            var publicId = await cloudinaryPhotoService.UploadPhotoAsync(request.FileStream, request.FileName, request.UserProfileId);
 
-            account.Profile.Avatar = publicId;
+            userProfile.Avatar = publicId;
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

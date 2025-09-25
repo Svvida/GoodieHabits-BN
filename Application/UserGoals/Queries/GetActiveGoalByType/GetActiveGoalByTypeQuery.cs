@@ -4,5 +4,5 @@ using Domain.Enums;
 
 namespace Application.UserGoals.Queries.GetActiveGoalByType
 {
-    public record GetActiveGoalByTypeQuery(int AccountId, GoalTypeEnum GoalType) : IQuery<QuestDetailsDto?>;
+    public record GetActiveGoalByTypeQuery(int UserProfileId, GoalTypeEnum GoalType) : IQuery<QuestDetailsDto?>;
 }

@@ -5,10 +5,10 @@ namespace Domain.Interfaces.Repositories
 {
     public interface IQuestLabelRepository : IBaseRepository<QuestLabel>
     {
-        Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int accountId, bool asNoTracking, CancellationToken cancellationToken = default);
-        Task<QuestLabel?> GetLabelByValueAsync(string value, int accountId, CancellationToken cancellationToken = default);
-        Task<bool> IsLabelValueUniqueForUser(string value, int accountId, CancellationToken cancellationToken = default);
-        Task<bool> IsLabelOwnedByUserAsync(int labelId, int accountId, CancellationToken cancellationToken = default);
-        Task<int> CountOwnedLabelsAsync(IEnumerable<int> labelIds, int accountId, CancellationToken cancellationToken = default);
+        Task<QuestLabel?> GetUserLabelByIdAsync(int labelId, int userProfileId, bool asNoTracking, CancellationToken cancellationToken = default);
+        Task<IEnumerable<QuestLabel>> GetUserLabelsAsync(int userProfileId, bool asNoTracking, CancellationToken cancellationToken = default);
+        Task<bool> IsLabelValueUniqueForUser(string value, int userProfileId, CancellationToken cancellationToken = default);
+        Task<bool> IsLabelOwnedByUserAsync(int labelId, int userProfileId, CancellationToken cancellationToken = default);
+        Task<int> CountOwnedLabelsAsync(IEnumerable<int> labelIds, int userProfileId, CancellationToken cancellationToken = default);
     }
 }

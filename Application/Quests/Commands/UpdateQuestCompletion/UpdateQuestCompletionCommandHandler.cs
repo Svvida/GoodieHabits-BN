@@ -1,4 +1,4 @@
-﻿using Application.Common;
+﻿using Application.Badges;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -11,7 +11,7 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
 {
     public class UpdateQuestCompletionCommandHandler(
         IUnitOfWork unitOfWork,
-        IPublisher publisher,
+        IBadgeAwardingService badgeAwardingService,
         ILogger<UpdateQuestCompletionCommandHandler> logger) : IRequestHandler<UpdateQuestCompletionCommand, Unit>
     {
         public async Task<Unit> Handle(UpdateQuestCompletionCommand command, CancellationToken cancellationToken = default)
@@ -32,18 +32,12 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             if (command.IsCompleted)
             {
                 quest.Complete(nowUtc.ToDateTimeUtc(), ShouldAssignRewards(quest, nowUtc));
+                await badgeAwardingService.CheckAndAwardBadgesAsync(BadgeTriggerEnum.QuestCompleted, quest.UserProfile, quest, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 quest.Uncomplete(nowUtc.ToDateTimeUtc());
             }
-
-            foreach (var domainEvent in quest.DomainEvents)
-            {
-                var notification = DomainEventsHelper.CreateDomainEventNotification(domainEvent);
-                await publisher.Publish(notification, cancellationToken).ConfigureAwait(false);
-            }
-            quest.ClearDomainEvents();
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogDebug("Quest {QuestId} completion processed", quest.Id);
@@ -56,10 +50,10 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             var quest = await unitOfWork.Quests.GetQuestByIdForCompletionUpdateAsync(questId, questType, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {questId} not found");
 
-            if (quest.Account is null || string.IsNullOrWhiteSpace(quest.Account.TimeZone))
+            if (quest.UserProfile is null || string.IsNullOrWhiteSpace(quest.UserProfile.TimeZone))
             {
-                logger.LogError("Account {AccountId} data or TimeZone is missing for Quest {QuestId}. Cannot accurately perform daily completion check.",
-                    quest.AccountId, quest.Id);
+                logger.LogError("User Profile {UserProfileId} data or TimeZone is missing for Quest {QuestId}. Cannot accurately perform daily completion check.",
+                    quest.UserProfileId, quest.Id);
                 throw new InvalidArgumentException($"TimeZone information is missing for the account associated with Quest {quest.Id}.");
             }
 
@@ -75,8 +69,8 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             if (!quest.LastCompletedAt.HasValue)
                 return true;
 
-            var userTimeZone = DateTimeZoneProviders.Tzdb[quest.Account.TimeZone]
-                ?? throw new NotFoundException($"Timezone with ID: {quest.Account.TimeZone} not found");
+            var userTimeZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone]
+                ?? throw new NotFoundException($"Timezone with ID: {quest.UserProfile.TimeZone} not found");
 
             var lastCompletedAtUtc = Instant.FromDateTimeUtc(DateTime.SpecifyKind(quest.LastCompletedAt.Value, DateTimeKind.Utc));
             var lastCompletedAtUserLocal = lastCompletedAtUtc.InZone(userTimeZone).LocalDateTime;
@@ -86,7 +80,7 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
                 return true;
 
             logger.LogInformation("Quest {QuestId} already completed today: {CurrentTime} in user's timezone {TimeZone}. Last Completion: {LastCompletion}",
-                quest.Id, nowUserLocal, quest.Account.TimeZone, lastCompletedAtUserLocal);
+                quest.Id, nowUserLocal, quest.UserProfile.TimeZone, lastCompletedAtUserLocal);
 
             return false;
         }
