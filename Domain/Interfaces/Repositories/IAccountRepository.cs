@@ -7,6 +7,7 @@ namespace Domain.Interfaces.Repositories
     {
         Task<Account?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
         Task<Account?> GetAccountWithProfileAsync(int accountId, CancellationToken cancellationToken = default);
+        Task<Account?> GetAccountWithProfileForDisplayAsync(int accountId, CancellationToken cancellationToken = default);
         Task<bool> DoesLoginExistAsync(string login, int accountIdToExclude, CancellationToken cancellationToken = default);
         Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default);
         // Used in register validator

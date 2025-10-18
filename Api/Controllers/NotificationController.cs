@@ -15,7 +15,7 @@ namespace Api.Controllers
     public class NotificationController(ISender sender) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetAllNotificationsAsync([FromQuery] bool onlyUnread, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetAllNotificationsAsync([FromQuery] bool onlyUnread = false, CancellationToken cancellationToken = default)
         {
             var query = new GetAllNotificationsQuery(JwtHelpers.GetCurrentUserProfileId(User), onlyUnread);
             var notifications = await sender.Send(query, cancellationToken).ConfigureAwait(false);
