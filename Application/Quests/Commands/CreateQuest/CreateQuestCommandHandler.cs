@@ -48,6 +48,7 @@ namespace Application.Quests.Commands.CreateQuest
             {
                 quest.SetNextResetAt();
                 quest.InitializeOccurrences(nowUtc);
+                quest.RecalculateStatistics(nowUtc);
             }
 
             userProfile.UpdateAfterQuestCreation();
