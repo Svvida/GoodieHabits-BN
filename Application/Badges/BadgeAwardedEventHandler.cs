@@ -43,6 +43,7 @@ namespace Application.Badges
             var notificationDto = new NotificationDto(
                 Id: notification.Id,
                 Type: notification.Type.ToString(),
+                IsRead: notification.IsRead,
                 Title: notification.Title,
                 Message: notification.Message,
                 Data: notification.PayloadJson);
