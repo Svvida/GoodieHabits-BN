@@ -30,12 +30,21 @@ namespace Domain.Models
         public int TotalGoals { get; set; } = 0;
         public int ActiveGoals { get; set; } = 0;
 
+        // Stats for friends
+        public int FriendsCount { get; set; } = 0;
+
         public Account Account { get; set; } = null!;
         public ICollection<Quest> Quests { get; set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public ICollection<UserGoal> UserGoals { get; set; } = [];
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];
         public ICollection<Notification> Notifications { get; set; } = [];
+        public ICollection<FriendInvitation> SentFriendInvitations { get; private set; } = [];
+        public ICollection<FriendInvitation> ReceivedFriendInvitations { get; private set; } = [];
+        public ICollection<UserBlock> SentBlocks { get; private set; } = [];
+        public ICollection<UserBlock> ReceivedBlocks { get; private set; } = [];
+        public ICollection<Friendship> FriendshipsAsUser1 { get; private set; } = [];
+        public ICollection<Friendship> FriendshipsAsUser2 { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
@@ -211,5 +220,9 @@ namespace Domain.Models
 
             AddDomainEvent(new BadgeAwardedEvent(Id, badge));
         }
+
+        public void IncreaseFriendsCount() => FriendsCount++;
+
+        public void DecreaseFriendsCount() => FriendsCount = Math.Max(FriendsCount - 1, 0);
     }
 }
