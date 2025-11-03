@@ -14,7 +14,7 @@
         {
             BlockerUserProfileId = blockerUserProfileId;
             BlockedUserProfileId = blockedUserProfileId;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = nowUtc;
         }
 
         public static UserBlock Create(int blockerUserProfileId, int blockedUserProfileId, DateTime nowUtc)
