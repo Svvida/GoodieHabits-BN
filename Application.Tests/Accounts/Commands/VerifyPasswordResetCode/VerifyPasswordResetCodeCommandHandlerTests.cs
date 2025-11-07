@@ -7,11 +7,9 @@ namespace Application.Tests.Accounts.Commands.VerifyPasswordResetCode
     public class VerifyPasswordResetCodeCommandHandlerTests : TestBase<VerifyPasswordResetCodeCommandHandler>
     {
         private readonly VerifyPasswordResetCodeCommandHandler _handler;
-        private readonly Instant _fixedTestInstant;
 
         public VerifyPasswordResetCodeCommandHandlerTests() : base()
         {
-            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
             _clockMock.Setup(c => c.GetCurrentInstant()).Returns(_fixedTestInstant);
 
             _handler = new VerifyPasswordResetCodeCommandHandler(_unitOfWork, _clockMock.Object);

@@ -11,7 +11,7 @@ namespace Domain.Models
         public int Id { get; set; }
         public int AccountId { get; set; }
         public string TimeZone { get; private set; } = "Etc/UTC";
-        public string? Nickname { get; set; }
+        public string Nickname { get; set; } = null!;
         public string? Avatar { get; set; }
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;

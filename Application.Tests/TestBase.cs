@@ -18,9 +18,12 @@ namespace Application.Tests
         protected readonly Mock<ILogger<THandler>> _loggerMock;
         protected readonly Mock<IClock> _clockMock;
         protected readonly Mock<IForgotPasswordEmailSender> _emailSenderMock;
+        protected readonly Instant _fixedTestInstant;
 
         protected TestBase()
         {
+            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
+
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Unique DB for each test
                 .Options;
@@ -58,6 +61,14 @@ namespace Application.Tests
             _context.QuestLabels.Add(label);
             await _context.SaveChangesAsync();
             return label;
+        }
+
+        protected async Task<Friendship> AddFriendshipAsync(int userProfileId1, int userProfileId2)
+        {
+            var friendship = Friendship.Create(userProfileId1, userProfileId2, _fixedTestInstant.ToDateTimeUtc());
+            _context.Friendships.Add(friendship);
+            await _context.SaveChangesAsync();
+            return friendship;
         }
     }
 }
