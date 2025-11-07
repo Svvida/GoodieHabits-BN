@@ -14,12 +14,10 @@ namespace Application.Tests.Accounts.Commands.ResetPassword
     {
         private readonly Mock<IPasswordHasher<Account>> _passwordHasherMock;
         private readonly ResetPasswordCommandHandler _handler;
-        private readonly Instant _fixedTestInstant;
 
         public ResetPasswordCommandHandlerTests() : base()
         {
             _passwordHasherMock = new Mock<IPasswordHasher<Account>>();
-            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
             _clockMock.Setup(c => c.GetCurrentInstant()).Returns(_fixedTestInstant);
 
             _handler = new ResetPasswordCommandHandler(_unitOfWork, _passwordHasherMock.Object, _clockMock.Object, _loggerMock.Object);

@@ -1,18 +1,14 @@
 ﻿using Application.Friendships.Commands.RemoveFriend;
-using Domain.Models;
 using FluentValidation.TestHelper;
-using NodaTime;
 
 namespace Application.Tests.Friends.Commands.RemoveFriend
 {
     public class RemoveFriendCommandValidatorTests : TestBase<RemoveFriendCommandValidator>
     {
         private readonly RemoveFriendCommandValidator _validator;
-        private readonly Instant _fixedTestInstant;
 
         public RemoveFriendCommandValidatorTests()
         {
-            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
             _validator = new RemoveFriendCommandValidator(_unitOfWork);
         }
 
@@ -51,13 +47,9 @@ namespace Application.Tests.Friends.Commands.RemoveFriend
         public async Task ShouldNotHaveError_WhenFriendshipExists()
         {
             // Arrange: Create two user profiles and a friendship between them
-            var user1 = Account.Create("hashed_password1", "email1@email.com", "nick1");
-            var user2 = Account.Create("hashed_password2", "email2@email.com", "nick2");
-            _context.Accounts.AddRange(user1, user2);
-            await _context.SaveChangesAsync();
-            var friendship = Friendship.Create(user1.Profile.Id, user2.Profile.Id, _fixedTestInstant.ToDateTimeUtc());
-            _context.Friendships.Add(friendship);
-            await _context.SaveChangesAsync();
+            var user1 = await AddAccountAsync("email1@email.com", "hashed_password1", "nick1");
+            var user2 = await AddAccountAsync("email2@email.com", "hashed_password2", "nick2");
+            var friendship = await AddFriendshipAsync(user1.Profile.Id, user2.Profile.Id);
 
             var command = new RemoveFriendCommand(user1.Profile.Id, user2.Profile.Id);
 
@@ -73,10 +65,8 @@ namespace Application.Tests.Friends.Commands.RemoveFriend
         public async Task ShouldHaveError_WhenFriendshipDoesntExists()
         {
             // Arrange: Create two user profiles without a friendship
-            var user1 = Account.Create("hashed_password1", "email1@email.com", "nick1");
-            var user2 = Account.Create("hashed_password2", "email2@email.com", "nick2");
-            _context.Accounts.AddRange(user1, user2);
-            await _context.SaveChangesAsync();
+            var user1 = await AddAccountAsync("email1@email.com", "hashed_password1", "nick1");
+            var user2 = await AddAccountAsync("email2@email.com", "hashed_password2", "nick2");
 
             var command = new RemoveFriendCommand(user1.Profile.Id, user2.Profile.Id);
 
