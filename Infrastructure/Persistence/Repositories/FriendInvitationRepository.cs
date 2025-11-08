@@ -57,5 +57,59 @@ namespace Infrastructure.Persistence.Repositories
                                  cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<FriendInvitation?> GetUserInvitationByIdAsync(int userProfileId, int invitationId, CancellationToken cancellationToken = default)
+        {
+            return await context.FriendInvitations
+                .Include(fi => fi.Sender)
+                .Include(fi => fi.Receiver)
+                .FirstOrDefaultAsync(fi => fi.Id == invitationId &&
+                                           (fi.SenderUserProfileId == userProfileId || fi.ReceiverUserProfileId == userProfileId),
+                                           cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<bool> IsUserInvitationExistByIdAsync(int userProfileId, int invitationId, CancellationToken cancellationToken = default)
+        {
+            return await context.FriendInvitations
+                .AnyAsync(fi => fi.Id == invitationId &&
+                                (fi.SenderUserProfileId == userProfileId || fi.ReceiverUserProfileId == userProfileId),
+                                cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<FriendshipEligibilityStatus> CheckFriendshipEligibilityAsync(int senderUserProfileId, int receiverUserProfileId, CancellationToken cancellationToken = default)
+        {
+            var lowerId = Math.Min(senderUserProfileId, receiverUserProfileId);
+            var higherId = Math.Max(senderUserProfileId, receiverUserProfileId);
+
+            // Check 1: Are they already friends?
+            if (await context.Friendships.AnyAsync(f => f.UserProfileId1 == lowerId && f.UserProfileId2 == higherId, cancellationToken))
+                return FriendshipEligibilityStatus.AlreadyFriends;
+
+            // Check 2: Is there an existing pending invitation between them (in either direction)?
+            if (await context.FriendInvitations.AnyAsync(fi =>
+                fi.Status == FriendInvitationStatus.Pending &&
+                ((fi.SenderUserProfileId == senderUserProfileId && fi.ReceiverUserProfileId == receiverUserProfileId) ||
+                  (fi.SenderUserProfileId == receiverUserProfileId && fi.ReceiverUserProfileId == senderUserProfileId)), cancellationToken))
+            {
+                return FriendshipEligibilityStatus.InvitationExists;
+            }
+
+            // Check 3: Has the receiver blocked the sender?
+            if (await context.UserBlocks.AnyAsync(ub => ub.BlockerUserProfileId == receiverUserProfileId && ub.BlockedUserProfileId == senderUserProfileId, cancellationToken))
+            {
+                return FriendshipEligibilityStatus.BlockedByRecipient;
+            }
+
+            // Check 4: Has the sender blocked the receiver?
+            if (await context.UserBlocks.AnyAsync(ub => ub.BlockerUserProfileId == senderUserProfileId && ub.BlockedUserProfileId == receiverUserProfileId, cancellationToken))
+            {
+                return FriendshipEligibilityStatus.SenderIsBlocking;
+            }
+
+            // If all checks pass:
+            return FriendshipEligibilityStatus.Eligible;
+        }
     }
 }

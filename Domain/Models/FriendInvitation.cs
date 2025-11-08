@@ -51,5 +51,8 @@ namespace Domain.Models
             Status = FriendInvitationStatus.Rejected;
             RespondedAt = nowUtc;
         }
+
+        public void SetSender(UserProfile sender) => Sender = sender;
+        public void SetReceiver(UserProfile receiver) => Receiver = receiver;
     }
 }
