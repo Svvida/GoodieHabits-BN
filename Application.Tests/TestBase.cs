@@ -63,12 +63,30 @@ namespace Application.Tests
             return label;
         }
 
-        protected async Task<Friendship> AddFriendshipAsync(int userProfileId1, int userProfileId2)
+        protected async Task<Friendship> AddFriendshipAsync(UserProfile userProfile1, UserProfile userProfile2)
         {
-            var friendship = Friendship.Create(userProfileId1, userProfileId2, _fixedTestInstant.ToDateTimeUtc());
+            var friendship = Friendship.Create(userProfile1.Id, userProfile2.Id, _fixedTestInstant.ToDateTimeUtc());
             _context.Friendships.Add(friendship);
+            userProfile1.IncreaseFriendsCount();
+            userProfile2.IncreaseFriendsCount();
             await _context.SaveChangesAsync();
             return friendship;
+        }
+
+        protected async Task<UserBlock> AddUserBlockAsync(int blockerUserProfileId, int blockedUserProfileId)
+        {
+            var userBlock = UserBlock.Create(blockerUserProfileId, blockedUserProfileId, _fixedTestInstant.ToDateTimeUtc());
+            _context.UserBlocks.Add(userBlock);
+            await _context.SaveChangesAsync();
+            return userBlock;
+        }
+
+        protected async Task<FriendInvitation> AddFriendInvitationAsync(int senderUserProfileId, int receiverUserProfileId)
+        {
+            var friendInvitation = FriendInvitation.Create(senderUserProfileId, receiverUserProfileId, _fixedTestInstant.ToDateTimeUtc());
+            _context.FriendInvitations.Add(friendInvitation);
+            await _context.SaveChangesAsync();
+            return friendInvitation;
         }
     }
 }
