@@ -49,7 +49,9 @@ namespace Application.Tests.Friends.Commands.RemoveFriend
             // Arrange: Create two user profiles and a friendship between them
             var user1 = await AddAccountAsync("email1@email.com", "hashed_password1", "nick1");
             var user2 = await AddAccountAsync("email2@email.com", "hashed_password2", "nick2");
-            var friendship = await AddFriendshipAsync(user1.Profile.Id, user2.Profile.Id);
+            await AddFriendshipAsync(user1.Profile, user2.Profile);
+
+            Assert.True(await _unitOfWork.Friends.IsFriendshipExistsByUserProfileIdsAsync(user1.Profile.Id, user2.Profile.Id, CancellationToken.None));
 
             var command = new RemoveFriendCommand(user1.Profile.Id, user2.Profile.Id);
 

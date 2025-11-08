@@ -16,6 +16,8 @@ namespace Infrastructure.Persistence
         private INotificationRepository? _notificationRepository;
         private IBadgeRepository? _badgeRepository;
         private IFriendsRepository? _friendsRepository;
+        private IUserBlockRepository? _userBlockRepository;
+        private IFriendInvitationRepository? _friendInvitationRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
@@ -25,6 +27,8 @@ namespace Infrastructure.Persistence
         public INotificationRepository Notifications => _notificationRepository ??= new NotificationRepository(_context);
         public IBadgeRepository Badges => _badgeRepository ??= new BadgeRepository(_context);
         public IFriendsRepository Friends => _friendsRepository ??= new FriendsRepository(_context);
+        public IUserBlockRepository UserBlocks => _userBlockRepository ??= new UserBlockRepository(_context);
+        public IFriendInvitationRepository FriendInvitations => _friendInvitationRepository ??= new FriendInvitationRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

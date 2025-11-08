@@ -18,7 +18,8 @@ namespace Application.Tests.Friends.Queries.GetMyFriendsList
             var account1 = await AddAccountAsync("test1@email.com", "password1", "nickname1");
             var account2 = await AddAccountAsync("test2@email.com", "password2", "nickname2");
 
-            var friendship = await AddFriendshipAsync(account1.Profile.Id, account2.Profile.Id);
+            await AddFriendshipAsync(account1.Profile, account2.Profile);
+            Assert.True(await _unitOfWork.Friends.IsFriendshipExistsByUserProfileIdsAsync(account1.Profile.Id, account2.Profile.Id, CancellationToken.None));
 
             var query = new GetMyFriendsListQuery(account1.Profile.Id);
 

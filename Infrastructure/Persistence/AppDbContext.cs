@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence
         public DbSet<QuestStatistics> QuestStatistics { get; set; }
         public DbSet<QuestOccurrence> QuestOccurrences { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<FriendInvitation> Invitations { get; set; }
+        public DbSet<FriendInvitation> FriendInvitations { get; set; }
         public DbSet<UserBlock> UserBlocks { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
 
