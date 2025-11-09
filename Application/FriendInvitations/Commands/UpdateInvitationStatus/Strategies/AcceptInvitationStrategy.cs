@@ -32,7 +32,7 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
                 invitation.SenderUserProfileId,
                 NotificationTypeEnum.FriendRequestAccepted,
                 "You have a new friend!",
-                $"{invitation.Receiver.Nickname} accepted your friends invitation!",
+                $"{invitation.Receiver.Nickname} accepted your friend invitation!",
                 "null");
 
             await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
