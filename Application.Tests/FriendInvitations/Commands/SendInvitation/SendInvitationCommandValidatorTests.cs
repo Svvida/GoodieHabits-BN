@@ -1,7 +1,7 @@
 ﻿using Application.FriendInvitations.Commands.SendInvitation;
 using FluentValidation.TestHelper;
 
-namespace Application.Tests.FriendInvitations.Commands
+namespace Application.Tests.FriendInvitations.Commands.SendInvitation
 {
     public class SendInvitationCommandValidatorTests : TestBase<SendInvitationCommandValidator>
     {

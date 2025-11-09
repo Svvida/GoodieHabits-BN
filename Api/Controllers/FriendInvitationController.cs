@@ -1,5 +1,6 @@
 ﻿using Api.Helpers;
 using Application.FriendInvitations.Commands.SendInvitation;
+using Application.FriendInvitations.Commands.UpdateInvitationStatus;
 using Application.FriendInvitations.Queries.GetInvitationById;
 using Application.FriendInvitations.Queries.GetUserInvitations;
 using Domain.Enums;
@@ -44,6 +45,17 @@ namespace Api.Controllers
                 request.ReceiverUserProfileId);
             var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
             return CreatedAtAction(nameof(GetInvitationById), new { invitationId = result.InvitationId }, result);
+        }
+
+        [HttpPatch("{invitationId}")]
+        public async Task<IActionResult> UpdateInvitationStatus([FromBody] UpdateInvitationStatusRequest request, int invitationId, CancellationToken cancellationToken)
+        {
+            var command = new UpdateInvitationStatusCommand(
+                JwtHelpers.GetCurrentUserProfileId(User),
+                invitationId,
+                request.Status);
+            await sender.Send(command, cancellationToken).ConfigureAwait(false);
+            return NoContent();
         }
     }
 }

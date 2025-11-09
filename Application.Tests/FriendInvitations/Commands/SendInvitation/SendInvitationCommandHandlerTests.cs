@@ -3,7 +3,7 @@ using Application.Common.Interfaces.Notifications;
 using Application.FriendInvitations.Commands.SendInvitation;
 using Moq;
 
-namespace Application.Tests.FriendInvitations.Commands
+namespace Application.Tests.FriendInvitations.Commands.SendInvitation
 {
     public class SendInvitationCommandHandlerTests : TestBase<SendInvitationCommandHandler>
     {
