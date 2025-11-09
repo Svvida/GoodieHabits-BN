@@ -17,7 +17,7 @@ namespace Domain.Models
 
         protected Notification() { } // For EF Core
 
-        private Notification(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
+        private Notification(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson, DateTime utcNow)
         {
             Id = id;
             UserProfileId = userProfileId;
@@ -26,12 +26,12 @@ namespace Domain.Models
             Message = message;
             PayloadJson = payloadJson;
             IsRead = false;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = utcNow;
         }
 
-        public static Notification Create(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson)
+        public static Notification Create(Guid id, int userProfileId, NotificationTypeEnum type, string title, string message, string payloadJson, DateTime utcNow)
         {
-            return new Notification(id, userProfileId, type, title, message, payloadJson);
+            return new Notification(id, userProfileId, type, title, message, payloadJson, utcNow);
         }
 
         public void MarkAsRead()

@@ -20,7 +20,9 @@ namespace Application.FriendInvitations.Commands.SendInvitation
             var receiverProfile = await unitOfWork.UserProfiles.GetByIdAsync(command.ReceiverUserProfileId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"User Profile with ID {command.ReceiverUserProfileId} not found.");
 
-            var friendInvitation = FriendInvitation.Create(command.SenderUserProfileId, command.ReceiverUserProfileId, clock.GetCurrentInstant().ToDateTimeUtc());
+            var utcNow = clock.GetCurrentInstant().ToDateTimeUtc();
+
+            var friendInvitation = FriendInvitation.Create(command.SenderUserProfileId, command.ReceiverUserProfileId, utcNow);
             await unitOfWork.FriendInvitations.AddAsync(friendInvitation, cancellationToken).ConfigureAwait(false);
 
             var receiverNotificationTitle = "New Friend Invite!";
@@ -32,7 +34,8 @@ namespace Application.FriendInvitations.Commands.SendInvitation
                 type: NotificationTypeEnum.FriendRequestReceived,
                 title: receiverNotificationTitle,
                 message: receiverNotificationMessage,
-                payloadJson: "null"); // Payload is unnecessary, we probably won't do anything with it so we can delete it.
+                payloadJson: "null", // Payload is unnecessary, we probably won't do anything with it so we can delete it.
+                utcNow: utcNow);
 
             await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
 
@@ -42,7 +45,8 @@ namespace Application.FriendInvitations.Commands.SendInvitation
                 IsRead: notification.IsRead,
                 Title: notification.Title,
                 Message: notification.Message,
-                Data: notification.PayloadJson);
+                Data: notification.PayloadJson,
+                CreatedAt: utcNow);
 
             await notificationSender.SendNotificationAsync(notification.UserProfileId, notificationDto, cancellationToken).ConfigureAwait(false);
 
