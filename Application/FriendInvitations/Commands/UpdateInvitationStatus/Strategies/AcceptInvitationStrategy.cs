@@ -17,10 +17,10 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
             if (invitation.ReceiverUserProfileId != currentUserId)
                 throw new ForbiddenException("Only the receiver can accept the invitation.");
 
-            var now = clock.GetCurrentInstant().ToDateTimeUtc();
-            invitation.SetAccepted(now);
+            var utcNow = clock.GetCurrentInstant().ToDateTimeUtc();
+            invitation.SetAccepted(utcNow);
 
-            var friendship = Friendship.Create(invitation.SenderUserProfileId, invitation.ReceiverUserProfileId, now);
+            var friendship = Friendship.Create(invitation.SenderUserProfileId, invitation.ReceiverUserProfileId, utcNow);
             await unitOfWork.Friends.AddAsync(friendship, cancellationToken).ConfigureAwait(false);
 
             invitation.Sender.IncreaseFriendsCount();
@@ -33,7 +33,8 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
                 NotificationTypeEnum.FriendRequestAccepted,
                 "You have a new friend!",
                 $"{invitation.Receiver.Nickname} accepted your friend invitation!",
-                "null");
+                "null",
+                utcNow);
 
             await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
 
@@ -43,7 +44,8 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
                 notification.IsRead,
                 notification.Title,
                 notification.Message,
-                notification.PayloadJson);
+                notification.PayloadJson,
+                utcNow);
 
             await notificationSender.SendNotificationAsync(invitation.SenderUserProfileId, notificationDto, cancellationToken).ConfigureAwait(false);
 
