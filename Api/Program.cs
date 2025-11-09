@@ -11,6 +11,8 @@ using Application.Common.Interfaces;
 using Application.Common.Interfaces.Badges;
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Notifications;
+using Application.FriendInvitations.Commands.UpdateInvitationStatus;
+using Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategies;
 using Application.Quests;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
@@ -219,6 +221,11 @@ namespace Api
             builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateFirstBadgeStrategy>();
             builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateTenBadgeStrategy>();
             builder.Services.AddScoped<IBadgeAwardingStrategy, StreakRecoveryBadgeStrategy>();
+
+            // Register Update Friend Invitation Status strategies
+            builder.Services.AddScoped<IInvitationStatusUpdateStrategy, AcceptInvitationStrategy>();
+            builder.Services.AddScoped<IInvitationStatusUpdateStrategy, RejectInvitationStrategy>();
+            builder.Services.AddScoped<IInvitationStatusUpdateStrategy, CancelInvitationStrategy>();
 
             // Register Validators
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();

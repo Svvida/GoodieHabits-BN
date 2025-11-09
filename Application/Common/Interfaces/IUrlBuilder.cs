@@ -3,5 +3,6 @@
     public interface IUrlBuilder
     {
         string BuildAvatarUrl(string? publicId);
+        string BuildInvitationAvatarUrl(string? publicId);
     }
 }

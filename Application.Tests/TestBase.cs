@@ -1,7 +1,10 @@
-﻿using Application.Common.Interfaces.Email;
+﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces.Email;
 using Domain.Interfaces;
 using Domain.Models;
 using Infrastructure.Persistence;
+using Mapster;
+using MapsterMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,6 +22,8 @@ namespace Application.Tests
         protected readonly Mock<IClock> _clockMock;
         protected readonly Mock<IForgotPasswordEmailSender> _emailSenderMock;
         protected readonly Instant _fixedTestInstant;
+        protected readonly IMapper _mapper;
+        protected readonly Mock<IUrlBuilder> _urlBuilderMock;
 
         protected TestBase()
         {
@@ -34,6 +39,20 @@ namespace Application.Tests
             _context.Database.EnsureCreated();
 
             _unitOfWork = new UnitOfWork(_context);
+
+            _urlBuilderMock = new Mock<IUrlBuilder>();
+            // (Optional but good practice) Set up a default behavior for the mock
+            _urlBuilderMock.Setup(b => b.BuildInvitationAvatarUrl(It.IsAny<string>()))
+                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+
+            var serviceProviderMock = new Mock<IServiceProvider>();
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(IUrlBuilder)))
+                    .Returns(_urlBuilderMock.Object);
+
+            var typeAdapterConfig = new TypeAdapterConfig();
+            typeAdapterConfig.Scan(typeof(Application.AssemblyReference).Assembly);
+
+            _mapper = new ServiceMapper(serviceProviderMock.Object, typeAdapterConfig);
 
             _mediatorMock = new Mock<IMediator>();
             _loggerMock = new Mock<ILogger<THandler>>();

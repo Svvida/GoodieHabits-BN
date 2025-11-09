@@ -29,7 +29,7 @@ namespace Domain.Models
             return new FriendInvitation(senderId, receiverId, nowUtc);
         }
 
-        internal void SetAccepted(DateTime nowUtc)
+        public void SetAccepted(DateTime nowUtc)
         {
             if (Status != FriendInvitationStatus.Pending)
                 throw new FriendInvitationException("Only pending invitations can be accepted.");
@@ -37,19 +37,22 @@ namespace Domain.Models
             RespondedAt = nowUtc;
         }
 
-        public void Cancel()
+        public void SetCancelled()
         {
             if (Status != FriendInvitationStatus.Pending)
                 throw new FriendInvitationException("Only pending invitations can be cancelled.");
             Status = FriendInvitationStatus.Cancelled;
         }
 
-        public void Reject(DateTime nowUtc)
+        public void SetRejected(DateTime nowUtc)
         {
             if (Status != FriendInvitationStatus.Pending)
                 throw new FriendInvitationException("Only pending invitations can be rejected.");
             Status = FriendInvitationStatus.Rejected;
             RespondedAt = nowUtc;
         }
+
+        public void SetSender(UserProfile sender) => Sender = sender;
+        public void SetReceiver(UserProfile receiver) => Receiver = receiver;
     }
 }
