@@ -222,7 +222,7 @@ namespace Api
             builder.Services.AddScoped<IBadgeAwardingStrategy, GoalCreateTenBadgeStrategy>();
             builder.Services.AddScoped<IBadgeAwardingStrategy, StreakRecoveryBadgeStrategy>();
 
-            // Register Update Friend Invitation Status strategied
+            // Register Update Friend Invitation Status strategies
             builder.Services.AddScoped<IInvitationStatusUpdateStrategy, AcceptInvitationStrategy>();
             builder.Services.AddScoped<IInvitationStatusUpdateStrategy, RejectInvitationStrategy>();
             builder.Services.AddScoped<IInvitationStatusUpdateStrategy, CancelInvitationStrategy>();

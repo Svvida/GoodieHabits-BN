@@ -41,7 +41,7 @@ namespace Application.Tests.FriendInvitations.Queries.GetUserInvitations
             Assert.IsType<FriendInvitationDto>(invitationDto);
 
             Assert.Equal(invitation.Id, invitationDto.InvitationId);
-            Assert.Equal(FriendInvitationStatus.Pending.ToString(), invitation.Status.ToString());
+            Assert.Equal(invitation.Status.ToString(), invitationDto.Status);
             Assert.Equal(_fixedTestInstant.ToDateTimeUtc(), invitation.CreatedAt);
 
             Assert.Equal(sender.Profile.Id, invitationDto.Sender.UserProfileId);

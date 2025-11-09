@@ -12,7 +12,7 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus
                 ?? throw new NotFoundException($"Invitation with ID {command.InvitationId} not found.");
 
             var strategy = strategies.FirstOrDefault(s => s.Status == command.Status)
-                ?? throw new FriendInvitationException($"No strategy found for status '{command.Status}.");
+                ?? throw new FriendInvitationException($"No strategy found for status '{command.Status}'.");
 
             await strategy.ExecuteAsync(invitation, command.UserProfileId, cancellationToken).ConfigureAwait(false);
 

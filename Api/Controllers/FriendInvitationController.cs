@@ -51,8 +51,8 @@ namespace Api.Controllers
         public async Task<IActionResult> UpdateInvitationStatus([FromBody] UpdateInvitationStatusRequest request, int invitationId, CancellationToken cancellationToken)
         {
             var command = new UpdateInvitationStatusCommand(
-                JwtHelpers.GetCurrentUserProfileId(User),
                 invitationId,
+                JwtHelpers.GetCurrentUserProfileId(User),
                 request.Status);
             await sender.Send(command, cancellationToken).ConfigureAwait(false);
             return NoContent();

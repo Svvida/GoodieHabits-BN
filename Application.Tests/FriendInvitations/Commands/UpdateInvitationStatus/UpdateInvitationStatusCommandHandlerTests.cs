@@ -37,8 +37,8 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
 
             var command = new UpdateInvitationStatusCommand(
-                UserProfileId: receiver.Profile.Id,
                 InvitationId: invitation.Id,
+                UserProfileId: receiver.Profile.Id,
                 Status: UpdateFriendInvitationStatusEnum.Accepted);
 
             NotificationDto? capturedNotificationDto = null;
@@ -87,8 +87,8 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
 
             var command = new UpdateInvitationStatusCommand(
-                UserProfileId: receiver.Profile.Id,
                 InvitationId: invitation.Id,
+                UserProfileId: receiver.Profile.Id,
                 Status: UpdateFriendInvitationStatusEnum.Rejected);
 
             // Act
@@ -109,8 +109,8 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
 
             var command = new UpdateInvitationStatusCommand(
-                UserProfileId: sender.Profile.Id,
                 InvitationId: invitation.Id,
+                UserProfileId: sender.Profile.Id,
                 Status: UpdateFriendInvitationStatusEnum.Cancelled);
 
             // Act
@@ -146,8 +146,8 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             var receiver = await AddAccountAsync("receiver@example.com", "hashedpass", "receiverNick");
 
             var command = new UpdateInvitationStatusCommand(
-                UserProfileId: receiver.Profile.Id,
                 InvitationId: 999, // Non-existent invitation ID
+                UserProfileId: receiver.Profile.Id,
                 Status: UpdateFriendInvitationStatusEnum.Accepted);
 
             // Act & Assert
