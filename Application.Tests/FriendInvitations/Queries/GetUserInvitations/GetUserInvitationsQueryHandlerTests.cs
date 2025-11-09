@@ -46,7 +46,7 @@ namespace Application.Tests.FriendInvitations.Queries.GetUserInvitations
 
             Assert.Equal(sender.Profile.Id, invitationDto.Sender.UserProfileId);
             Assert.Equal(sender.Profile.Nickname, invitationDto.Sender.Nickname);
-            Assert.Null(invitationDto.Sender.AvatarUrl);
+            Assert.Equal("", invitationDto.Sender.AvatarUrl);
 
             Assert.Equal(receiver.Profile.Id, invitationDto.Receiver.UserProfileId);
             Assert.Equal(receiver.Profile.Nickname, invitationDto.Receiver.Nickname);

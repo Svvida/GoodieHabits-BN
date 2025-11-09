@@ -8,7 +8,7 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
     public class RejectInvitationStrategy(IClock clock) : IInvitationStatusUpdateStrategy
     {
         public UpdateFriendInvitationStatusEnum Status => UpdateFriendInvitationStatusEnum.Rejected;
-        public async Task ExecuteAsync(FriendInvitation invitation, int currentUserId, CancellationToken cancellationToken)
+        public Task ExecuteAsync(FriendInvitation invitation, int currentUserId, CancellationToken cancellationToken)
         {
             if (invitation.ReceiverUserProfileId != currentUserId)
                 throw new ForbiddenException("Only the receiver can reject the invitation.");
@@ -16,7 +16,7 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
             var now = clock.GetCurrentInstant().ToDateTimeUtc();
             invitation.SetRejected(now);
 
-            await Task.CompletedTask.ConfigureAwait(false);
+            return Task.CompletedTask;
         }
     }
 }

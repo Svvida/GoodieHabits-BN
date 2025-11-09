@@ -131,8 +131,8 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
 
             var command = new UpdateInvitationStatusCommand(
-                UserProfileId: receiver.Profile.Id,
                 InvitationId: invitation.Id,
+                UserProfileId: receiver.Profile.Id,
                 Status: (UpdateFriendInvitationStatusEnum)999); // Invalid status
 
             // Act & Assert

@@ -27,23 +27,20 @@ namespace Infrastructure.Persistence.Repositories
         {
             var query = context.FriendInvitations.AsQueryable();
 
+            query = query.Include(fi => fi.Sender)
+                         .Include(fi => fi.Receiver);
+
             if (direction == InvitationDirection.Sent)
             {
-                query = query.Where(fi => fi.SenderUserProfileId == userProfileId)
-                             .Include(fi => fi.Sender)
-                             .Include(fi => fi.Receiver);
+                query = query.Where(fi => fi.SenderUserProfileId == userProfileId);
             }
             else if (direction == InvitationDirection.Received)
             {
-                query = query.Where(fi => fi.ReceiverUserProfileId == userProfileId)
-                             .Include(fi => fi.Sender)
-                             .Include(fi => fi.Receiver);
+                query = query.Where(fi => fi.ReceiverUserProfileId == userProfileId);
             }
             else
             {
-                query = query.Where(fi => fi.SenderUserProfileId == userProfileId || fi.ReceiverUserProfileId == userProfileId)
-                             .Include(fi => fi.Sender)
-                             .Include(fi => fi.Receiver);
+                query = query.Where(fi => fi.SenderUserProfileId == userProfileId || fi.ReceiverUserProfileId == userProfileId);
             }
 
             return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
