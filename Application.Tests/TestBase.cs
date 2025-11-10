@@ -42,7 +42,7 @@ namespace Application.Tests
 
             _urlBuilderMock = new Mock<IUrlBuilder>();
             // (Optional but good practice) Set up a default behavior for the mock
-            _urlBuilderMock.Setup(b => b.BuildInvitationAvatarUrl(It.IsAny<string>()))
+            _urlBuilderMock.Setup(b => b.BuildThumbnailAvatarUrl(It.IsAny<string>()))
                            .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
 
             var serviceProviderMock = new Mock<IServiceProvider>();

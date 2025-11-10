@@ -5,7 +5,7 @@ namespace Infrastructure.Photos
 {
     public class CloudinaryUrlBuilder(Cloudinary cloudinary) : IUrlBuilder
     {
-        public string BuildAvatarUrl(string? publicId)
+        public string BuildProfilePageAvatarUrl(string? publicId)
         {
             if (string.IsNullOrEmpty(publicId))
             {
@@ -21,7 +21,7 @@ namespace Infrastructure.Photos
                 .BuildUrl(publicId);
         }
 
-        public string BuildInvitationAvatarUrl(string? publicId)
+        public string BuildThumbnailAvatarUrl(string? publicId)
         {
             if (string.IsNullOrEmpty(publicId))
             {

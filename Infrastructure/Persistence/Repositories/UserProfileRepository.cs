@@ -74,5 +74,17 @@ namespace Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname)
+        {
+            var query = context.UserProfiles.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(nickname))
+            {
+                query = query.Where(u => u.Nickname.Contains(nickname));
+            }
+
+            return query;
+        }
     }
 }

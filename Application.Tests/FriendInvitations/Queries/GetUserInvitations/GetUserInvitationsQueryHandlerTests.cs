@@ -52,8 +52,8 @@ namespace Application.Tests.FriendInvitations.Queries.GetUserInvitations
             Assert.Equal(receiver.Profile.Nickname, invitationDto.Receiver.Nickname);
             Assert.Equal("mock_url_for_receiver_avatar_id", invitationDto.Receiver.AvatarUrl);
 
-            _urlBuilderMock.Verify(b => b.BuildInvitationAvatarUrl(null), Times.Once);
-            _urlBuilderMock.Verify(b => b.BuildInvitationAvatarUrl("receiver_avatar_id"), Times.Once);
+            _urlBuilderMock.Verify(b => b.BuildThumbnailAvatarUrl(null), Times.Once);
+            _urlBuilderMock.Verify(b => b.BuildThumbnailAvatarUrl("receiver_avatar_id"), Times.Once);
         }
     }
 }
