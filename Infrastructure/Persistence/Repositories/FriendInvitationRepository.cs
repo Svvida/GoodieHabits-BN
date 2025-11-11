@@ -3,6 +3,7 @@ using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Infrastructure.Persistence.Repositories
 {
@@ -75,7 +76,7 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<FriendshipEligibilityStatus> CheckFriendshipEligibilityAsync(int senderUserProfileId, int receiverUserProfileId, CancellationToken cancellationToken = default)
+        public async Task<FriendshipEligibilityStatus> CheckFriendshipEligibilityAsync(int senderUserProfileId, int receiverUserProfileId, Instant nowUtc, CancellationToken cancellationToken = default)
         {
             var lowerId = Math.Min(senderUserProfileId, receiverUserProfileId);
             var higherId = Math.Max(senderUserProfileId, receiverUserProfileId);
@@ -84,13 +85,27 @@ namespace Infrastructure.Persistence.Repositories
             if (await context.Friendships.AnyAsync(f => f.UserProfileId1 == lowerId && f.UserProfileId2 == higherId, cancellationToken))
                 return FriendshipEligibilityStatus.AlreadyFriends;
 
-            // Check 2: Is there an existing pending invitation between them (in either direction)?
-            if (await context.FriendInvitations.AnyAsync(fi =>
-                fi.Status == FriendInvitationStatus.Pending &&
-                ((fi.SenderUserProfileId == senderUserProfileId && fi.ReceiverUserProfileId == receiverUserProfileId) ||
-                  (fi.SenderUserProfileId == receiverUserProfileId && fi.ReceiverUserProfileId == senderUserProfileId)), cancellationToken))
+            // Check 2: Is there an existing pending or rejected invitation between them (in either direction)?
+            var existingInvitation = await context.FriendInvitations
+                .Where(fi =>
+                    (fi.SenderUserProfileId == senderUserProfileId && fi.ReceiverUserProfileId == receiverUserProfileId) ||
+                    (fi.SenderUserProfileId == receiverUserProfileId && fi.ReceiverUserProfileId == senderUserProfileId))
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            if (existingInvitation is not null)
             {
-                return FriendshipEligibilityStatus.InvitationExists;
+                switch (existingInvitation.Status)
+                {
+                    case FriendInvitationStatus.Pending:
+                        // An active, pending invitation already exists
+                        return FriendshipEligibilityStatus.InvitationExists;
+
+                    case FriendInvitationStatus.Rejected:
+                        // An invitation was rejected. Check if enough time has passed.
+                        var sevenDaysAgo = nowUtc.Minus(Duration.FromDays(7)).ToDateTimeUtc();
+                        if (existingInvitation.RespondedAt.HasValue && existingInvitation.RespondedAt > sevenDaysAgo)
+                            return FriendshipEligibilityStatus.RecentlyRejected;
+                        break;
+                }
             }
 
             // Check 3: Has the receiver blocked the sender?
@@ -107,6 +122,17 @@ namespace Infrastructure.Persistence.Repositories
 
             // If all checks pass:
             return FriendshipEligibilityStatus.Eligible;
+        }
+
+        public async Task<FriendInvitation?> GetPendingInvitationAsync(int userProfileId1, int userProfileId2, CancellationToken cancellationToken = default)
+        {
+            return await context.FriendInvitations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(fi => (fi.SenderUserProfileId == userProfileId1 && fi.ReceiverUserProfileId == userProfileId2) ||
+                                 (fi.ReceiverUserProfileId == userProfileId1 && fi.SenderUserProfileId == userProfileId2) &&
+                                 fi.Status == FriendInvitationStatus.Pending,
+                                 cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

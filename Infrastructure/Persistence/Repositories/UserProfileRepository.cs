@@ -86,5 +86,16 @@ namespace Infrastructure.Persistence.Repositories
 
             return query;
         }
+
+        public async Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default)
+        {
+            // The handler will figure out what's important. We will fetch related data later.
+            return await context.UserProfiles
+                .AsNoTracking()
+                .Where(u => u.Id == viewedUserProfileId)
+                .Include(u => u.UserProfile_Badges).ThenInclude(upb => upb.Badge)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

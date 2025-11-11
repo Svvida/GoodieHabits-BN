@@ -1,6 +1,7 @@
 ﻿using Domain.Enums;
 using Domain.Interfaces.Domain.Interfaces;
 using Domain.Models;
+using NodaTime;
 
 namespace Domain.Interfaces.Repositories
 {
@@ -11,6 +12,7 @@ namespace Domain.Interfaces.Repositories
         Task<bool> IsFriendInvitationExistByProfileIdsAsync(int userProfileId1, int userProfileId2, CancellationToken cancellationToken = default);
         Task<FriendInvitation?> GetUserInvitationByIdAsync(int userProfileId, int invitationId, CancellationToken cancellationToken = default);
         Task<bool> IsUserInvitationExistByIdAsync(int userProfileId, int invitationId, CancellationToken cancellationToken = default);
-        Task<FriendshipEligibilityStatus> CheckFriendshipEligibilityAsync(int senderUserProfileId, int receiverUserProfileId, CancellationToken cancellationToken = default);
+        Task<FriendshipEligibilityStatus> CheckFriendshipEligibilityAsync(int senderUserProfileId, int receiverUserProfileId, Instant nowUtc, CancellationToken cancellationToken = default);
+        Task<FriendInvitation?> GetPendingInvitationAsync(int userProfileId1, int userProfileId2, CancellationToken cancellationToken = default);
     }
 }

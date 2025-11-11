@@ -1,4 +1,6 @@
-﻿using Application.UserProfiles.Queries.GetUserProfiles;
+﻿using Api.Helpers;
+using Application.UserProfiles.Queries.GetUserProfileForPublicDisplay;
+using Application.UserProfiles.Queries.GetUserProfiles;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +14,22 @@ namespace Api.Controllers
     {
         [HttpGet]
         public async Task<ActionResult<List<UserProfileSummaryDto>>> GetUserProfiles(
-            CancellationToken cancellationToken,
             [FromQuery] string? nickname,
-            [FromQuery] int limit = 10)
+            [FromQuery] int limit = 10,
+            CancellationToken cancellationToken = default)
         {
             var query = new GetUserProfilesQuery(nickname, limit);
-            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            var result = await sender.Send(query, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("{userProfileId}")]
+        public async Task<ActionResult<BaseUserProfileDto>> GetUserProfileById(
+            int userProfileId,
+            CancellationToken cancellationToken = default)
+        {
+            var query = new GetUserProfileForPublicDisplayQuery(JwtHelpers.GetCurrentUserProfileId(User), userProfileId);
+            var result = await sender.Send(query, cancellationToken);
             return Ok(result);
         }
     }

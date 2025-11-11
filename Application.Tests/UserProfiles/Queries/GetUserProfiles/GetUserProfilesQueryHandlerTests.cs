@@ -1,7 +1,7 @@
 ﻿using Application.UserProfiles.Queries.GetUserProfiles;
 using FluentAssertions;
 
-namespace Application.Tests.UserProfiles.Queries
+namespace Application.Tests.UserProfiles.Queries.GetUserProfiles
 {
     public class GetUserProfilesQueryHandlerTests : TestBase<GetUserProfilesQueryHandler>
     {

@@ -6,6 +6,7 @@
         AlreadyFriends,
         InvitationExists,
         BlockedByRecipient,
-        SenderIsBlocking
+        SenderIsBlocking,
+        RecentlyRejected
     }
 }

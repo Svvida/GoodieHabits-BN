@@ -14,5 +14,6 @@ namespace Domain.Interfaces.Repositories
         Task<IEnumerable<UserProfile>> GetProfilesWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
         Task<UserProfile?> GetUserProfileWithBadgesAsync(int userProfileId, CancellationToken cancellationToken = default);
         IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname);
+        Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default);
     }
 }

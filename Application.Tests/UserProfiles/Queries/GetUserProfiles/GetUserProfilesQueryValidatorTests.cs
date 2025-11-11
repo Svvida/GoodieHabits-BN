@@ -2,7 +2,7 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
 
-namespace Application.Tests.UserProfiles.Queries
+namespace Application.Tests.UserProfiles.Queries.GetUserProfiles
 {
     public class GetUserProfilesQueryValidatorTests
     {
@@ -28,9 +28,7 @@ namespace Application.Tests.UserProfiles.Queries
 
             // Assert
             if (isValid)
-            {
                 result.ShouldNotHaveValidationErrorFor(x => x.Nickname);
-            }
             else
             {
                 result.ShouldHaveValidationErrorFor(x => x.Nickname)
@@ -54,9 +52,7 @@ namespace Application.Tests.UserProfiles.Queries
 
             // Assert
             if (isValid)
-            {
                 result.ShouldNotHaveValidationErrorFor(x => x.Limit);
-            }
             else
             {
                 result.ShouldHaveValidationErrorFor(x => x.Limit)
