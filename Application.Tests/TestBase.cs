@@ -1,7 +1,9 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.Email;
+using Application.Statistics.Calculators;
 using Domain.Interfaces;
 using Domain.Models;
+using Domain.ValueObjects;
 using Infrastructure.Persistence;
 using Mapster;
 using MapsterMapper;
@@ -24,6 +26,7 @@ namespace Application.Tests
         protected readonly Instant _fixedTestInstant;
         protected readonly IMapper _mapper;
         protected readonly Mock<IUrlBuilder> _urlBuilderMock;
+        protected readonly Mock<ILevelCalculator> _levelCalculatorMock;
 
         protected TestBase()
         {
@@ -42,12 +45,27 @@ namespace Application.Tests
 
             _urlBuilderMock = new Mock<IUrlBuilder>();
             // (Optional but good practice) Set up a default behavior for the mock
-            _urlBuilderMock.Setup(b => b.BuildInvitationAvatarUrl(It.IsAny<string>()))
+            _urlBuilderMock.Setup(b => b.BuildThumbnailAvatarUrl(It.IsAny<string>()))
                            .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+            _urlBuilderMock.Setup(b => b.BuildProfilePageAvatarUrl(It.IsAny<string>()))
+                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+
+            _levelCalculatorMock = new Mock<ILevelCalculator>();
+            _levelCalculatorMock
+                            .Setup(lc => lc.CalculateLevelInfo(It.IsAny<int>()))
+                            .Returns((int xp) => new LevelInfo // Use a callback to return dynamic info
+                            {
+                                CurrentLevel = xp / 100, // Example: 1 level per 100 XP
+                                IsMaxLevel = false,
+                                CurrentLevelRequiredXp = (xp / 100) * 100,
+                                NextLevelRequiredXp = ((xp / 100) + 1) * 100
+                            });
 
             var serviceProviderMock = new Mock<IServiceProvider>();
             serviceProviderMock.Setup(sp => sp.GetService(typeof(IUrlBuilder)))
                     .Returns(_urlBuilderMock.Object);
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(ILevelCalculator)))
+                    .Returns(_levelCalculatorMock.Object);
 
             var typeAdapterConfig = new TypeAdapterConfig();
             typeAdapterConfig.Scan(typeof(Application.AssemblyReference).Assembly);

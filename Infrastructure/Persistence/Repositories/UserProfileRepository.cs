@@ -74,5 +74,28 @@ namespace Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname)
+        {
+            var query = context.UserProfiles.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(nickname))
+            {
+                query = query.Where(u => u.Nickname.Contains(nickname));
+            }
+
+            return query;
+        }
+
+        public async Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default)
+        {
+            // The handler will figure out what's important. We will fetch related data later.
+            return await context.UserProfiles
+                .AsNoTracking()
+                .Where(u => u.Id == viewedUserProfileId)
+                .Include(u => u.UserProfile_Badges).ThenInclude(upb => upb.Badge)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

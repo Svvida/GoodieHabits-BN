@@ -1,15 +1,18 @@
 ﻿using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
+using NodaTime;
 
 namespace Application.FriendInvitations.Commands.SendInvitation
 {
     public class SendInvitationCommandValidator : AbstractValidator<SendInvitationCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
-        public SendInvitationCommandValidator(IUnitOfWork unitOfWork)
+        private readonly IClock _clock;
+        public SendInvitationCommandValidator(IUnitOfWork unitOfWork, IClock clock)
         {
             _unitOfWork = unitOfWork;
+            _clock = clock;
 
             RuleFor(x => x.SenderUserProfileId)
                 .GreaterThan(0).WithMessage("Sender user profile ID must be greater than zero.");
@@ -35,7 +38,7 @@ namespace Application.FriendInvitations.Commands.SendInvitation
 
             var status = await _unitOfWork.FriendInvitations.CheckFriendshipEligibilityAsync(
                 command.SenderUserProfileId,
-                receiverUserProfileId, cancellationToken).ConfigureAwait(false);
+                receiverUserProfileId, _clock.GetCurrentInstant(), cancellationToken).ConfigureAwait(false);
 
             if (status != FriendshipEligibilityStatus.Eligible)
             {

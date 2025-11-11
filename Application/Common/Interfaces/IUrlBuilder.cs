@@ -2,7 +2,7 @@
 {
     public interface IUrlBuilder
     {
-        string BuildAvatarUrl(string? publicId);
-        string BuildInvitationAvatarUrl(string? publicId);
+        string BuildProfilePageAvatarUrl(string? publicId);
+        string BuildThumbnailAvatarUrl(string? publicId);
     }
 }

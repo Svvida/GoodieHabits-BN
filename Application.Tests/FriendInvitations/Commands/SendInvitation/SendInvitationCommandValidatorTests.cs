@@ -9,7 +9,7 @@ namespace Application.Tests.FriendInvitations.Commands.SendInvitation
 
         public SendInvitationCommandValidatorTests()
         {
-            _validator = new SendInvitationCommandValidator(_unitOfWork);
+            _validator = new SendInvitationCommandValidator(_unitOfWork, _clockMock.Object);
         }
 
         [Fact]
@@ -114,6 +114,49 @@ namespace Application.Tests.FriendInvitations.Commands.SendInvitation
             // Assert
             result.ShouldHaveValidationErrorFor(x => x.ReceiverUserProfileId)
                 .WithErrorMessage("Unable to send invitation. Reason: BlockedByRecipient.");
+        }
+
+        [Fact]
+        public async Task Validate_ShouldNotHaveError_WhenRejectedInvitationIsOlderThanSevenDays()
+        {
+            // Arrange
+            var sender = await AddAccountAsync("test1@email.com", "password1", "nickname1");
+            var receiver = await AddAccountAsync("test2@email.com", "password2", "nickname2");
+
+            var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
+            invitation.SetRejected(_fixedTestInstant.ToDateTimeUtc().AddDays(-8));
+
+            _clockMock.Setup(clock => clock.GetCurrentInstant()).Returns(_fixedTestInstant);
+
+            var command = new SendInvitationCommand(sender.Profile.Id, receiver.Profile.Id);
+
+            // Act
+            var result = await _validator.TestValidateAsync(command);
+
+            // Assert
+            result.ShouldNotHaveAnyValidationErrors();
+        }
+
+        [Fact]
+        public async Task Validate_ShouldHaveError_WhenRejectedInvitationIsWithinSevenDays()
+        {
+            // Arrange
+            var sender = await AddAccountAsync("test1@email.com", "password1", "nickname1");
+            var receiver = await AddAccountAsync("test2@email.com", "password2", "nickname2");
+
+            var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);
+            invitation.SetRejected(_fixedTestInstant.ToDateTimeUtc().AddDays(-6));
+
+            _clockMock.Setup(clock => clock.GetCurrentInstant()).Returns(_fixedTestInstant);
+
+            var command = new SendInvitationCommand(sender.Profile.Id, receiver.Profile.Id);
+
+            // Act
+            var result = await _validator.TestValidateAsync(command);
+
+            // Assert
+            result.ShouldHaveValidationErrorFor(x => x.ReceiverUserProfileId)
+                .WithErrorMessage("Unable to send invitation. Reason: RecentlyRejected.");
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Application.Accounts.Commands.UploadAvatar
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return new UploadAvatarResponse(urlBuilder.BuildAvatarUrl(publicId));
+            return new UploadAvatarResponse(urlBuilder.BuildProfilePageAvatarUrl(publicId));
         }
     }
 }

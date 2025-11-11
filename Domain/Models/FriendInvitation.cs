@@ -52,7 +52,25 @@ namespace Domain.Models
             RespondedAt = nowUtc;
         }
 
-        public void SetSender(UserProfile sender) => Sender = sender;
-        public void SetReceiver(UserProfile receiver) => Receiver = receiver;
+        public void ReactivateAsPending(DateTime nowUtc)
+        {
+            if (Status != FriendInvitationStatus.Rejected && Status != FriendInvitationStatus.Cancelled)
+                throw new FriendInvitationException("Cannot reactivate an invitation that is not Rejected or Cancelled.");
+
+            Status = FriendInvitationStatus.Pending;
+            RespondedAt = null;
+            CreatedAt = nowUtc;
+        }
+
+        public void SetSender(UserProfile sender)
+        {
+            Sender = sender;
+            SenderUserProfileId = sender.Id;
+        }
+        public void SetReceiver(UserProfile receiver)
+        {
+            Receiver = receiver;
+            ReceiverUserProfileId = receiver.Id;
+        }
     }
 }

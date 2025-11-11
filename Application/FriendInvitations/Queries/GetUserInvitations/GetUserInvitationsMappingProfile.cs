@@ -10,11 +10,11 @@ namespace Application.FriendInvitations.Queries.GetUserInvitations
         {
             config.NewConfig<UserProfile, SenderDto>()
                 .Map(dest => dest.UserProfileId, src => src.Id)
-                .Map(dest => dest.AvatarUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildInvitationAvatarUrl(src.Avatar));
+                .Map(dest => dest.AvatarUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildThumbnailAvatarUrl(src.Avatar));
 
             config.NewConfig<UserProfile, ReceiverDto>()
                 .Map(dest => dest.UserProfileId, src => src.Id)
-                .Map(dest => dest.AvatarUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildInvitationAvatarUrl(src.Avatar));
+                .Map(dest => dest.AvatarUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildThumbnailAvatarUrl(src.Avatar));
 
             config.NewConfig<FriendInvitation, FriendInvitationDto>()
                 .Map(dest => dest.InvitationId, src => src.Id)

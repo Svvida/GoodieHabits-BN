@@ -8,7 +8,7 @@ namespace Application.Tests.Friends.Queries.GetMyFriendsList
 
         public GetMyFriendsListQueryHandlerTests()
         {
-            _handler = new GetMyFriendsListQueryHandler(_unitOfWork);
+            _handler = new GetMyFriendsListQueryHandler(_unitOfWork, _urlBuilderMock.Object);
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace Application.Tests.Friends.Queries.GetMyFriendsList
 
             Assert.Equal(account2.Profile.Id, friendDto.UserProfileId);
             Assert.Equal(account2.Profile.Nickname, friendDto.Nickname);
-            Assert.Null(friendDto.AvatarUrl);
+            Assert.Empty(friendDto.AvatarUrl);
         }
 
         [Fact]

@@ -11,7 +11,7 @@ namespace Application.Accounts.Mappings
         {
             config.NewConfig<UserProfile, UserProfileInfoDto>()
                 .Map(dest => dest.Badges, src => src.UserProfile_Badges)
-                .Map(dest => dest.Avatar, src => MapContext.Current.GetService<IUrlBuilder>().BuildAvatarUrl(src.Avatar));
+                .Map(dest => dest.Avatar, src => MapContext.Current.GetService<IUrlBuilder>().BuildProfilePageAvatarUrl(src.Avatar));
 
             config.NewConfig<UserProfile_Badge, BadgeDto>()
                 .Map(dest => dest.Type, src => src.Badge.Type)
