@@ -19,6 +19,16 @@ namespace Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<Account?> GetAccountWithProfileForDisplayAsync(int accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .AsNoTracking()
+                .Include(a => a.Profile)
+                    .ThenInclude(p => p.UserProfile_Badges)
+                        .ThenInclude(upb => upb.Badge)
+                .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclue, CancellationToken cancellationToken = default)
         {
             return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclue && a.Login == login, cancellationToken).ConfigureAwait(false);

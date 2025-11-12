@@ -264,6 +264,62 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Models.FriendInvitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("ReceiverUserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SenderUserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverUserProfileId");
+
+                    b.HasIndex("SenderUserProfileId", "ReceiverUserProfileId", "Status")
+                        .IsUnique();
+
+                    b.ToTable("FriendInvitations", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.Friendship", b =>
+                {
+                    b.Property<int>("UserProfileId1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserProfileId2")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("BecameFriendsAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserProfileId1", "UserProfileId2");
+
+                    b.HasIndex("UserProfileId2");
+
+                    b.HasIndex("UserProfileId1", "UserProfileId2")
+                        .IsUnique();
+
+                    b.ToTable("Friendships", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.MonthlyQuest_Days", b =>
                 {
                     b.Property<int>("Id")
@@ -563,6 +619,29 @@ namespace Infrastructure.Migrations
                     b.ToTable("SeasonalQuest_Seasons", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.UserBlock", b =>
+                {
+                    b.Property<int>("BlockerUserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockedUserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("BlockerUserProfileId", "BlockedUserProfileId");
+
+                    b.HasIndex("BlockedUserProfileId");
+
+                    b.HasIndex("BlockerUserProfileId", "BlockedUserProfileId")
+                        .IsUnique();
+
+                    b.ToTable("UserBlocks", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.UserGoal", b =>
                 {
                     b.Property<int>("Id")
@@ -692,6 +771,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<int>("FriendsCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Nickname")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -774,6 +858,44 @@ namespace Infrastructure.Migrations
                     b.HasIndex("QuestId");
 
                     b.ToTable("WeeklyQuest_Days", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.FriendInvitation", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "Receiver")
+                        .WithMany("ReceivedFriendInvitations")
+                        .HasForeignKey("ReceiverUserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "Sender")
+                        .WithMany("SentFriendInvitations")
+                        .HasForeignKey("SenderUserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Domain.Models.Friendship", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile1")
+                        .WithMany("FriendshipsAsUser1")
+                        .HasForeignKey("UserProfileId1")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile2")
+                        .WithMany("FriendshipsAsUser2")
+                        .HasForeignKey("UserProfileId2")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile1");
+
+                    b.Navigation("UserProfile2");
                 });
 
             modelBuilder.Entity("Domain.Models.MonthlyQuest_Days", b =>
@@ -872,6 +994,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest");
                 });
 
+            modelBuilder.Entity("Domain.Models.UserBlock", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "BlockedUserProfile")
+                        .WithMany("ReceivedBlocks")
+                        .HasForeignKey("BlockedUserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "BlockerUserProfile")
+                        .WithMany("SentBlocks")
+                        .HasForeignKey("BlockerUserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("BlockedUserProfile");
+
+                    b.Navigation("BlockerUserProfile");
+                });
+
             modelBuilder.Entity("Domain.Models.UserGoal", b =>
                 {
                     b.HasOne("Domain.Models.Quest", "Quest")
@@ -967,11 +1108,23 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
+                    b.Navigation("FriendshipsAsUser1");
+
+                    b.Navigation("FriendshipsAsUser2");
+
                     b.Navigation("Labels");
 
                     b.Navigation("Notifications");
 
                     b.Navigation("Quests");
+
+                    b.Navigation("ReceivedBlocks");
+
+                    b.Navigation("ReceivedFriendInvitations");
+
+                    b.Navigation("SentBlocks");
+
+                    b.Navigation("SentFriendInvitations");
 
                     b.Navigation("UserGoals");
 

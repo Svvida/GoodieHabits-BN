@@ -73,8 +73,6 @@ namespace Domain.Models
             if (IsRepeatable())
             {
                 Statistics = QuestStatistics.Create(this);
-                InitializeOccurrences(nowUtc);
-                SetNextResetAt();
             }
         }
 

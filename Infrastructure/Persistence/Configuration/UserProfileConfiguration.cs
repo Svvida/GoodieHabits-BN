@@ -78,6 +78,10 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(p => p.FriendsCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(p => p.Bio)
                 .IsRequired(false)
                 .HasMaxLength(150);

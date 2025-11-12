@@ -9,11 +9,9 @@ namespace Application.Tests.Accounts.Commands.RequestPasswordReset
     public class RequestPasswordResetCommandHandlerTests : TestBase<RequestPasswordResetCommandHandler>
     {
         private readonly RequestPasswordResetCommandHandler _handler;
-        private readonly Instant _fixedTestInstant;
 
         public RequestPasswordResetCommandHandlerTests() : base()
         {
-            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
             _clockMock.Setup(c => c.GetCurrentInstant()).Returns(_fixedTestInstant);
 
             _handler = new RequestPasswordResetCommandHandler(_unitOfWork, _emailSenderMock.Object, _clockMock.Object);

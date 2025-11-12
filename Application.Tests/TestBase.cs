@@ -1,7 +1,12 @@
-﻿using Application.Common.Interfaces.Email;
+﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces.Email;
+using Application.Statistics.Calculators;
 using Domain.Interfaces;
 using Domain.Models;
+using Domain.ValueObjects;
 using Infrastructure.Persistence;
+using Mapster;
+using MapsterMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,9 +23,15 @@ namespace Application.Tests
         protected readonly Mock<ILogger<THandler>> _loggerMock;
         protected readonly Mock<IClock> _clockMock;
         protected readonly Mock<IForgotPasswordEmailSender> _emailSenderMock;
+        protected readonly Instant _fixedTestInstant;
+        protected readonly IMapper _mapper;
+        protected readonly Mock<IUrlBuilder> _urlBuilderMock;
+        protected readonly Mock<ILevelCalculator> _levelCalculatorMock;
 
         protected TestBase()
         {
+            _fixedTestInstant = Instant.FromUtc(2023, 10, 26, 10, 0, 0);
+
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Unique DB for each test
                 .Options;
@@ -31,6 +42,35 @@ namespace Application.Tests
             _context.Database.EnsureCreated();
 
             _unitOfWork = new UnitOfWork(_context);
+
+            _urlBuilderMock = new Mock<IUrlBuilder>();
+            // (Optional but good practice) Set up a default behavior for the mock
+            _urlBuilderMock.Setup(b => b.BuildThumbnailAvatarUrl(It.IsAny<string>()))
+                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+            _urlBuilderMock.Setup(b => b.BuildProfilePageAvatarUrl(It.IsAny<string>()))
+                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+
+            _levelCalculatorMock = new Mock<ILevelCalculator>();
+            _levelCalculatorMock
+                            .Setup(lc => lc.CalculateLevelInfo(It.IsAny<int>()))
+                            .Returns((int xp) => new LevelInfo // Use a callback to return dynamic info
+                            {
+                                CurrentLevel = xp / 100, // Example: 1 level per 100 XP
+                                IsMaxLevel = false,
+                                CurrentLevelRequiredXp = (xp / 100) * 100,
+                                NextLevelRequiredXp = ((xp / 100) + 1) * 100
+                            });
+
+            var serviceProviderMock = new Mock<IServiceProvider>();
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(IUrlBuilder)))
+                    .Returns(_urlBuilderMock.Object);
+            serviceProviderMock.Setup(sp => sp.GetService(typeof(ILevelCalculator)))
+                    .Returns(_levelCalculatorMock.Object);
+
+            var typeAdapterConfig = new TypeAdapterConfig();
+            typeAdapterConfig.Scan(typeof(Application.AssemblyReference).Assembly);
+
+            _mapper = new ServiceMapper(serviceProviderMock.Object, typeAdapterConfig);
 
             _mediatorMock = new Mock<IMediator>();
             _loggerMock = new Mock<ILogger<THandler>>();
@@ -58,6 +98,32 @@ namespace Application.Tests
             _context.QuestLabels.Add(label);
             await _context.SaveChangesAsync();
             return label;
+        }
+
+        protected async Task<Friendship> AddFriendshipAsync(UserProfile userProfile1, UserProfile userProfile2)
+        {
+            var friendship = Friendship.Create(userProfile1.Id, userProfile2.Id, _fixedTestInstant.ToDateTimeUtc());
+            _context.Friendships.Add(friendship);
+            userProfile1.IncreaseFriendsCount();
+            userProfile2.IncreaseFriendsCount();
+            await _context.SaveChangesAsync();
+            return friendship;
+        }
+
+        protected async Task<UserBlock> AddUserBlockAsync(int blockerUserProfileId, int blockedUserProfileId)
+        {
+            var userBlock = UserBlock.Create(blockerUserProfileId, blockedUserProfileId, _fixedTestInstant.ToDateTimeUtc());
+            _context.UserBlocks.Add(userBlock);
+            await _context.SaveChangesAsync();
+            return userBlock;
+        }
+
+        protected async Task<FriendInvitation> AddFriendInvitationAsync(int senderUserProfileId, int receiverUserProfileId)
+        {
+            var friendInvitation = FriendInvitation.Create(senderUserProfileId, receiverUserProfileId, _fixedTestInstant.ToDateTimeUtc());
+            _context.FriendInvitations.Add(friendInvitation);
+            await _context.SaveChangesAsync();
+            return friendInvitation;
         }
     }
 }

@@ -11,6 +11,9 @@ namespace Domain.Interfaces
         IQuestLabelRepository QuestLabels { get; }
         INotificationRepository Notifications { get; }
         IBadgeRepository Badges { get; }
+        IFriendsRepository Friends { get; }
+        IUserBlockRepository UserBlocks { get; }
+        IFriendInvitationRepository FriendInvitations { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
