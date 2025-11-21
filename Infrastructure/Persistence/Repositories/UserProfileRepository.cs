@@ -77,7 +77,7 @@ namespace Infrastructure.Persistence.Repositories
 
         public IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname)
         {
-            var query = context.UserProfiles.AsNoTracking();
+            var query = _context.UserProfiles.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(nickname))
             {
@@ -90,7 +90,7 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default)
         {
             // The handler will figure out what's important. We will fetch related data later.
-            return await context.UserProfiles
+            return await _context.UserProfiles
                 .AsNoTracking()
                 .Where(u => u.Id == viewedUserProfileId)
                 .Include(u => u.UserProfile_Badges).ThenInclude(upb => upb.Badge)

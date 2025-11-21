@@ -1,5 +1,4 @@
-﻿using Application.Common.Dtos;
-using Application.Common.Interfaces.Notifications;
+﻿using Application.Common.Interfaces.Notifications;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -8,7 +7,7 @@ using NodaTime;
 
 namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategies
 {
-    public class AcceptInvitationStrategy(IUnitOfWork unitOfWork, INotificationSender notificationSender, IClock clock) : IInvitationStatusUpdateStrategy
+    public class AcceptInvitationStrategy(IUnitOfWork unitOfWork, INotificationService notificationService, IClock clock) : IInvitationStatusUpdateStrategy
     {
         public UpdateFriendInvitationStatusEnum Status => UpdateFriendInvitationStatusEnum.Accepted;
 
@@ -26,28 +25,13 @@ namespace Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategi
             invitation.Sender.IncreaseFriendsCount();
             invitation.Receiver.IncreaseFriendsCount();
 
-            // Send notification to the sender about acceptance
-            var notification = Notification.Create(
-                Guid.NewGuid(),
+            await notificationService.CreateAndSendAsync(
                 invitation.SenderUserProfileId,
                 NotificationTypeEnum.FriendRequestAccepted,
                 "You have a new friend!",
                 $"{invitation.Receiver.Nickname} accepted your friend invitation!",
                 "null",
-                utcNow);
-
-            await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
-
-            var notificationDto = new NotificationDto(
-                notification.Id,
-                notification.Type.ToString(),
-                notification.IsRead,
-                notification.Title,
-                notification.Message,
-                notification.PayloadJson,
-                utcNow);
-
-            await notificationSender.SendNotificationAsync(invitation.SenderUserProfileId, notificationDto, cancellationToken).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
 
             unitOfWork.FriendInvitations.Remove(invitation);
         }

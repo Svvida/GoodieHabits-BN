@@ -1,5 +1,4 @@
 ﻿using Application.Common.Dtos;
-using Application.Common.Interfaces.Notifications;
 using Application.FriendInvitations.Commands.UpdateInvitationStatus;
 using Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategies;
 using Domain.Enums;
@@ -12,15 +11,12 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
     public class UpdateInvitationStatusCommandHandlerTests : TestBase<UpdateInvitationStatusCommandHandler>
     {
         private readonly UpdateInvitationStatusCommandHandler _handler;
-        private readonly Mock<INotificationSender> _notificationSenderMock;
 
         public UpdateInvitationStatusCommandHandlerTests() : base()
         {
-            _notificationSenderMock = new Mock<INotificationSender>();
-
             var strategies = new List<IInvitationStatusUpdateStrategy>
             {
-                new AcceptInvitationStrategy(_unitOfWork, _notificationSenderMock.Object, _clockMock.Object),
+                new AcceptInvitationStrategy(_unitOfWork, _notificationService, _clockMock.Object),
                 new RejectInvitationStrategy(_clockMock.Object),
                 new CancelInvitationStrategy()
             };
@@ -45,10 +41,10 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
 
             _notificationSenderMock
                 .Setup(ns => ns.SendNotificationAsync(
-                    It.IsAny<int>(),
+                    sender.Profile.Id,
                     It.IsAny<NotificationDto>(),
                     It.IsAny<CancellationToken>()))
-                .Callback<int, NotificationDto, CancellationToken>((userId, dto, ct) =>
+                .Callback<int, NotificationDto, CancellationToken>((_, dto, _) =>
                 {
                     capturedNotificationDto = dto;
                 })
@@ -68,14 +64,16 @@ namespace Application.Tests.FriendInvitations.Commands.UpdateInvitationStatus
             friendship.Should().NotBeNull();
 
             Assert.NotNull(capturedNotificationDto);
-            var notificationInDb = await _unitOfWork.Notifications.GetUserNotificationByIdAsync(capturedNotificationDto.Id, sender.Profile.Id, true, CancellationToken.None);
+
+            var notificationInDb = await _unitOfWork.Notifications
+                .GetUserNotificationByIdAsync(
+                    capturedNotificationDto.Id,
+                    sender.Profile.Id,
+                    true,
+                    CancellationToken.None);
+
             notificationInDb.Should().NotBeNull();
             notificationInDb!.UserProfileId.Should().Be(sender.Profile.Id);
-
-            _notificationSenderMock.Verify(ns => ns.SendNotificationAsync(
-                sender.Profile.Id,
-                It.IsAny<NotificationDto>(),
-                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]

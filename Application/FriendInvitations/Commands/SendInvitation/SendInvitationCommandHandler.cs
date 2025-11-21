@@ -1,5 +1,4 @@
-﻿using Application.Common.Dtos;
-using Application.Common.Interfaces.Notifications;
+﻿using Application.Common.Interfaces.Notifications;
 using Application.FriendInvitations.Queries.GetUserInvitations;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -11,7 +10,7 @@ using NodaTime;
 
 namespace Application.FriendInvitations.Commands.SendInvitation
 {
-    public class SendInvitationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IClock clock, INotificationSender notificationSender) : IRequestHandler<SendInvitationCommand, FriendInvitationDto>
+    public class SendInvitationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IClock clock, INotificationService notificationService) : IRequestHandler<SendInvitationCommand, FriendInvitationDto>
     {
         public async Task<FriendInvitationDto> Handle(SendInvitationCommand command, CancellationToken cancellationToken)
         {
@@ -58,30 +57,13 @@ namespace Application.FriendInvitations.Commands.SendInvitation
             newInvitation.SetReceiver(receiverProfile);
             await unitOfWork.FriendInvitations.AddAsync(newInvitation, cancellationToken);
 
-            var receiverNotificationTitle = "New Friend Invite!";
-            var receiverNotificationMessage = $"You have received a friend invitation from {newInvitation.Sender.Nickname}.";
-
-            var notification = Notification.Create(
-                id: Guid.NewGuid(),
-                userProfileId: newInvitation.ReceiverUserProfileId,
+            await notificationService.CreateAndSendAsync(
+                userProfileId: command.ReceiverUserProfileId,
                 type: NotificationTypeEnum.FriendRequestReceived,
-                title: receiverNotificationTitle,
-                message: receiverNotificationMessage,
-                payloadJson: "null", // Payload is unnecessary, we probably won't do anything with it so we can delete it.
-                utcNow: utcNow);
-
-            await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
-
-            var notificationDto = new NotificationDto(
-                Id: notification.Id,
-                Type: notification.Type.ToString(),
-                IsRead: notification.IsRead,
-                Title: notification.Title,
-                Message: notification.Message,
-                Data: notification.PayloadJson,
-                CreatedAt: utcNow);
-
-            await notificationSender.SendNotificationAsync(notification.UserProfileId, notificationDto, cancellationToken).ConfigureAwait(false);
+                title: "New Friend Invite!",
+                message: $"You have received a friend invitation from {senderProfile.Nickname}.",
+                payload: "null", // Payload is unnecessary, we probably won't do anything with it so we can delete it.
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return mapper.Map<FriendInvitationDto>(newInvitation);

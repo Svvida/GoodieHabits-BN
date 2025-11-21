@@ -1,9 +1,11 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.Email;
+using Application.Common.Interfaces.Notifications;
 using Application.Statistics.Calculators;
 using Domain.Interfaces;
 using Domain.Models;
 using Domain.ValueObjects;
+using Infrastructure.Notifications;
 using Infrastructure.Persistence;
 using Mapster;
 using MapsterMapper;
@@ -27,6 +29,8 @@ namespace Application.Tests
         protected readonly IMapper _mapper;
         protected readonly Mock<IUrlBuilder> _urlBuilderMock;
         protected readonly Mock<ILevelCalculator> _levelCalculatorMock;
+        protected readonly Mock<INotificationSender> _notificationSenderMock;
+        protected readonly INotificationService _notificationService;
 
         protected TestBase()
         {
@@ -72,10 +76,18 @@ namespace Application.Tests
 
             _mapper = new ServiceMapper(serviceProviderMock.Object, typeAdapterConfig);
 
+            _notificationSenderMock = new Mock<INotificationSender>();
+
             _mediatorMock = new Mock<IMediator>();
             _loggerMock = new Mock<ILogger<THandler>>();
             _clockMock = new Mock<IClock>();
+            _clockMock.Setup(c => c.GetCurrentInstant()).Returns(_fixedTestInstant);
             _emailSenderMock = new Mock<IForgotPasswordEmailSender>();
+
+            _notificationService = new NotificationService(
+                _unitOfWork,
+                _notificationSenderMock.Object,
+                _clockMock.Object);
         }
 
         public void Dispose()

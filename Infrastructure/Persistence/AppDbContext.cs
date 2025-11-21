@@ -74,6 +74,7 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new FriendInvitationConfiguration());
             modelBuilder.ApplyConfiguration(new UserBlockConfiguration());
             modelBuilder.ApplyConfiguration(new FriendshipConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationConfiguration());
 
             modelBuilder.Entity<Badge>().HasData(
                 new Badge(1, BadgeTypeEnum.CompleteDailySeven, "Daily Streak: 7", "One week of daily quests in a row!", "#008000"),

@@ -1,21 +1,20 @@
-﻿using Application.Common.Dtos;
-using Application.Common.Interfaces.Notifications;
+﻿using Application.Common.Interfaces.Notifications;
 using Application.FriendInvitations.Commands.SendInvitation;
-using Moq;
 using Domain.Enums;
 using Domain.Exceptions;
+using Moq;
 
 namespace Application.Tests.FriendInvitations.Commands.SendInvitation
 {
     public class SendInvitationCommandHandlerTests : TestBase<SendInvitationCommandHandler>
     {
         private readonly SendInvitationCommandHandler _handler;
-        private readonly Mock<INotificationSender> _notificationSenderMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
 
         public SendInvitationCommandHandlerTests()
         {
-            _notificationSenderMock = new Mock<INotificationSender>();
-            _handler = new SendInvitationCommandHandler(_unitOfWork, _mapper, _clockMock.Object, _notificationSenderMock.Object);
+            _notificationServiceMock = new Mock<INotificationService>();
+            _handler = new SendInvitationCommandHandler(_unitOfWork, _mapper, _clockMock.Object, _notificationServiceMock.Object);
         }
 
         [Fact]
@@ -38,9 +37,12 @@ namespace Application.Tests.FriendInvitations.Commands.SendInvitation
                 .IsFriendInvitationExistByProfileIdsAsync(sender.Profile.Id, receiver.Profile.Id, CancellationToken.None));
 
             // Assert: Verify that a notification was sent to the receiver
-            _notificationSenderMock.Verify(ns => ns.SendNotificationAsync(
+            _notificationServiceMock.Verify(ns => ns.CreateAndSendAsync(
                 receiver.Profile.Id,
-                It.IsAny<NotificationDto>(),
+                NotificationTypeEnum.FriendRequestReceived,
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<object>(),
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
