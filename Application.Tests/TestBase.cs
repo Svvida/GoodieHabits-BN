@@ -137,5 +137,13 @@ namespace Application.Tests
             await _context.SaveChangesAsync();
             return friendInvitation;
         }
+
+        protected async Task<UserInventory> AddUserInventoryItemAsync(int userProfileId, int shopItemId, int quantity)
+        {
+            var inventoryItem = UserInventory.Create(userProfileId, shopItemId, quantity, _fixedTestInstant.ToDateTimeUtc());
+            _context.UserInventories.Add(inventoryItem);
+            await _context.SaveChangesAsync();
+            return inventoryItem;
+        }
     }
 }

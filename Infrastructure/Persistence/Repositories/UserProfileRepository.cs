@@ -97,5 +97,14 @@ namespace Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<UserProfile?> GetUserProfileWithInventoryItemsForShopContextAsync(int userProfileId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .AsNoTracking()
+                .Include(up => up.InventoryItems)
+                .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

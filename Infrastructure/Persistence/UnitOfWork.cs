@@ -18,6 +18,8 @@ namespace Infrastructure.Persistence
         private IFriendsRepository? _friendsRepository;
         private IUserBlockRepository? _userBlockRepository;
         private IFriendInvitationRepository? _friendInvitationRepository;
+        private IShopItemRepository? _shopItemRepository;
+        private IUserInventoryRepository? _userInventoryRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
@@ -29,6 +31,8 @@ namespace Infrastructure.Persistence
         public IFriendsRepository Friends => _friendsRepository ??= new FriendsRepository(_context);
         public IUserBlockRepository UserBlocks => _userBlockRepository ??= new UserBlockRepository(_context);
         public IFriendInvitationRepository FriendInvitations => _friendInvitationRepository ??= new FriendInvitationRepository(_context);
+        public IShopItemRepository ShopItems => _shopItemRepository ??= new ShopItemRepository(_context);
+        public IUserInventoryRepository UserInventories => _userInventoryRepository ??= new UserInventoryRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
