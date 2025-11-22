@@ -15,6 +15,7 @@ namespace Domain.Models
         public string? Avatar { get; set; }
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;
+        public int Coins { get; set; } = 0;
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int CompletedDailyQuests { get; set; } = 0;
@@ -45,6 +46,7 @@ namespace Domain.Models
         public ICollection<UserBlock> ReceivedBlocks { get; private set; } = [];
         public ICollection<Friendship> FriendshipsAsUser1 { get; private set; } = [];
         public ICollection<Friendship> FriendshipsAsUser2 { get; private set; } = [];
+        public ICollection<UserInventory> InventoryItems { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")

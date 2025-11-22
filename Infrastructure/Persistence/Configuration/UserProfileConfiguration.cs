@@ -30,6 +30,10 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(p => p.Coins)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(p => p.TotalQuests)
                 .IsRequired()
                 .HasDefaultValue(0);
