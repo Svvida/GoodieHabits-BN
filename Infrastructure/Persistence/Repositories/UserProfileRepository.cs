@@ -98,10 +98,14 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<UserProfile?> GetUserProfileWithInventoryItemsForShopContextAsync(int userProfileId, CancellationToken cancellationToken = default)
+        public async Task<UserProfile?> GetUserProfileWithInventoryItemsForShopContextAsync(int userProfileId, bool asNoTracking = true, CancellationToken cancellationToken = default)
         {
-            return await _context.UserProfiles
-                .AsNoTracking()
+            var query = _context.UserProfiles.AsQueryable();
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query
                 .Include(up => up.InventoryItems)
                 .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);

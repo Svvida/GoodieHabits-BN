@@ -1,5 +1,6 @@
 ﻿using Api.Helpers;
 using Application.Common.Sorting;
+using Application.Shop.Commands.PurchaseItem;
 using Application.Shop.Queries.GetItemsWithUserContext;
 using Domain.Enums;
 using MediatR;
@@ -27,6 +28,16 @@ namespace Api.Controllers
                 sortOrder);
             var items = await sender.Send(query, cancellationToken).ConfigureAwait(false);
             return Ok(items);
+        }
+
+        [HttpPost("purchases")]
+        public async Task<ActionResult<PurchaseItemResponse>> PurchaseItem(
+            [FromBody] PurchaseItemRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var command = new PurchaseItemCommand(request.ShopItemId, JwtHelpers.GetCurrentUserProfileId(User));
+            var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
         }
     }
 }
