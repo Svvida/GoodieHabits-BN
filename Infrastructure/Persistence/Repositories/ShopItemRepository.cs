@@ -2,6 +2,7 @@
 using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories
 {
@@ -19,6 +20,14 @@ namespace Infrastructure.Persistence.Repositories
             query = query.Where(item => item.IsPurchasable);
 
             return query;
+        }
+
+        public async Task<IEnumerable<ShopItem>> GetFreeItemsUnlockableAtLevelAsync(int level, CancellationToken cancellationToken = default)
+        {
+            return await _context.ShopItems
+                .Where(item => item.Price == 0 && item.LevelRequirement == level)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
