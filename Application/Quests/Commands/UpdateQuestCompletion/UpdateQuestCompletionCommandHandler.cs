@@ -1,4 +1,6 @@
 ﻿using Application.Badges;
+using Application.Common.Notifications;
+using Application.Statistics.Calculators;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -12,7 +14,9 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
     public class UpdateQuestCompletionCommandHandler(
         IUnitOfWork unitOfWork,
         IBadgeAwardingService badgeAwardingService,
-        ILogger<UpdateQuestCompletionCommandHandler> logger) : IRequestHandler<UpdateQuestCompletionCommand, Unit>
+        ILogger<UpdateQuestCompletionCommandHandler> logger,
+        ILevelCalculator levelCalculator,
+        IPublisher publisher) : IRequestHandler<UpdateQuestCompletionCommand, Unit>
     {
         public async Task<Unit> Handle(UpdateQuestCompletionCommand command, CancellationToken cancellationToken = default)
         {
@@ -29,6 +33,8 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
 
             var nowUtc = SystemClock.Instance.GetCurrentInstant();
 
+            var userLevelBeforeCompletion = levelCalculator.CalculateLevelInfo(quest.UserProfile.TotalXp).CurrentLevel;
+
             if (command.IsCompleted)
             {
                 quest.Complete(nowUtc.ToDateTimeUtc(), ShouldAssignRewards(quest, nowUtc));
@@ -37,6 +43,14 @@ namespace Application.Quests.Commands.UpdateQuestCompletion
             else
             {
                 quest.Uncomplete(nowUtc.ToDateTimeUtc());
+            }
+
+            var userLevelAfterCompletion = levelCalculator.CalculateLevelInfo(quest.UserProfile.TotalXp).CurrentLevel;
+            if (userLevelAfterCompletion > userLevelBeforeCompletion)
+            {
+                logger.LogDebug("UserProfile {UserProfileId} leveled up from {OldLevel} to {NewLevel} after updating Quest {QuestId} completion.",
+                    quest.UserProfileId, userLevelBeforeCompletion, userLevelAfterCompletion, quest.Id);
+                await publisher.Publish(new UserLeveledUpNotification(quest.UserProfileId, userLevelAfterCompletion), cancellationToken).ConfigureAwait(false);
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

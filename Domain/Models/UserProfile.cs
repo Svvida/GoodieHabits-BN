@@ -261,5 +261,24 @@ namespace Domain.Models
                 }
             }
         }
+
+        public void GrandItem(ShopItem item, DateTime utcNow)
+        {
+            var existingItem = InventoryItems.FirstOrDefault(ii => ii.ShopItemId == item.Id);
+            if (item.IsUnique)
+            {
+                if (existingItem is null)
+                {
+                    InventoryItems.Add(UserInventory.Create(Id, item.Id, 1, utcNow));
+                }
+            }
+            else
+            {
+                if (existingItem is not null)
+                    existingItem.IncreaseQuantity(1);
+                else
+                    InventoryItems.Add(UserInventory.Create(Id, item.Id, 1, utcNow));
+            }
+        }
     }
 }

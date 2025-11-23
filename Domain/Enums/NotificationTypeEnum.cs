@@ -6,5 +6,6 @@
         FriendRequestSent = 2,
         FriendRequestReceived = 3,
         FriendRequestAccepted = 4,
+        ShopItemAwarded = 5,
     }
 }
