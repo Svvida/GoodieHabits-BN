@@ -12,7 +12,7 @@ namespace Application.Shop.Queries.GetItemsWithUserContext
     {
         public async Task<List<ShopItemDto>> Handle(GetItemsWithUserContextQuery request, CancellationToken cancellationToken)
         {
-            var user = await unitOfWork.UserProfiles.GetUserProfileWithInventoryItemsForShopContextAsync(request.UserProfileId, cancellationToken)
+            var user = await unitOfWork.UserProfiles.GetUserProfileWithInventoryItemsForShopContextAsync(request.UserProfileId, true, cancellationToken)
                 ?? throw new NotFoundException($"User with ID {request.UserProfileId} not found.");
 
             var query = unitOfWork.ShopItems.GetAvailableItemsQuery(request.Category);

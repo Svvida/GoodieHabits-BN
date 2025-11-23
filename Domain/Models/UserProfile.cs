@@ -226,5 +226,40 @@ namespace Domain.Models
         public void IncreaseFriendsCount() => FriendsCount++;
 
         public void DecreaseFriendsCount() => FriendsCount = Math.Max(FriendsCount - 1, 0);
+
+        public void PurchaseItem(ShopItem shopItem, int userLevel, DateTime nowUtc)
+        {
+            if (userLevel < shopItem.LevelRequirement)
+                throw new PurchaseItemException("Insufficient level to purchase this item.");
+
+            if (Coins < shopItem.Price)
+                throw new PurchaseItemException("Insufficient funds.");
+
+            var existingItem = InventoryItems.FirstOrDefault(ii => ii.ShopItemId == shopItem.Id);
+
+            if (shopItem.IsUnique)
+            {
+                if (existingItem is not null)
+                    throw new PurchaseItemException("You already own this item.");
+
+                Coins -= shopItem.Price;
+                var newItem = UserInventory.Create(Id, shopItem.Id, 1, nowUtc);
+                InventoryItems.Add(newItem);
+            }
+            else
+            {
+                Coins -= shopItem.Price;
+
+                if (existingItem is not null)
+                {
+                    existingItem.IncreaseQuantity(1);
+                }
+                else
+                {
+                    var newItem = UserInventory.Create(Id, shopItem.Id, 1, nowUtc);
+                    InventoryItems.Add(newItem);
+                }
+            }
+        }
     }
 }

@@ -145,5 +145,14 @@ namespace Application.Tests
             await _context.SaveChangesAsync();
             return inventoryItem;
         }
+
+        protected async Task<Account> CreateUserWithLevelAndCoins(int level, int coins)
+        {
+            var user = await AddAccountAsync($"user_lvl{level}_{coins}coins@test.com", "password", $"User_Lvl{level}_{coins}Coins");
+            user.Profile.TotalXp = level * 100; // Based on TestBase mock: 1 level per 100 XP
+            user.Profile.Coins = coins;
+            await _unitOfWork.SaveChangesAsync();
+            return user;
+        }
     }
 }

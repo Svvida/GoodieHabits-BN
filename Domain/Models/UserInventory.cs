@@ -29,5 +29,12 @@ namespace Domain.Models
                 throw new InvalidArgumentException("Quantity of a item cannot be 0 or less.");
             return new UserInventory(userProfileId, shopItemId, quantity, acquiredAt);
         }
+
+        public void IncreaseQuantity(int amount)
+        {
+            if (amount <= 0)
+                throw new InvalidArgumentException("Amount must be greater than 0.");
+            Quantity += amount;
+        }
     }
 }
