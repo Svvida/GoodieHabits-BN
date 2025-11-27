@@ -2,14 +2,14 @@
 {
     public enum ShopItemTypeEnum
     {
-        Cosmetic,
-        Consumable,
-        Avatar,
-        Theme,
-        Emote,
-        Pet,
-        Title,
-        Background,
-        VisualEffect
+        Cosmetic = 0,
+        Consumable = 1,
+        Avatar = 2,
+        //Theme = 3,
+        //Emote = 4,
+        Pet = 5,
+        Title = 6,
+        //Background = 7,
+        VisualEffect = 8
     }
 }

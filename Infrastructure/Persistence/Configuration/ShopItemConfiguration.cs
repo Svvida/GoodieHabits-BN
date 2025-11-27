@@ -1,5 +1,7 @@
-﻿using Domain.Enums;
+﻿using System.Text.Json;
+using Domain.Enums;
 using Domain.Models;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -7,6 +9,12 @@ namespace Infrastructure.Persistence.Configuration
 {
     public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
     {
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            // This ensures the [JsonPolymorphic] attributes are respected
+            // and handles Case Insensitivity which is safer for DB JSON
+            PropertyNameCaseInsensitive = true
+        };
         public void Configure(EntityTypeBuilder<ShopItem> builder)
         {
             builder.ToTable("ShopItems");
@@ -50,9 +58,13 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(x => x.IsUnique)
                 .IsRequired();
 
-            builder.Property(x => x.EffectDataJson)
+            builder.Property(x => x.Payload)
                 .HasColumnType("nvarchar(max)")
-                .IsRequired(false);
+                .IsRequired(false)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, typeof(ShopItemPayload), _jsonOptions),
+                    v => JsonSerializer.Deserialize<ShopItemPayload>(v, _jsonOptions)
+                );
 
             builder.HasData(
                 // -------------------------
@@ -70,7 +82,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 1,
                     isPurchasable: false,
                     isUnique: true,
-                    effectDataJson: "{\"frameId\": \"wooden_rookie\"}"
+                    payload: new AvatarFramePayload { FrameId = "wooden_rookie" }
                 ),
                 ShopItem.Create(
                     id: 101,
@@ -84,7 +96,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 4,
                     isPurchasable: false,
                     isUnique: true,
-                    effectDataJson: "{\"frameId\": \"silver_striver\"}"
+                    payload: new AvatarFramePayload { FrameId = "silver_striver" }
                 ),
                 ShopItem.Create(
                     id: 102,
@@ -98,7 +110,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 8,
                     isPurchasable: false,
                     isUnique: true,
-                    effectDataJson: "{\"frameId\": \"gold_grinder\"}"
+                    payload: new AvatarFramePayload { FrameId = "gold_grinder" }
                 ),
                 ShopItem.Create(
                     id: 103,
@@ -112,7 +124,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 15,
                     isPurchasable: false,
                     isUnique: true,
-                    effectDataJson: "{\"frameId\": \"diamond_achiever\"}"
+                    payload: new AvatarFramePayload { FrameId = "diamond_achiever" }
                 ),
                 // -------------------------
                 // PAID AVATARS
@@ -129,7 +141,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 1,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"avatarId\": \"cat_programmer\"}"
+                    payload: new AvatarPayload { AvatarId = "cat_programmer" }
                 ),
                 ShopItem.Create(
                     id: 201,
@@ -143,7 +155,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 5,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"avatarId\": \"giga_chad\"}"
+                    payload: new AvatarPayload { AvatarId = "giga_chad" }
                 ),
                 ShopItem.Create(
                     id: 202,
@@ -157,7 +169,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 3,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"avatarId\": \"wizard_deadlines\"}"
+                    payload: new AvatarPayload { AvatarId = "wizard_deadlines" }
                 ),
                 // -------------------------
                 // PETS
@@ -174,7 +186,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 10,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"petId\": \"tiny_dragon\", \"animation\": \"hover\"}"
+                    payload: new PetPayload { PetId = "tiny_dragon", Animation = "hover" }
                 ),
                 ShopItem.Create(
                     id: 301,
@@ -188,7 +200,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 6,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"petId\": \"floating_duck\", \"animation\": \"float\"}"
+                    payload: new PetPayload { PetId = "floating_duck", Animation = "float" }
                 ),
                 // -------------------------
                 // TITLES
@@ -205,7 +217,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 1,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"title\": \"Certified Procrastinator\"}"
+                    payload: new TitlePayload { TitleText = "Certified Procrastinator" }
                 ),
                 ShopItem.Create(
                     id: 401,
@@ -219,7 +231,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 8,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"title\": \"Task Slayer\"}"
+                    payload: new TitlePayload { TitleText = "Task Slayer" }
                 ),
                 ShopItem.Create(
                     id: 402,
@@ -233,7 +245,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 12,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"title\": \"Lord of Deadlines\"}"
+                    payload: new TitlePayload { TitleText = "Lord of Deadlines" }
                 ),
                 // -------------------------
                 // NAME EFFECTS
@@ -250,7 +262,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 4,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"effect\": \"glow\", \"color\": \"#00AFFF\"}"
+                    payload: new NameEffectPayload { EffectStyle = "glow", ColorHex = "#00AFFF" }
                 ),
                 ShopItem.Create(
                     id: 501,
@@ -264,7 +276,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 10,
                     isPurchasable: true,
                     isUnique: true,
-                    effectDataJson: "{\"effect\": \"aura\", \"style\": \"fire\"}"
+                    payload: new NameEffectPayload { EffectStyle = "aura", ColorHex = "#FF4500" }
                 ),
                 // -------------------------
                 // CONSUMABLES
@@ -281,12 +293,12 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 1,
                     isPurchasable: true,
                     isUnique: false,
-                    effectDataJson: "{\"type\": \"xp\", \"amount\": 40}"
+                    payload: new ConsumablePayload { EffectType = ConsumablesEffectTypeEnum.NextQuestXpBonus, UsageCount = 1, FlatValue = 40 }
                 ),
                 ShopItem.Create(
                     id: 601,
                     name: "Giga XP Meal",
-                    description: "+350 XP on next completed task.",
+                    description: "+120 XP on next completed task.",
                     imageUrl: "consumables/giga_meal",
                     category: ShopItemsCategoryEnum.Consumables,
                     itemType: ShopItemTypeEnum.Consumable,
@@ -295,7 +307,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 6,
                     isPurchasable: true,
                     isUnique: false,
-                    effectDataJson: "{\"type\": \"xp\", \"amount\": 350}"
+                    payload: new ConsumablePayload { EffectType = ConsumablesEffectTypeEnum.NextQuestXpBonus, UsageCount = 1, FlatValue = 120 }
                 ),
                 ShopItem.Create(
                     id: 602,
@@ -309,7 +321,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 10,
                     isPurchasable: true,
                     isUnique: false,
-                    effectDataJson: "{\"type\": \"multiplier\", \"x\": 2, \"tasks\": 2}"
+                    payload: new ConsumablePayload { EffectType = ConsumablesEffectTypeEnum.XpMultiplier, UsageCount = 2, Multiplier = 2 }
                 )
             );
         }

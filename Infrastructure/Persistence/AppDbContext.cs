@@ -6,10 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Quest> Quests { get; set; }
         public DbSet<MonthlyQuest_Days> MonthlyQuest_Days { get; set; }
@@ -29,6 +27,7 @@ namespace Infrastructure.Persistence
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<ShopItem> ShopItems { get; set; }
         public DbSet<UserInventory> UserInventories { get; set; }
+        public DbSet<ActiveUserEffect> ActiveUserEffects { get; set; }
 
         public override int SaveChanges()
         {
@@ -79,6 +78,7 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new NotificationConfiguration());
             modelBuilder.ApplyConfiguration(new ShopItemConfiguration());
             modelBuilder.ApplyConfiguration(new UserInventoryConfiguration());
+            modelBuilder.ApplyConfiguration(new ActiveUserEffectConfiguration());
 
             modelBuilder.Entity<Badge>().HasData(
                 new Badge(1, BadgeTypeEnum.CompleteDailySeven, "Daily Streak: 7", "One week of daily quests in a row!", "#008000"),

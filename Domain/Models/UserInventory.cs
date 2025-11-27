@@ -36,5 +36,29 @@ namespace Domain.Models
                 throw new InvalidArgumentException("Amount must be greater than 0.");
             Quantity += amount;
         }
+
+        public int ConsumeItem()
+        {
+            if (Quantity <= 0)
+                throw new InvalidArgumentException("No items left to consume.");
+            Quantity -= 1;
+            return Quantity;
+        }
+
+        public void Equip()
+        {
+            if (IsActive)
+                return;
+
+            IsActive = true;
+        }
+
+        public void Unequip()
+        {
+            if (!IsActive)
+                return;
+
+            IsActive = false;
+        }
     }
 }
