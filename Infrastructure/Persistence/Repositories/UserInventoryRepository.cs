@@ -14,5 +14,19 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(ui => ui.ShopItem)
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        public async Task<UserInventory?> GetUserInventoryItemAsync(int userProfileId, int inventoryId, bool loadUserProfile = false, CancellationToken cancellationToken = default)
+        {
+            var query = _context.UserInventories
+                .Include(ui => ui.ShopItem)
+                .Where(ui => ui.UserProfileId == userProfileId && ui.Id == inventoryId);
+
+            if (loadUserProfile)
+            {
+                query = query.Include(ui => ui.UserProfile);
+            }
+
+            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 }

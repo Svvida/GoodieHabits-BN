@@ -2,6 +2,7 @@
 using Domain.Enums;
 using Domain.Events.Badges;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using NodaTime;
 
 namespace Domain.Models
@@ -280,6 +281,39 @@ namespace Domain.Models
                 else
                     InventoryItems.Add(UserInventory.Create(Id, item.Id, 1, utcNow));
             }
+        }
+
+        public void UseConsumableItem(UserInventory item, DateTime utcNow)
+        {
+            if (item.ShopItem.Category != ShopItemsCategoryEnum.Consumables)
+                throw new InvalidArgumentException("Only consumable items can be used.");
+
+            if (item.ShopItem.Payload is not ConsumablePayload payload)
+            {
+                throw new InvalidArgumentException($"Item {item.ShopItem.Name} does not have valid consumable configuration.");
+            }
+
+            item.ConsumeItem();
+
+            var activeEffectValues = new ActiveEffectValues
+            {
+                FlatValue = payload.FlatValue,
+                Multiplier = payload.Multiplier
+            };
+
+            var expiresAt = payload.DurationMinutes.HasValue
+                ? utcNow.AddMinutes(payload.DurationMinutes.Value)
+                : (DateTime?)null;
+
+            var activeEffect = ActiveUserEffect.Create(
+                Id,
+                item.ShopItemId,
+                payload.EffectType,
+                expiresAt,
+                payload.UsageCount,
+                activeEffectValues);
+
+            ActiveUserEffects.Add(activeEffect);
         }
     }
 }

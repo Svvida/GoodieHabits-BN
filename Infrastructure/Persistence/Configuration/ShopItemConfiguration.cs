@@ -321,7 +321,7 @@ namespace Infrastructure.Persistence.Configuration
                     levelRequirement: 10,
                     isPurchasable: true,
                     isUnique: false,
-                    payload: new ConsumablePayload { EffectType = ConsumablesEffectTypeEnum.XpBoost, UsageCount = 2, Multiplier = 2 }
+                    payload: new ConsumablePayload { EffectType = ConsumablesEffectTypeEnum.XpMultiplier, UsageCount = 2, Multiplier = 2 }
                 )
             );
         }
