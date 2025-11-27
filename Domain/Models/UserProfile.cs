@@ -47,6 +47,7 @@ namespace Domain.Models
         public ICollection<Friendship> FriendshipsAsUser1 { get; private set; } = [];
         public ICollection<Friendship> FriendshipsAsUser2 { get; private set; } = [];
         public ICollection<UserInventory> InventoryItems { get; private set; } = [];
+        public ICollection<ActiveUserEffect> ActiveUserEffects { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")

@@ -9,14 +9,14 @@ namespace Infrastructure.Persistence.Repositories
     {
         public async Task<bool> IsUserBlockExistsByProfileIdsAsync(int blockerUserProfileId, int blockedUserProfileId, CancellationToken cancellationToken = default)
         {
-            return await context.UserBlocks.AnyAsync(ub =>
+            return await _context.UserBlocks.AnyAsync(ub =>
                 ub.BlockerUserProfileId == blockerUserProfileId &&
                 ub.BlockedUserProfileId == blockedUserProfileId, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<UserBlock?> GetUserBlockByProfileIdsAsync(int blockerUserProfileId, int blockedUserProfileId, bool loadProfiles, CancellationToken cancellationToken = default)
         {
-            var query = context.UserBlocks.AsQueryable();
+            var query = _context.UserBlocks.AsQueryable();
 
             if (loadProfiles)
             {

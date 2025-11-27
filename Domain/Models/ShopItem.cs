@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 
 namespace Domain.Models
 {
@@ -16,14 +17,15 @@ namespace Domain.Models
         public int LevelRequirement { get; private set; } = 1;
         public bool IsPurchasable { get; private set; } = true; // Can be used to hide certain items from the shop
         public bool IsUnique { get; private set; } // true for items a user can only own one of (cosmetics)
-        public string? EffectDataJson { get; private set; }
+        public ShopItemPayload? Payload { get; private set; }
 
         public ICollection<UserInventory> UserInventories { get; private set; } = [];
+        public ICollection<ActiveUserEffect> ActiveUserEffects { get; private set; } = [];
 
         protected ShopItem() { }
         private ShopItem(int id, string name, string description, string imageUrl, ShopItemsCategoryEnum category,
             ShopItemTypeEnum itemType, int price, CurrencyTypeEnum currencyType, int levelRequirement,
-            bool isPurchasable, bool isUnique, string? effectDataJson)
+            bool isPurchasable, bool isUnique, ShopItemPayload? payload)
         {
             Id = id;
             Name = name;
@@ -36,12 +38,12 @@ namespace Domain.Models
             LevelRequirement = levelRequirement;
             IsPurchasable = isPurchasable;
             IsUnique = isUnique;
-            EffectDataJson = effectDataJson;
+            Payload = payload;
         }
 
         public static ShopItem Create(int id, string name, string description, string imageUrl, ShopItemsCategoryEnum category,
             ShopItemTypeEnum itemType, int price, CurrencyTypeEnum currencyType, int levelRequirement,
-            bool isPurchasable, bool isUnique, string? effectDataJson)
+            bool isPurchasable, bool isUnique, ShopItemPayload? payload)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new InvalidArgumentException("Name cannot be null or whitespace.");
@@ -55,7 +57,7 @@ namespace Domain.Models
                 throw new InvalidArgumentException("LevelRequirement must be at least 1.");
 
             return new ShopItem(id, name, description, imageUrl, category, itemType, price, currencyType,
-                levelRequirement, isPurchasable, isUnique, effectDataJson);
+                levelRequirement, isPurchasable, isUnique, payload);
         }
     }
 }

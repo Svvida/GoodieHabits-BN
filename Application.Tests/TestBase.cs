@@ -2,6 +2,7 @@
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Notifications;
 using Application.Statistics.Calculators;
+using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Models;
 using Domain.ValueObjects;
@@ -153,6 +154,44 @@ namespace Application.Tests
             user.Profile.Coins = coins;
             await _unitOfWork.SaveChangesAsync();
             return user;
+        }
+
+        protected async Task<ShopItem> GetOrCreateShopItemAsync(
+            int id,
+            string name = "Test Item", // Defaults for quick creation
+            ShopItemsCategoryEnum category = ShopItemsCategoryEnum.Avatars,
+            ShopItemTypeEnum type = ShopItemTypeEnum.Cosmetic,
+            int price = 100,
+            ShopItemPayload? payload = null)
+        {
+            // 1. Check if the seed data already put this item in the DB
+            var existingItem = await _context.ShopItems.FindAsync(id);
+            if (existingItem != null)
+            {
+                return existingItem;
+            }
+
+            // 2. If not, create a new custom test item
+            payload ??= new TitlePayload { TitleText = "Test Title" };
+
+            var shopItem = ShopItem.Create(
+                id: id,
+                name: name,
+                description: $"Description for {name}",
+                imageUrl: $"images/{name.ToLower().Replace(" ", "_")}",
+                category: category,
+                itemType: type,
+                price: price,
+                currencyType: CurrencyTypeEnum.Gold,
+                levelRequirement: 1,
+                isPurchasable: true,
+                isUnique: false,
+                payload: payload
+            );
+
+            _context.ShopItems.Add(shopItem);
+            await _context.SaveChangesAsync();
+            return shopItem;
         }
     }
 }

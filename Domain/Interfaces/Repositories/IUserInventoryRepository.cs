@@ -5,5 +5,6 @@ namespace Domain.Interfaces.Repositories
 {
     public interface IUserInventoryRepository : IBaseRepository<UserInventory>
     {
+        Task<List<UserInventory>> GetUserInventoryItemsAsync(int userProfileId, CancellationToken cancellationToken = default);
     }
 }
