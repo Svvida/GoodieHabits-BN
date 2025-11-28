@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Application.Accounts.Dtos;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using MapsterMapper;
 using MediatR;

@@ -26,12 +26,15 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(a => a.Profile)
                     .ThenInclude(p => p.UserProfile_Badges)
                         .ThenInclude(upb => upb.Badge)
+                .Include(a => a.Profile)
+                    .ThenInclude(p => p.InventoryItems.Where(ii => ii.IsActive))
+                        .ThenInclude(ii => ii.ShopItem)
                 .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclue, CancellationToken cancellationToken = default)
+        public async Task<bool> DoesLoginExistAsync(string login, int accountIdToExclude, CancellationToken cancellationToken = default)
         {
-            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclue && a.Login == login, cancellationToken).ConfigureAwait(false);
+            return await _context.Accounts.AnyAsync(a => a.Id != accountIdToExclude && a.Login == login, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<bool> DoesEmailExistAsync(string email, int accountIdToExclude, CancellationToken cancellationToken = default)
