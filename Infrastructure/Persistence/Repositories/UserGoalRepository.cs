@@ -8,11 +8,11 @@ namespace Infrastructure.Persistence.Repositories
 {
     public class UserGoalRepository(AppDbContext context) : BaseRepository<UserGoal>(context), IUserGoalRepository
     {
-        public async Task<int> GetActiveGoalsCountByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
+        public async Task<int> GetActiveGoalsCountByTypeAsync(int userProfileId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
         {
             return await _context.UserGoals.CountAsync
                 (ug =>
-                ug.UserProfile.AccountId == accountId &&
+                ug.UserProfileId == userProfileId &&
                 ug.GoalType == goalType &&
                 !ug.IsExpired, cancellationToken).ConfigureAwait(false);
         }
@@ -24,11 +24,11 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<UserGoal?> GetUserActiveGoalByTypeAsync(int accountId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
+        public async Task<UserGoal?> GetUserActiveGoalByTypeAsync(int userProfileId, GoalTypeEnum goalType, CancellationToken cancellationToken = default)
         {
             return await _context.UserGoals
                 .Include(ug => ug.Quest)
-                .FirstOrDefaultAsync(ug => ug.UserProfile.AccountId == accountId && ug.GoalType == goalType && !ug.IsExpired, cancellationToken)
+                .FirstOrDefaultAsync(ug => ug.UserProfileId == userProfileId && ug.GoalType == goalType && !ug.IsExpired, cancellationToken)
                 .ConfigureAwait(false);
         }
 
