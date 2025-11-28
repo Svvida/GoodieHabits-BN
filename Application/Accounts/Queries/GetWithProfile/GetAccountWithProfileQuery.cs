@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Accounts.Dtos;
+using Application.Common.Interfaces;
 
 namespace Application.Accounts.Queries.GetWithProfile
 {
