@@ -20,7 +20,7 @@ namespace Application.Tests.FriendInvitations.Queries.GetUserInvitations
             var sender = await AddAccountAsync("test1@email.com", "password1", "nickname1");
 
             var receiver = await AddAccountAsync("test2@email.com", "password2", "nickname2");
-            receiver.Profile.Avatar = "receiver_avatar_id";
+            receiver.Profile.UploadAvatar("receiver_avatar_id");
             await _context.SaveChangesAsync();
 
             var invitation = await AddFriendInvitationAsync(sender.Profile.Id, receiver.Profile.Id);

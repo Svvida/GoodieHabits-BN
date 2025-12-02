@@ -12,7 +12,7 @@ namespace Application.Friendships.Queries.GetMyFriendsList
             var friendsList = friendships.Select(f =>
             {
                 var friendProfile = f.UserProfileId1 == request.UserProfileId ? f.UserProfile2 : f.UserProfile1;
-                return new FriendDto(friendProfile.Id, friendProfile.Nickname, urlBuilder.BuildThumbnailAvatarUrl(friendProfile.Avatar));
+                return new FriendDto(friendProfile.Id, friendProfile.Nickname, urlBuilder.BuildThumbnailAvatarUrl(friendProfile.CurrentAvatarUrl));
             }).ToList();
             return friendsList;
         }

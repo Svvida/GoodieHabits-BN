@@ -16,7 +16,7 @@ namespace Application.UserProfiles.Queries.GetUserProfiles
                 .Select(u => new UserProfileSummaryDto(
                     u.Id,
                     u.Nickname,
-                    u.Avatar // Temporarily holds the Public ID
+                    u.UploadedAvatarUrl // Temporarily holds the Public ID
                  ))
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

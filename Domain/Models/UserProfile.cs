@@ -13,7 +13,8 @@ namespace Domain.Models
         public int AccountId { get; set; }
         public string TimeZone { get; private set; } = "Etc/UTC";
         public string Nickname { get; set; } = null!;
-        public string? Avatar { get; set; }
+        public string? UploadedAvatarUrl { get; private set; }
+        public string? CurrentAvatarUrl { get; private set; }
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;
         public int Coins { get; set; } = 0;
@@ -314,6 +315,47 @@ namespace Domain.Models
                 activeEffectValues);
 
             ActiveUserEffects.Add(activeEffect);
+        }
+
+        public void UploadAvatar(string newCloudinaryId)
+        {
+            UploadedAvatarUrl = newCloudinaryId;
+            CurrentAvatarUrl = newCloudinaryId;
+
+            UnequipActiveShopAvatarHelper();
+        }
+
+        public void EquipAvatar(UserInventory inventoryItem)
+        {
+            if (inventoryItem.ShopItem.Category != ShopItemsCategoryEnum.Avatars)
+                throw new InvalidArgumentException("Wrong item category for avatar.");
+
+            UnequipActiveShopAvatarHelper();
+
+            inventoryItem.Equip();
+
+            // Point to the Shop Item URL
+            CurrentAvatarUrl = inventoryItem.ShopItem.ImageUrl;
+        }
+
+        // This method is called by the Handler when the user explicitly clicks "Unequip"
+        public void UnequipAvatar(UserInventory inventoryItem)
+        {
+            if (inventoryItem.ShopItem.Category != ShopItemsCategoryEnum.Avatars)
+                throw new InvalidArgumentException("Wrong item category for avatar.");
+
+            inventoryItem.Unequip();
+
+            // Logic: Restore the face beneath the mask
+            CurrentAvatarUrl = UploadedAvatarUrl;
+        }
+
+        private void UnequipActiveShopAvatarHelper()
+        {
+            var activeAvatar = InventoryItems
+                .FirstOrDefault(ii => ii.IsActive && ii.ShopItem.Category == ShopItemsCategoryEnum.Avatars);
+
+            activeAvatar?.Unequip();
         }
     }
 }

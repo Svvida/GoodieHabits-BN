@@ -8,7 +8,7 @@ namespace Application.Inventories.Queries.GetUserInventoryItems
     {
         public async Task<List<UserInventoryItemDto>> Handle(GetUserInventoryItemsQuery request, CancellationToken cancellationToken)
         {
-            var userInventoryItems = await unitOfWork.UserInventories.GetUserInventoryItemsAsync(request.UserProfileId, cancellationToken).ConfigureAwait(false);
+            var userInventoryItems = await unitOfWork.UserInventories.GetUserInventoryItemsAsync(request.UserProfileId, true, false, cancellationToken).ConfigureAwait(false);
             return mapper.Map<List<UserInventoryItemDto>>(userInventoryItems);
         }
     }

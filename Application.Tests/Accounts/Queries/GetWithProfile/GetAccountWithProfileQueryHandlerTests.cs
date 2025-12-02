@@ -151,9 +151,9 @@ namespace Application.Tests.Accounts.Queries.GetWithProfile
 
             // Assert
             result.Profile.Nickname.Should().Be(user.Profile.Nickname);
-            // Verify Avatar Mock
-            // user.Profile.Avatar is usually null in new accounts, check logic
-            if (string.IsNullOrEmpty(user.Profile.Avatar))
+            // Verify UploadedAvatarUrl Mock
+            // user.Profile.UploadedAvatarUrl is usually null in new accounts, check logic
+            if (string.IsNullOrEmpty(user.Profile.UploadedAvatarUrl))
             {
                 result.Profile.Avatar.Should().BeEmpty();
             }

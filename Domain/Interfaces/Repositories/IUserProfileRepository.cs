@@ -16,5 +16,6 @@ namespace Domain.Interfaces.Repositories
         IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname);
         Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default);
         Task<UserProfile?> GetUserProfileWithInventoryItemsForShopContextAsync(int userProfileId, bool asNoTracking = true, CancellationToken cancellationToken = default);
+        Task<UserProfile?> GetUserProfileForAvatarUploadAsync(int userProfileId, CancellationToken cancellationToken = default);
     }
 }
