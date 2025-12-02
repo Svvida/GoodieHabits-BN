@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Domain.Enums;
+using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
@@ -107,6 +108,15 @@ namespace Infrastructure.Persistence.Repositories
 
             return await query
                 .Include(up => up.InventoryItems)
+                .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<UserProfile?> GetUserProfileForAvatarUploadAsync(int userProfileId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .Include(up => up.InventoryItems.Where(ii => ii.IsActive && ii.ShopItem.Category == ShopItemsCategoryEnum.Avatars))
+                    .ThenInclude(ii => ii.ShopItem)
                 .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }

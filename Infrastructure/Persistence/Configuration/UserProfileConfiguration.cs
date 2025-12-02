@@ -23,7 +23,10 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired(true)
                 .HasMaxLength(30);
 
-            builder.Property(p => p.Avatar)
+            builder.Property(p => p.UploadedAvatarUrl)
+                .IsRequired(false);
+
+            builder.Property(p => p.CurrentAvatarUrl)
                 .IsRequired(false);
 
             builder.Property(p => p.TotalXp)

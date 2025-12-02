@@ -20,9 +20,9 @@ namespace Application.Tests.UserProfiles.Queries.GetUserProfiles
             var account2 = await AddAccountAsync("user2@example.com", "hashed_password2", "SecondUser");
             var account3 = await AddAccountAsync("user3@example.com", "hashed_password3", "Other");
 
-            account1.Profile.Avatar = "avatar1";
-            account2.Profile.Avatar = "avatar2";
-            account3.Profile.Avatar = "avatar3";
+            account1.Profile.UploadAvatar("avatar1");
+            account2.Profile.UploadAvatar("avatar2");
+            account3.Profile.UploadAvatar("avatar3");
 
             await _context.SaveChangesAsync();
 

@@ -9,7 +9,7 @@ namespace Application.Inventories.Commands.UnequipInventoryItem
     {
         public async Task<Unit> Handle(UnequipInventoryItemCommand request, CancellationToken cancellationToken)
         {
-            var itemToUnequip = await unitOfWork.UserInventories.GetUserInventoryItemAsync(request.UserProfileId, request.InventoryId, false, cancellationToken).ConfigureAwait(false)
+            var itemToUnequip = await unitOfWork.UserInventories.GetUserInventoryItemAsync(request.UserProfileId, request.InventoryId, true, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"User Inventory item {request.InventoryId} not found.");
 
             if (itemToUnequip.ShopItem.Category == ShopItemsCategoryEnum.Consumables)
@@ -21,7 +21,11 @@ namespace Application.Inventories.Commands.UnequipInventoryItem
             {
                 return Unit.Value;
             }
-            itemToUnequip.Unequip();
+
+            if (itemToUnequip.ShopItem.Category == ShopItemsCategoryEnum.Avatars)
+                itemToUnequip.UserProfile.UnequipAvatar(itemToUnequip);
+            else
+                itemToUnequip.Unequip();
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Unit.Value;
         }
