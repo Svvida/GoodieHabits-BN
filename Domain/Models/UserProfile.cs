@@ -117,6 +117,8 @@ namespace Domain.Models
                     CompletedMonthlyQuests++;
                     break;
             }
+
+            Coins += 10;
         }
 
         public void RevertQuestCompletion(QuestTypeEnum questType)
