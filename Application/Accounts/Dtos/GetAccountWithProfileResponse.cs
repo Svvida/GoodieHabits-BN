@@ -12,6 +12,7 @@
         string Nickname,
         string? Avatar,
         string? Bio,
+        int Coins,
         ICollection<BadgeDto> Badges
     );
 
