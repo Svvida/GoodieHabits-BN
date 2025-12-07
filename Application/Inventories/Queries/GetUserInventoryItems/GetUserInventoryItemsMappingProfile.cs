@@ -13,7 +13,7 @@ namespace Application.Inventories.Queries.GetUserInventoryItems
                 .Map(dest => dest.ShopItemId, src => src.ShopItemId)
                 .Map(dest => dest.ItemType, src => src.ShopItem.ItemType.ToString())
                 .Map(dest => dest.Category, src => src.ShopItem.Category.ToString())
-                .Map(dest => dest.ItemUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildThumbnailAvatarUrl(src.ShopItem.ImageUrl))
+                .Map(dest => dest.ItemUrl, src => MapContext.Current.GetService<IUrlBuilder>().BuildShopItemThumbnailUrl(src.ShopItem.ImageUrl))
                 .Map(dest => dest.ItemName, src => src.ShopItem.Name)
                 .Map(dest => dest.ItemDescription, src => src.ShopItem.Description)
                 .Map(dest => dest.Quantity, src => src.Quantity)

@@ -60,5 +60,22 @@ namespace Infrastructure.Photos
                 .FetchFormat("auto").Quality("auto"))
                 .BuildUrl(publicId);
         }
+
+        public string BuildShopItemThumbnailUrl(string? publicId)
+        {
+            if (string.IsNullOrEmpty(publicId))
+                return string.Empty;
+
+            return cloudinary.Api.Url
+                .Transform(new Transformation()
+                    .Width(250).Height(250)
+                    // "fit" is CRITICAL here. 
+                    // It ensures the image fits INSIDE the 250x250 box without 
+                    // stretching or cropping off parts of the item.
+                    .Crop("fit")
+                    .FetchFormat("auto")
+                    .Quality("auto"))
+                .BuildUrl(publicId);
+        }
     }
 }
