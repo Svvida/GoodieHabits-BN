@@ -1,25 +1,17 @@
-﻿using System.Text.Json;
-using Application.Common;
-using Application.Common.Dtos;
+﻿using Application.Common;
 using Application.Common.Interfaces.Notifications;
 using Domain.Enums;
 using Domain.Events.Badges;
-using Domain.Interfaces;
-using Domain.Models;
 using MediatR;
-using NodaTime;
 
 namespace Application.Badges
 {
-    public class BadgeAwardedEventHandler(IUnitOfWork unitOfWork, INotificationSender notificationSender, IClock clock) : INotificationHandler<DomainEventNotification<BadgeAwardedEvent>>
+    public class BadgeAwardedEventHandler(INotificationService notificationService) : INotificationHandler<DomainEventNotification<BadgeAwardedEvent>>
     {
         public async Task Handle(DomainEventNotification<BadgeAwardedEvent> wrappedNotification, CancellationToken cancellationToken)
         {
             var userProfileId = wrappedNotification.DomainEvent.UserProfileId;
             var badge = wrappedNotification.DomainEvent.Badge;
-
-            var title = "New Badge Earned!";
-            var message = $"Congratulations! You've earned the '{badge.Text}' badge.";
 
             var payloadData = new
             {
@@ -29,31 +21,14 @@ namespace Application.Badges
                 badgeDescription = badge.Description,
                 color = badge.ColorHex
             };
-            var payloadJson = JsonSerializer.Serialize(payloadData);
 
-            var utcNow = clock.GetCurrentInstant().ToDateTimeUtc();
-
-            var notification = Notification.Create(
-                id: Guid.NewGuid(),
+            await notificationService.CreateAndSendAsync(
                 userProfileId: userProfileId,
-                NotificationTypeEnum.BadgeEarned,
-                title: title,
-                message: message,
-                payloadJson: payloadJson,
-                utcNow: utcNow);
-
-            await unitOfWork.Notifications.AddAsync(notification, cancellationToken).ConfigureAwait(false);
-
-            var notificationDto = new NotificationDto(
-                Id: notification.Id,
-                Type: notification.Type.ToString(),
-                IsRead: notification.IsRead,
-                Title: notification.Title,
-                Message: notification.Message,
-                Data: notification.PayloadJson,
-                CreatedAt: utcNow);
-
-            await notificationSender.SendNotificationAsync(userProfileId, notificationDto, cancellationToken).ConfigureAwait(false);
+                type: NotificationTypeEnum.BadgeEarned,
+                title: "New Badge Earned!",
+                message: $"Congratulations! You've earned the '{badge.Text}' badge.",
+                payload: payloadData,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
         }
     }
 }

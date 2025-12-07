@@ -7,6 +7,7 @@ using Application.Accounts.Commands.UpdateAccount;
 using Application.Accounts.Commands.UploadAvatar;
 using Application.Accounts.Commands.VerifyPasswordResetCode;
 using Application.Accounts.Commands.WipeoutData;
+using Application.Accounts.Dtos;
 using Application.Accounts.Queries.GetWithProfile;
 using MapsterMapper;
 using MediatR;

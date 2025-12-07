@@ -10,12 +10,12 @@ namespace Infrastructure.Persistence.Repositories
     {
         public async Task<Badge> GetBadgeByTypeAsync(BadgeTypeEnum badgeType, CancellationToken cancellationToken = default)
         {
-            return await context.Badges.FirstAsync(b => b.Type == badgeType, cancellationToken).ConfigureAwait(false);
+            return await _context.Badges.FirstAsync(b => b.Type == badgeType, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IReadOnlyCollection<Badge>> GetAllBadgesAsync(CancellationToken cancellationToken = default)
         {
-            return await context.Badges.ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.Badges.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

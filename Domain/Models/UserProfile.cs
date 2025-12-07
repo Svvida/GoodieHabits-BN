@@ -2,6 +2,7 @@
 using Domain.Enums;
 using Domain.Events.Badges;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using NodaTime;
 
 namespace Domain.Models
@@ -12,9 +13,11 @@ namespace Domain.Models
         public int AccountId { get; set; }
         public string TimeZone { get; private set; } = "Etc/UTC";
         public string Nickname { get; set; } = null!;
-        public string? Avatar { get; set; }
+        public string? UploadedAvatarUrl { get; private set; }
+        public string? CurrentAvatarUrl { get; private set; }
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;
+        public int Coins { get; set; } = 0;
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int CompletedDailyQuests { get; set; } = 0;
@@ -45,6 +48,8 @@ namespace Domain.Models
         public ICollection<UserBlock> ReceivedBlocks { get; private set; } = [];
         public ICollection<Friendship> FriendshipsAsUser1 { get; private set; } = [];
         public ICollection<Friendship> FriendshipsAsUser2 { get; private set; } = [];
+        public ICollection<UserInventory> InventoryItems { get; private set; } = [];
+        public ICollection<ActiveUserEffect> ActiveUserEffects { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
@@ -112,6 +117,8 @@ namespace Domain.Models
                     CompletedMonthlyQuests++;
                     break;
             }
+
+            Coins += 10;
         }
 
         public void RevertQuestCompletion(QuestTypeEnum questType)
@@ -224,5 +231,133 @@ namespace Domain.Models
         public void IncreaseFriendsCount() => FriendsCount++;
 
         public void DecreaseFriendsCount() => FriendsCount = Math.Max(FriendsCount - 1, 0);
+
+        public void PurchaseItem(ShopItem shopItem, int userLevel, DateTime nowUtc)
+        {
+            if (userLevel < shopItem.LevelRequirement)
+                throw new PurchaseItemException("Insufficient level to purchase this item.");
+
+            if (Coins < shopItem.Price)
+                throw new PurchaseItemException("Insufficient funds.");
+
+            var existingItem = InventoryItems.FirstOrDefault(ii => ii.ShopItemId == shopItem.Id);
+
+            if (shopItem.IsUnique)
+            {
+                if (existingItem is not null)
+                    throw new PurchaseItemException("You already own this item.");
+
+                Coins -= shopItem.Price;
+                var newItem = UserInventory.Create(Id, shopItem.Id, 1, nowUtc);
+                InventoryItems.Add(newItem);
+            }
+            else
+            {
+                Coins -= shopItem.Price;
+
+                if (existingItem is not null)
+                {
+                    existingItem.IncreaseQuantity(1);
+                }
+                else
+                {
+                    var newItem = UserInventory.Create(Id, shopItem.Id, 1, nowUtc);
+                    InventoryItems.Add(newItem);
+                }
+            }
+        }
+
+        public void GrandItem(ShopItem item, DateTime utcNow)
+        {
+            var existingItem = InventoryItems.FirstOrDefault(ii => ii.ShopItemId == item.Id);
+            if (item.IsUnique)
+            {
+                if (existingItem is null)
+                {
+                    InventoryItems.Add(UserInventory.Create(Id, item.Id, 1, utcNow));
+                }
+            }
+            else
+            {
+                if (existingItem is not null)
+                    existingItem.IncreaseQuantity(1);
+                else
+                    InventoryItems.Add(UserInventory.Create(Id, item.Id, 1, utcNow));
+            }
+        }
+
+        public void UseConsumableItem(UserInventory item, DateTime utcNow)
+        {
+            if (item.ShopItem.Category != ShopItemsCategoryEnum.Consumables)
+                throw new InvalidArgumentException("Only consumable items can be used.");
+
+            if (item.ShopItem.Payload is not ConsumablePayload payload)
+            {
+                throw new InvalidArgumentException($"Item {item.ShopItem.Name} does not have valid consumable configuration.");
+            }
+
+            item.ConsumeItem();
+
+            var activeEffectValues = new ActiveEffectValues
+            {
+                FlatValue = payload.FlatValue,
+                Multiplier = payload.Multiplier
+            };
+
+            var expiresAt = payload.DurationMinutes.HasValue
+                ? utcNow.AddMinutes(payload.DurationMinutes.Value)
+                : (DateTime?)null;
+
+            var activeEffect = ActiveUserEffect.Create(
+                Id,
+                item.ShopItemId,
+                payload.EffectType,
+                expiresAt,
+                payload.UsageCount,
+                activeEffectValues);
+
+            ActiveUserEffects.Add(activeEffect);
+        }
+
+        public void UploadAvatar(string newCloudinaryId)
+        {
+            UploadedAvatarUrl = newCloudinaryId;
+            CurrentAvatarUrl = newCloudinaryId;
+
+            UnequipActiveShopAvatarHelper();
+        }
+
+        public void EquipAvatar(UserInventory inventoryItem)
+        {
+            if (inventoryItem.ShopItem.Category != ShopItemsCategoryEnum.Avatars)
+                throw new InvalidArgumentException("Wrong item category for avatar.");
+
+            UnequipActiveShopAvatarHelper();
+
+            inventoryItem.Equip();
+
+            // Point to the Shop Item URL
+            CurrentAvatarUrl = inventoryItem.ShopItem.ImageUrl;
+        }
+
+        // This method is called by the Handler when the user explicitly clicks "Unequip"
+        public void UnequipAvatar(UserInventory inventoryItem)
+        {
+            if (inventoryItem.ShopItem.Category != ShopItemsCategoryEnum.Avatars)
+                throw new InvalidArgumentException("Wrong item category for avatar.");
+
+            inventoryItem.Unequip();
+
+            // Logic: Restore the face beneath the mask
+            CurrentAvatarUrl = UploadedAvatarUrl;
+        }
+
+        private void UnequipActiveShopAvatarHelper()
+        {
+            var activeAvatar = InventoryItems
+                .FirstOrDefault(ii => ii.IsActive && ii.ShopItem.Category == ShopItemsCategoryEnum.Avatars);
+
+            activeAvatar?.Unequip();
+        }
     }
 }

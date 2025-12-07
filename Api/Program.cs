@@ -200,6 +200,7 @@ namespace Api
             builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
             builder.Services.AddScoped<IUrlBuilder, CloudinaryUrlBuilder>();
             builder.Services.AddSingleton<INotificationSender, SignalRNotificationSender>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
             // Register Badge awarding strategies
             // Orchestrator

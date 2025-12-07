@@ -14,6 +14,8 @@ namespace Domain.Interfaces
         IFriendsRepository Friends { get; }
         IUserBlockRepository UserBlocks { get; }
         IFriendInvitationRepository FriendInvitations { get; }
+        IShopItemRepository ShopItems { get; }
+        IUserInventoryRepository UserInventories { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

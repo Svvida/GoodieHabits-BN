@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence.Repositories
             var query = _context.Notifications.Where(n => n.Id == notificationId && n.UserProfileId == userProfileId);
 
             if (asNoTracking)
-                query.AsNoTracking();
+                query = query.AsNoTracking();
 
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }

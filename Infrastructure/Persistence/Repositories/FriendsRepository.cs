@@ -9,7 +9,7 @@ namespace Infrastructure.Persistence.Repositories
     {
         public async Task<List<Friendship>> GetUserFriendsAsync(int userProfileId, CancellationToken cancellationToken = default)
         {
-            return await context.Friendships
+            return await _context.Friendships
                 .Where(f => f.UserProfileId1 == userProfileId || f.UserProfileId2 == userProfileId)
                 .Include(f => f.UserProfile1)
                 .Include(f => f.UserProfile2)
@@ -22,7 +22,7 @@ namespace Infrastructure.Persistence.Repositories
             var lowerId = Math.Min(userProfileId1, userProfileId2);
             var higherId = Math.Max(userProfileId1, userProfileId2);
 
-            var query = context.Friendships.AsQueryable();
+            var query = _context.Friendships.AsQueryable();
 
             if (loadProfiles)
             {
@@ -40,7 +40,7 @@ namespace Infrastructure.Persistence.Repositories
             var lowerId = Math.Min(userProfileId1, userProfileId2);
             var higherId = Math.Max(userProfileId1, userProfileId2);
 
-            return await context.Friendships
+            return await _context.Friendships
                 .AnyAsync(f => f.UserProfileId1 == lowerId && f.UserProfileId2 == higherId, cancellationToken)
                 .ConfigureAwait(false);
         }

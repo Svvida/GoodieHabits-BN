@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Domain.Enums;
+using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +78,7 @@ namespace Infrastructure.Persistence.Repositories
 
         public IQueryable<UserProfile> SearchUserProfilesByNickname(string? nickname)
         {
-            var query = context.UserProfiles.AsNoTracking();
+            var query = _context.UserProfiles.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(nickname))
             {
@@ -90,11 +91,33 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<UserProfile?> GetUserProfileByIdForPublicDisplayAsync(int viewedUserProfileId, CancellationToken cancellationToken = default)
         {
             // The handler will figure out what's important. We will fetch related data later.
-            return await context.UserProfiles
+            return await _context.UserProfiles
                 .AsNoTracking()
                 .Where(u => u.Id == viewedUserProfileId)
                 .Include(u => u.UserProfile_Badges).ThenInclude(upb => upb.Badge)
                 .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<UserProfile?> GetUserProfileWithInventoryItemsForShopContextAsync(int userProfileId, bool asNoTracking = true, CancellationToken cancellationToken = default)
+        {
+            var query = _context.UserProfiles.AsQueryable();
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query
+                .Include(up => up.InventoryItems)
+                .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<UserProfile?> GetUserProfileForAvatarUploadAsync(int userProfileId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .Include(up => up.InventoryItems.Where(ii => ii.IsActive && ii.ShopItem.Category == ShopItemsCategoryEnum.Avatars))
+                    .ThenInclude(ii => ii.ShopItem)
+                .FirstOrDefaultAsync(up => up.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

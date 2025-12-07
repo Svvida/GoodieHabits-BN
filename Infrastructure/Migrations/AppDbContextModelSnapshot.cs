@@ -70,6 +70,43 @@ namespace Infrastructure.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.ActiveUserEffect", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EffectType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SourceItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsageCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Values")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("EffectDataJson");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceItemId");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("ActiveUserEffects", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.Badge", b =>
                 {
                     b.Property<int>("Id")
@@ -352,14 +389,19 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
@@ -367,7 +409,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -379,7 +422,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UserProfileId");
 
-                    b.ToTable("Notifications");
+                    b.HasIndex("Id", "UserProfileId");
+
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.Quest", b =>
@@ -619,6 +664,323 @@ namespace Infrastructure.Migrations
                     b.ToTable("SeasonalQuest_Seasons", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.ShopItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrencyType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsPurchasable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsUnique")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ItemType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LevelRequirement")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.ToTable("ShopItems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 100,
+                            Category = 0,
+                            CurrencyType = 0,
+                            Description = "Unlocked at Level 1. Made from 100% imaginary wood.",
+                            ImageUrl = "shop_items/avatar_frames/wooden_rookie",
+                            IsPurchasable = false,
+                            IsUnique = true,
+                            ItemType = 0,
+                            LevelRequirement = 1,
+                            Name = "Wooden Rookie Frame",
+                            Payload = "{\"type\":\"AvatarFrame\",\"FrameId\":\"wooden_rookie\"}",
+                            Price = 0
+                        },
+                        new
+                        {
+                            Id = 101,
+                            Category = 0,
+                            CurrencyType = 0,
+                            Description = "Unlocked at Level 4. Clean, shiny, probably not real silver.",
+                            ImageUrl = "shop_items/avatar_frames/silver_striver",
+                            IsPurchasable = false,
+                            IsUnique = true,
+                            ItemType = 0,
+                            LevelRequirement = 4,
+                            Name = "Silver Striver Frame",
+                            Payload = "{\"type\":\"AvatarFrame\",\"FrameId\":\"silver_striver\"}",
+                            Price = 0
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Category = 0,
+                            CurrencyType = 0,
+                            Description = "Unlocked at Level 8. You earned this—literally.",
+                            ImageUrl = "shop_items/avatar_frames/gold_grinder",
+                            IsPurchasable = false,
+                            IsUnique = true,
+                            ItemType = 0,
+                            LevelRequirement = 8,
+                            Name = "Gold Grinder Frame",
+                            Payload = "{\"type\":\"AvatarFrame\",\"FrameId\":\"gold_grinder\"}",
+                            Price = 0
+                        },
+                        new
+                        {
+                            Id = 103,
+                            Category = 0,
+                            CurrencyType = 0,
+                            Description = "Unlocked at Level 15. Shiny enough to motivate anyone.",
+                            ImageUrl = "shop_items/avatar_frames/diamond_achiever",
+                            IsPurchasable = false,
+                            IsUnique = true,
+                            ItemType = 0,
+                            LevelRequirement = 15,
+                            Name = "Diamond Achiever Frame",
+                            Payload = "{\"type\":\"AvatarFrame\",\"FrameId\":\"diamond_achiever\"}",
+                            Price = 0
+                        },
+                        new
+                        {
+                            Id = 200,
+                            Category = 1,
+                            CurrencyType = 0,
+                            Description = "A cat furiously typing on a keyboard. Appears to know more than you.",
+                            ImageUrl = "shop_items/avatars/cat_programmer",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 2,
+                            LevelRequirement = 1,
+                            Name = "Cat Programmer",
+                            Payload = "{\"type\":\"Avatar\",\"AvatarId\":\"cat_programmer\"}",
+                            Price = 300
+                        },
+                        new
+                        {
+                            Id = 201,
+                            Category = 1,
+                            CurrencyType = 0,
+                            Description = "The peak of digital evolution. Jawline DLC included.",
+                            ImageUrl = "shop_items/avatars/giga_chad",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 2,
+                            LevelRequirement = 5,
+                            Name = "Giga-Chad Avatar",
+                            Payload = "{\"type\":\"Avatar\",\"AvatarId\":\"giga_chad\"}",
+                            Price = 400
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Category = 1,
+                            CurrencyType = 0,
+                            Description = "A stressed wizard constantly casting 'EXTEND DEADLINE' spell.",
+                            ImageUrl = "shop_items/avatars/wizard_deadlines",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 2,
+                            LevelRequirement = 3,
+                            Name = "Wizard of Deadlines",
+                            Payload = "{\"type\":\"Avatar\",\"AvatarId\":\"wizard_deadlines\"}",
+                            Price = 350
+                        },
+                        new
+                        {
+                            Id = 300,
+                            Category = 5,
+                            CurrencyType = 0,
+                            Description = "A baby dragon that follows you around. Harmless. Probably.",
+                            ImageUrl = "shop_items/pets/tiny_dragon",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 5,
+                            LevelRequirement = 10,
+                            Name = "Tiny Dragon",
+                            Payload = "{\"type\":\"Pet\",\"PetId\":\"tiny_dragon\",\"Animation\":\"hover\"}",
+                            Price = 1200
+                        },
+                        new
+                        {
+                            Id = 301,
+                            Category = 5,
+                            CurrencyType = 0,
+                            Description = "A yellow duck that defies gravity. Scientists hate it.",
+                            ImageUrl = "shop_items/pets/floating_duck",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 5,
+                            LevelRequirement = 6,
+                            Name = "Floating Duck",
+                            Payload = "{\"type\":\"Pet\",\"PetId\":\"floating_duck\",\"Animation\":\"float\"}",
+                            Price = 800
+                        },
+                        new
+                        {
+                            Id = 400,
+                            Category = 6,
+                            CurrencyType = 0,
+                            Description = "A title that proudly states what everyone already knew.",
+                            ImageUrl = "shop_items/titles/procrastinator",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 6,
+                            LevelRequirement = 1,
+                            Name = "Certified Procrastinator",
+                            Payload = "{\"type\":\"Title\",\"TitleText\":\"Certified Procrastinator\"}",
+                            Price = 250
+                        },
+                        new
+                        {
+                            Id = 401,
+                            Category = 6,
+                            CurrencyType = 0,
+                            Description = "For those who finish tasks with extreme prejudice.",
+                            ImageUrl = "shop_items/titles/slayer",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 6,
+                            LevelRequirement = 8,
+                            Name = "Task Slayer",
+                            Payload = "{\"type\":\"Title\",\"TitleText\":\"Task Slayer\"}",
+                            Price = 600
+                        },
+                        new
+                        {
+                            Id = 402,
+                            Category = 6,
+                            CurrencyType = 0,
+                            Description = "One title to postpone them all.",
+                            ImageUrl = "shop_items/titles/lord_deadlines",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 6,
+                            LevelRequirement = 12,
+                            Name = "Lord of Deadlines",
+                            Payload = "{\"type\":\"Title\",\"TitleText\":\"Lord of Deadlines\"}",
+                            Price = 900
+                        },
+                        new
+                        {
+                            Id = 500,
+                            Category = 3,
+                            CurrencyType = 0,
+                            Description = "Makes your username glow with neon blue energy.",
+                            ImageUrl = "shop_items/name_effects/neon_blue",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 8,
+                            LevelRequirement = 4,
+                            Name = "Blue Neon Name Glow",
+                            Payload = "{\"type\":\"NameEffect\",\"EffectStyle\":\"glow\",\"ColorHex\":\"#00AFFF\"}",
+                            Price = 500
+                        },
+                        new
+                        {
+                            Id = 501,
+                            Category = 3,
+                            CurrencyType = 0,
+                            Description = "Your username ignites with flame animation.",
+                            ImageUrl = "shop_items/name_effects/inferno",
+                            IsPurchasable = true,
+                            IsUnique = true,
+                            ItemType = 8,
+                            LevelRequirement = 10,
+                            Name = "Inferno Name Aura",
+                            Payload = "{\"type\":\"NameEffect\",\"EffectStyle\":\"aura\",\"ColorHex\":\"#FF4500\"}",
+                            Price = 950
+                        },
+                        new
+                        {
+                            Id = 600,
+                            Category = 4,
+                            CurrencyType = 0,
+                            Description = "+40 XP on next completed task. Tastes digital.",
+                            ImageUrl = "shop_items/consumables/snack",
+                            IsPurchasable = true,
+                            IsUnique = false,
+                            ItemType = 1,
+                            LevelRequirement = 1,
+                            Name = "Mini XP Snack",
+                            Payload = "{\"type\":\"Consumable\",\"EffectType\":2,\"DurationMinutes\":null,\"UsageCount\":1,\"Multiplier\":null,\"FlatValue\":40}",
+                            Price = 120
+                        },
+                        new
+                        {
+                            Id = 601,
+                            Category = 4,
+                            CurrencyType = 0,
+                            Description = "+120 XP on next completed task.",
+                            ImageUrl = "shop_items/consumables/giga_meal",
+                            IsPurchasable = true,
+                            IsUnique = false,
+                            ItemType = 1,
+                            LevelRequirement = 6,
+                            Name = "Giga XP Meal",
+                            Payload = "{\"type\":\"Consumable\",\"EffectType\":2,\"DurationMinutes\":null,\"UsageCount\":1,\"Multiplier\":null,\"FlatValue\":120}",
+                            Price = 450
+                        },
+                        new
+                        {
+                            Id = 602,
+                            Category = 4,
+                            CurrencyType = 0,
+                            Description = "Doubles XP for the next 2 tasks.",
+                            ImageUrl = "shop_items/consumables/focus_brew",
+                            IsPurchasable = true,
+                            IsUnique = false,
+                            ItemType = 1,
+                            LevelRequirement = 10,
+                            Name = "Ultra Focus Brew",
+                            Payload = "{\"type\":\"Consumable\",\"EffectType\":0,\"DurationMinutes\":null,\"UsageCount\":2,\"Multiplier\":2,\"FlatValue\":null}",
+                            Price = 800
+                        });
+                });
+
             modelBuilder.Entity("Domain.Models.UserBlock", b =>
                 {
                     b.Property<int>("BlockerUserProfileId")
@@ -698,6 +1060,45 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserGoals", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.UserInventory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AcquiredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("ShopItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopItemId");
+
+                    b.HasIndex("UserProfileId", "ShopItemId")
+                        .IsUnique();
+
+                    b.ToTable("UserInventories", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -714,12 +1115,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
-                    b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Bio")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Coins")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("CompletedDailyQuests")
                         .ValueGeneratedOnAdd()
@@ -750,6 +1153,9 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CurrentAvatarUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CurrentlyCompletedExistingQuests")
                         .ValueGeneratedOnAdd()
@@ -806,6 +1212,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UploadedAvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId")
@@ -858,6 +1267,25 @@ namespace Infrastructure.Migrations
                     b.HasIndex("QuestId");
 
                     b.ToTable("WeeklyQuest_Days", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.ActiveUserEffect", b =>
+                {
+                    b.HasOne("Domain.Models.ShopItem", "SourceItem")
+                        .WithMany("ActiveUserEffects")
+                        .HasForeignKey("SourceItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("ActiveUserEffects")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SourceItem");
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Domain.Models.FriendInvitation", b =>
@@ -1032,6 +1460,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserProfile");
                 });
 
+            modelBuilder.Entity("Domain.Models.UserInventory", b =>
+                {
+                    b.HasOne("Domain.Models.ShopItem", "ShopItem")
+                        .WithMany("UserInventories")
+                        .HasForeignKey("ShopItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("InventoryItems")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopItem");
+
+                    b.Navigation("UserProfile");
+                });
+
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
                     b.HasOne("Domain.Models.Account", "Account")
@@ -1106,11 +1553,22 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest_QuestLabels");
                 });
 
+            modelBuilder.Entity("Domain.Models.ShopItem", b =>
+                {
+                    b.Navigation("ActiveUserEffects");
+
+                    b.Navigation("UserInventories");
+                });
+
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
+                    b.Navigation("ActiveUserEffects");
+
                     b.Navigation("FriendshipsAsUser1");
 
                     b.Navigation("FriendshipsAsUser2");
+
+                    b.Navigation("InventoryItems");
 
                     b.Navigation("Labels");
 
