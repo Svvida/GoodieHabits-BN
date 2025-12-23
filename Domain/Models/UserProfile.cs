@@ -156,12 +156,14 @@ namespace Domain.Models
         {
             ExistingQuests++;
             TotalQuests++;
+            TotalXp += 2;
         }
 
         public void UpdateAfterUserGoalCreation()
         {
             ActiveGoals++;
             TotalGoals++;
+            TotalXp += 2;
         }
 
         public void UpdateNickname(string nickname)

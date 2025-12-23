@@ -193,9 +193,58 @@ namespace Domain.Models
                 }
             }
 
-            xpGained += shouldAssignRewards ? 10 : 0; // Base XP for quest completion
+            if (shouldAssignRewards)
+            {
+                int baseXp = 10;
+                int bonusXp = CalculateXpModifiers(nowUtc);
+                xpGained += (baseXp + bonusXp);
+            }
 
             UserProfile.ApplyQuestCompletionRewards(xpGained, isGoalCompleted, isFirstTimeCompleted, shouldAssignRewards, QuestType);
+        }
+
+        // Helper method to calculate dynamic XP based on properties
+        private int CalculateXpModifiers(DateTime nowUtc)
+        {
+            int bonus = 0;
+
+            // 1. Difficulty Bonus
+            // Harder tasks = More XP. Adjust these values based on your game balance.
+            if (Difficulty.HasValue)
+            {
+                bonus += Difficulty.Value switch
+                {
+                    DifficultyEnum.Easy => 0,       // Base XP is enough
+                    DifficultyEnum.Medium => 5,     // 1.5x Base
+                    DifficultyEnum.Hard => 10,      // 2x Base
+                    DifficultyEnum.Impossible => 20, // 3x Base
+                    _ => 0
+                };
+            }
+
+            // 2. Priority Bonus
+            // Higher Priority = More XP (Incentivize doing the important stuff)
+            if (Priority.HasValue)
+            {
+                bonus += Priority.Value switch
+                {
+                    PriorityEnum.Low => 0,
+                    PriorityEnum.Medium => 5,
+                    PriorityEnum.High => 10,
+                    _ => 0
+                };
+            }
+
+            // 3. Timeliness Bonus (End Date)
+            // If EndDate exists AND we are completing it before or exactly at that time
+            if (EndDate.HasValue && nowUtc <= EndDate.Value)
+            {
+                // "On Time" bonus. 
+                // You can make this flat (e.g., 5 XP) or a multiplier.
+                bonus += 5;
+            }
+
+            return bonus;
         }
 
         public void Uncomplete(DateTime utcNow)
