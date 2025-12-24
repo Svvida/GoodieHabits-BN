@@ -6,6 +6,7 @@ using Domain.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using NodaTime.Extensions;
 
 namespace Application.Quests.Queries.GetActiveQuests
 {
@@ -24,10 +25,16 @@ namespace Application.Quests.Queries.GetActiveQuests
                 ?? throw new InvalidArgumentException($"Invalid timezone: {userProfile.TimeZone}");
 
             Instant utcNow = SystemClock.Instance.GetCurrentInstant();
+            // Get Local Time
             LocalDateTime localNow = utcNow.InZone(userTimeZone).LocalDateTime;
 
+            // Calculate Search Range
             DateTime todayStart = localNow.Date.AtStartOfDayInZone(userTimeZone).ToDateTimeUtc();
             DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
+
+            // Extract the exact Day/Weekday for the User
+            var userLocalWeekday = (WeekdayEnum)localNow.DayOfWeek.ToDayOfWeek();
+            var userLocalDayOfMonth = localNow.Day;
 
             logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
                 todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
@@ -35,7 +42,14 @@ namespace Application.Quests.Queries.GetActiveQuests
 
             SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason(utcNow.ToDateTimeUtc());
 
-            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(request.UserProfileId, todayStart, todayEnd, currentSeason, cancellationToken).ConfigureAwait(false);
+            var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(
+                request.UserProfileId,
+                todayStart,
+                todayEnd,
+                userLocalWeekday,
+                userLocalDayOfMonth,
+                currentSeason,
+                cancellationToken).ConfigureAwait(false);
 
             return quests.Select(questMappingService.MapToDto);
         }
