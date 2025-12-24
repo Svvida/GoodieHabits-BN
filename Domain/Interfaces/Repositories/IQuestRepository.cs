@@ -6,7 +6,7 @@ namespace Domain.Interfaces.Repositories
 {
     public interface IQuestRepository : IBaseRepository<Quest>
     {
-        Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(int userProfileId, DateTime todayStart, DateTime todayEnd, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(int userProfileId, DateTime todayStart, DateTime todayEnd, WeekdayEnum userLocalWeekday, int userLocalDayOfMonth, SeasonEnum currentSeason, CancellationToken cancellationToken = default);
         Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(int userProfileId, QuestTypeEnum questType, CancellationToken cancellationToken = default);
         Task<Quest?> GetQuestByIdAsync(int questId, int userProfileId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default);
         Task<Quest?> GetQuestByIdForCompletionUpdateAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default);

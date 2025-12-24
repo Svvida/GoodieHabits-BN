@@ -12,35 +12,38 @@ namespace Infrastructure.Persistence.Repositories
             int userProfileId,
             DateTime todayStart,
             DateTime todayEnd,
+            WeekdayEnum userLocalWeekday,
+            int userLocalDayOfMonth,
             SeasonEnum currentSeason,
             CancellationToken cancellationToken = default)
         {
             var baseQuery = _context.Quests
                 .Where(q => q.UserProfileId == userProfileId)
                 .Where(q =>
+                    // ONE TIME
                     q.QuestType == QuestTypeEnum.OneTime &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
                         (q.StartDate.HasValue || q.EndDate.HasValue)
 
+                    // DAILY
                     || q.QuestType == QuestTypeEnum.Daily &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart
 
+                    // WEEKLY
                     || q.QuestType == QuestTypeEnum.Weekly &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        q.WeeklyQuest_Days.Any(wd =>
-                            wd.Weekday == (WeekdayEnum)todayStart.DayOfWeek ||
-                            wd.Weekday == (WeekdayEnum)todayEnd.DayOfWeek)
+                        q.WeeklyQuest_Days.Any(wd => wd.Weekday == userLocalWeekday)
 
+                    // MONTHLY
                     || q.QuestType == QuestTypeEnum.Monthly &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
-                        (q.MonthlyQuest_Days!.StartDay <= todayStart.Day && q.MonthlyQuest_Days.EndDay >= todayStart.Day
-                        ||
-                        q.MonthlyQuest_Days.StartDay <= todayEnd.Day && q.MonthlyQuest_Days.EndDay >= todayEnd.Day)
+                        (q.MonthlyQuest_Days!.StartDay <= userLocalDayOfMonth && q.MonthlyQuest_Days.EndDay >= userLocalDayOfMonth)
 
+                    // SEASONAL
                     || q.QuestType == QuestTypeEnum.Seasonal &&
                         (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
                         (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
