@@ -1,5 +1,6 @@
 ﻿using Api.Helpers;
 using Application.Common.Dtos;
+using Application.Notifications.Commands.DeleteNotification;
 using Application.Notifications.Commands.MarkAllNotificationsAsRead;
 using Application.Notifications.Commands.MarkNotificationAsRead;
 using Application.Notifications.Queries.GetAllNotifications;
@@ -36,6 +37,14 @@ namespace Api.Controllers
         public async Task<IActionResult> MarkAllNotificationsAsReadAsync(CancellationToken cancellationToken = default)
         {
             var command = new MarkAllNotificationsAsReadCommand(JwtHelpers.GetCurrentUserProfileId(User));
+            await sender.Send(command, cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteNotificationAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var command = new DeleteNotificationCommand(JwtHelpers.GetCurrentUserProfileId(User), id);
             await sender.Send(command, cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
