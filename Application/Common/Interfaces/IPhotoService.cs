@@ -3,5 +3,6 @@
     public interface IPhotoService
     {
         Task<string> UploadPhotoAsync(Stream fileStream, string fileName, int userProfileId);
+        Task DeletePhotoAsync(string avatarUrl);
     }
 }
