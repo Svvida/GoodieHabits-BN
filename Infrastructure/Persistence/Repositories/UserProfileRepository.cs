@@ -45,6 +45,14 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(u => u.Labels)
                 .Include(u => u.UserProfile_Badges)
                 .Include(u => u.Quests)
+                .Include(u => u.Notifications)
+                .Include(u => u.SentFriendInvitations)
+                .Include(u => u.ReceivedFriendInvitations)
+                .Include(u => u.SentBlocks)
+                .Include(u => u.FriendshipsAsUser1)
+                .Include(u => u.FriendshipsAsUser2)
+                .Include(u => u.InventoryItems)
+                .Include(u => u.ActiveUserEffects)
                 .FirstOrDefaultAsync(u => u.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }

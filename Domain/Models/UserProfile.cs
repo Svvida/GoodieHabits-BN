@@ -72,6 +72,9 @@ namespace Domain.Models
         {
             Bio = null;
             TotalXp = 0;
+            Coins = 0;
+            CurrentAvatarUrl = null;
+            UploadedAvatarUrl = null;
 
             // Stats for quests
             CompletedQuests = 0;
@@ -89,7 +92,17 @@ namespace Domain.Models
             TotalGoals = 0;
             ActiveGoals = 0;
 
+            Labels.Clear();
+            Quests.Clear();
             UserProfile_Badges.Clear();
+            Notifications.Clear();
+            SentFriendInvitations.Clear();
+            ReceivedFriendInvitations.Clear();
+            SentBlocks.Clear();
+            FriendshipsAsUser1.Clear();
+            FriendshipsAsUser2.Clear();
+            InventoryItems.Clear();
+            ActiveUserEffects.Clear();
         }
 
         public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards, QuestTypeEnum questType)
