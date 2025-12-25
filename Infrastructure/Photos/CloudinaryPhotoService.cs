@@ -28,5 +28,14 @@ namespace Infrastructure.Photos
 
             return uploadResult.PublicId;
         }
+
+        public async Task DeletePhotoAsync(string avatarUrl)
+        {
+            var deletionParams = new DeletionParams(avatarUrl)
+            {
+                Invalidate = true
+            };
+            await cloudinary.DestroyAsync(deletionParams).ConfigureAwait(false);
+        }
     }
 }
