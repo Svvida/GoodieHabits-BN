@@ -4,7 +4,7 @@
     {
         Cosmetic = 0,
         Consumable = 1,
-        Avatar = 2,
+        //Avatar = 2,
         //Theme = 3,
         //Emote = 4,
         Pet = 5,
