@@ -75,6 +75,7 @@ namespace Domain.Models
             Coins = 0;
             CurrentAvatarUrl = null;
             UploadedAvatarUrl = null;
+            FriendsCount = 0;
 
             // Stats for quests
             CompletedQuests = 0;
