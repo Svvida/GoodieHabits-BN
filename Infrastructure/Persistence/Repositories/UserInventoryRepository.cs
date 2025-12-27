@@ -10,6 +10,7 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<List<UserInventory>> GetUserInventoryItemsAsync(int userProfileId, bool asNoTracking = true, bool includeUserProfile = false, CancellationToken cancellationToken = default)
         {
             var query = _context.UserInventories
+                .OrderBy(ui => ui.ShopItemId)
                 .Include(ui => ui.ShopItem)
                 .Where(ui => ui.UserProfileId == userProfileId);
 
