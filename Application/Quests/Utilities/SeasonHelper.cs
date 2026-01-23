@@ -12,7 +12,7 @@ namespace Application.Quests.Utilities
             // Handle Winter separately because it spans two years
             if (season == SeasonEnum.Winter)
             {
-                if (utcNow.Month <= 3 && utcNow.Day <= 20)
+                if (utcNow.Month < 3 || (utcNow.Month == 3 && utcNow.Day <= 20))
                     return (new DateTime(year - 1, 12, 21), new DateTime(year, 03, 20));
 
                 return (new DateTime(year, 12, 21), new DateTime(year + 1, 03, 20));
