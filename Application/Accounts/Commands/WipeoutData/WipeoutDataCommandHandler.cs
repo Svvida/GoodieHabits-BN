@@ -19,6 +19,14 @@ namespace Application.Accounts.Commands.WipeoutData
 
             var avatarUrlToDelete = userProfile.UploadedAvatarUrl;
 
+            // Budgets/FinanceTransactions/FinanceCategories have a required FK to UserProfile configured with
+            // DeleteBehavior.NoAction (to avoid multiple cascade paths through FinanceCategory), so they can't be
+            // deleted by simply severing them from the navigation collection - they must be removed explicitly first.
+            unitOfWork.Budgets.RemoveRange(userProfile.Budgets);
+            unitOfWork.FinanceTransactions.RemoveRange(userProfile.FinanceTransactions);
+            unitOfWork.FinanceCategories.RemoveRange(userProfile.FinanceCategories);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             userProfile.WipeoutData();
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

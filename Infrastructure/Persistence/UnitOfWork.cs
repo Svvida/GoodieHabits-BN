@@ -20,6 +20,9 @@ namespace Infrastructure.Persistence
         private IFriendInvitationRepository? _friendInvitationRepository;
         private IShopItemRepository? _shopItemRepository;
         private IUserInventoryRepository? _userInventoryRepository;
+        private IFinanceCategoryRepository? _financeCategoryRepository;
+        private IFinanceTransactionRepository? _financeTransactionRepository;
+        private IBudgetRepository? _budgetRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
@@ -33,6 +36,9 @@ namespace Infrastructure.Persistence
         public IFriendInvitationRepository FriendInvitations => _friendInvitationRepository ??= new FriendInvitationRepository(_context);
         public IShopItemRepository ShopItems => _shopItemRepository ??= new ShopItemRepository(_context);
         public IUserInventoryRepository UserInventories => _userInventoryRepository ??= new UserInventoryRepository(_context);
+        public IFinanceCategoryRepository FinanceCategories => _financeCategoryRepository ??= new FinanceCategoryRepository(_context);
+        public IFinanceTransactionRepository FinanceTransactions => _financeTransactionRepository ??= new FinanceTransactionRepository(_context);
+        public IBudgetRepository Budgets => _budgetRepository ??= new BudgetRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

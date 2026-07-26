@@ -53,6 +53,9 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(u => u.FriendshipsAsUser2)
                 .Include(u => u.InventoryItems)
                 .Include(u => u.ActiveUserEffects)
+                .Include(u => u.FinanceCategories)
+                .Include(u => u.FinanceTransactions)
+                .Include(u => u.Budgets)
                 .FirstOrDefaultAsync(u => u.Id == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }

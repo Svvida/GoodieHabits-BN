@@ -28,6 +28,9 @@ namespace Infrastructure.Persistence
         public DbSet<ShopItem> ShopItems { get; set; }
         public DbSet<UserInventory> UserInventories { get; set; }
         public DbSet<ActiveUserEffect> ActiveUserEffects { get; set; }
+        public DbSet<FinanceCategory> FinanceCategories { get; set; }
+        public DbSet<FinanceTransaction> FinanceTransactions { get; set; }
+        public DbSet<Budget> Budgets { get; set; }
 
         public override int SaveChanges()
         {
@@ -79,6 +82,9 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new ShopItemConfiguration());
             modelBuilder.ApplyConfiguration(new UserInventoryConfiguration());
             modelBuilder.ApplyConfiguration(new ActiveUserEffectConfiguration());
+            modelBuilder.ApplyConfiguration(new FinanceCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new FinanceTransactionConfiguration());
+            modelBuilder.ApplyConfiguration(new BudgetConfiguration());
 
             modelBuilder.Entity<Badge>().HasData(
                 new Badge(1, BadgeTypeEnum.CompleteDailySeven, "Daily Streak: 7", "One week of daily quests in a row!", "#008000"),

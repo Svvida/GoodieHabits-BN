@@ -16,6 +16,9 @@ namespace Domain.Interfaces
         IFriendInvitationRepository FriendInvitations { get; }
         IShopItemRepository ShopItems { get; }
         IUserInventoryRepository UserInventories { get; }
+        IFinanceCategoryRepository FinanceCategories { get; }
+        IFinanceTransactionRepository FinanceTransactions { get; }
+        IBudgetRepository Budgets { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

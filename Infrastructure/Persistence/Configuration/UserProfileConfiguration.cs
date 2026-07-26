@@ -19,6 +19,11 @@ namespace Infrastructure.Persistence.Configuration
                 .HasDefaultValue("Etc/UTC")
                 .HasMaxLength(100);
 
+            builder.Property(p => p.Currency)
+                .IsRequired()
+                .HasDefaultValue("USD")
+                .HasMaxLength(3);
+
             builder.Property(p => p.Nickname)
                 .IsRequired(true)
                 .HasMaxLength(30);

@@ -301,6 +301,776 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Models.Budget", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("LimitAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserProfileId", "CategoryId", "Period", "Year", "Month")
+                        .IsUnique()
+                        .HasFilter("[CategoryId] IS NOT NULL AND [Month] IS NOT NULL");
+
+                    b.ToTable("Budgets", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.FinanceCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsSavings")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsSystem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("ParentCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentCategoryId");
+
+                    b.HasIndex("UserProfileId", "ParentCategoryId");
+
+                    b.ToTable("FinanceCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "#1987EE",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "home-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Mieszkanie",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "#F59E0B",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "car-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Transport",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "heart-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Życie i Zdrowie",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "#8B5CF6",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "school-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Rozwój i Edukacja",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Color = "#EC4899",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "game-controller-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Rozrywka i Inne",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Color = "#14B8A6",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "trending-up-outline",
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "Finanse i Oszczędności",
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 50,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "briefcase-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Wynagrodzenie",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 51,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "gift-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Premia / Bonus",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "business-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Działalność gosp.",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 53,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "laptop-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Freelance",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 54,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "wallet-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Dochód pasywny",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 55,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "shield-checkmark-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Świadczenia",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 56,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "receipt-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Zwrot podatku",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 57,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "ellipsis-horizontal-outline",
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Inne",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 101,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Czynsz / Rata kredytu",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 102,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Czynsz administracyjny",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 103,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Prąd",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 104,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Woda i ścieki",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 105,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Gaz",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 106,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Ogrzewanie",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 107,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Wywóz nieczystości",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 108,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Internet / Wi-Fi",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 109,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Telewizja",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 110,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Ubezpieczenie nieruchomości",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 111,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Serwis / Naprawy domowe",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 112,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Środki czystości",
+                            ParentCategoryId = 1,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 113,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Paliwo",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 114,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Rata kredytu / leasingu",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 115,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Ubezpieczenie OC/AC",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 116,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Przegląd / Serwis",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 117,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Opony",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 118,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Komunikacja miejska / PKP",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 119,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Taxi / Uber / Bolt",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 120,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Parkingi / Autostrady",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 121,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Akcesoria samochodowe",
+                            ParentCategoryId = 2,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 122,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Zakupy spożywcze",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 123,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Jedzenie na mieście",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 124,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Wizyty lekarskie",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 125,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Leki i suplementy",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 126,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Dentysta",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 127,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Siłownia / Karnet sportowy",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 128,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Kosmetyczka / Fryzjer",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 129,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Odzież i obuwie",
+                            ParentCategoryId = 3,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 130,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Czesne",
+                            ParentCategoryId = 4,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 131,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Kursy online / Szkolenia",
+                            ParentCategoryId = 4,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 132,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Książki / E-booki",
+                            ParentCategoryId = 4,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 133,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Subskrypcje edukacyjne",
+                            ParentCategoryId = 4,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 134,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Sprzęt edukacyjny",
+                            ParentCategoryId = 4,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 135,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Streaming (Netflix, Spotify...)",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 136,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Kino / Teatr / Koncerty",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 137,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Hobby i akcesoria",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 138,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Zwierzęta",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 139,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Dzieci",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 140,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Prezenty",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 141,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Wyjścia ze znajomymi",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 142,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = false,
+                            IsSystem = true,
+                            Name = "Nieprzewidziane wydatki",
+                            ParentCategoryId = 5,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 143,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "Poduszka finansowa",
+                            ParentCategoryId = 6,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 144,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "IKE / IKZE",
+                            ParentCategoryId = 6,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 145,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "Inwestycje (ETF / Giełda)",
+                            ParentCategoryId = 6,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 146,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "Oszczędności celowe",
+                            ParentCategoryId = 6,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 147,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsSavings = true,
+                            IsSystem = true,
+                            Name = "Spłata długów",
+                            ParentCategoryId = 6,
+                            Type = 1
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Models.FinanceTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateOnly>("OccurredOn")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserProfileId", "OccurredOn");
+
+                    b.HasIndex("UserProfileId", "CategoryId", "OccurredOn");
+
+                    b.ToTable("FinanceTransactions", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.FriendInvitation", b =>
                 {
                     b.Property<int>("Id")
@@ -1154,6 +1924,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)")
+                        .HasDefaultValue("USD");
+
                     b.Property<string>("CurrentAvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -1284,6 +2061,59 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("SourceItem");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.Budget", b =>
+                {
+                    b.HasOne("Domain.Models.FinanceCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("Budgets")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.FinanceCategory", b =>
+                {
+                    b.HasOne("Domain.Models.FinanceCategory", "ParentCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("FinanceCategories")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ParentCategory");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.FinanceTransaction", b =>
+                {
+                    b.HasOne("Domain.Models.FinanceCategory", "Category")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("FinanceTransactions")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("UserProfile");
                 });
@@ -1531,6 +2361,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserProfile_Badges");
                 });
 
+            modelBuilder.Entity("Domain.Models.FinanceCategory", b =>
+                {
+                    b.Navigation("SubCategories");
+
+                    b.Navigation("Transactions");
+                });
+
             modelBuilder.Entity("Domain.Models.Quest", b =>
                 {
                     b.Navigation("MonthlyQuest_Days");
@@ -1563,6 +2400,12 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
                     b.Navigation("ActiveUserEffects");
+
+                    b.Navigation("Budgets");
+
+                    b.Navigation("FinanceCategories");
+
+                    b.Navigation("FinanceTransactions");
 
                     b.Navigation("FriendshipsAsUser1");
 

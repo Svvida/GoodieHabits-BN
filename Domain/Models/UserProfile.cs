@@ -18,6 +18,8 @@ namespace Domain.Models
         public string? Bio { get; set; }
         public int TotalXp { get; set; } = 0;
         public int Coins { get; set; } = 0;
+        // Finance
+        public string Currency { get; private set; } = "USD";
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int CompletedDailyQuests { get; set; } = 0;
@@ -50,6 +52,9 @@ namespace Domain.Models
         public ICollection<Friendship> FriendshipsAsUser2 { get; private set; } = [];
         public ICollection<UserInventory> InventoryItems { get; private set; } = [];
         public ICollection<ActiveUserEffect> ActiveUserEffects { get; private set; } = [];
+        public ICollection<FinanceCategory> FinanceCategories { get; private set; } = [];
+        public ICollection<FinanceTransaction> FinanceTransactions { get; private set; } = [];
+        public ICollection<Budget> Budgets { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
@@ -104,6 +109,16 @@ namespace Domain.Models
             FriendshipsAsUser2.Clear();
             InventoryItems.Clear();
             ActiveUserEffects.Clear();
+            FinanceCategories.Clear();
+            FinanceTransactions.Clear();
+            Budgets.Clear();
+        }
+
+        public void UpdateCurrency(string currency)
+        {
+            if (!SupportedCurrencies.IsSupported(currency))
+                throw new InvalidArgumentException($"Currency '{currency}' is not supported.");
+            Currency = currency.Trim().ToUpperInvariant();
         }
 
         public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards, QuestTypeEnum questType)
