@@ -26,8 +26,8 @@ namespace Application.Finance.Analytics.Queries.GetMonthlySummary
             var income = transactions.Where(t => t.Type == FinanceTransactionTypeEnum.Income).ToList();
             var expense = transactions.Where(t => t.Type == FinanceTransactionTypeEnum.Expense).ToList();
 
-            var totalIncome = income.Sum(t => t.Amount);
-            var totalExpense = expense.Sum(t => t.Amount);
+            var totalIncome = income.Sum(t => t.NetAmount);
+            var totalExpense = expense.Sum(t => t.NetAmount);
 
             return new MonthlySummaryDto
             {

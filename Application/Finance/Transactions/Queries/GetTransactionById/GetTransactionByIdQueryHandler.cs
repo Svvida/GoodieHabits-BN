@@ -12,7 +12,7 @@ namespace Application.Finance.Transactions.Queries.GetTransactionById
         public async Task<TransactionDto> Handle(GetTransactionByIdQuery request, CancellationToken cancellationToken)
         {
             var transaction = await unitOfWork.FinanceTransactions
-                .GetOwnedByIdAsync(request.TransactionId, request.UserProfileId, true, cancellationToken).ConfigureAwait(false)
+                .GetOwnedWithCorrectionsAsync(request.TransactionId, request.UserProfileId, true, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Transaction with ID {request.TransactionId} not found.");
 
             return mapper.Map<TransactionDto>(transaction);

@@ -28,8 +28,8 @@ namespace Application.Finance.Analytics.Queries.GetSpendingTrend
                     .Where(t => t.OccurredOn.Year == monthDate.Year && t.OccurredOn.Month == monthDate.Month)
                     .ToList();
 
-                var income = monthTxns.Where(t => t.Type == FinanceTransactionTypeEnum.Income).Sum(t => t.Amount);
-                var expense = monthTxns.Where(t => t.Type == FinanceTransactionTypeEnum.Expense).Sum(t => t.Amount);
+                var income = monthTxns.Where(t => t.Type == FinanceTransactionTypeEnum.Income).Sum(t => t.NetAmount);
+                var expense = monthTxns.Where(t => t.Type == FinanceTransactionTypeEnum.Expense).Sum(t => t.NetAmount);
 
                 points.Add(new SpendingTrendPointDto
                 {

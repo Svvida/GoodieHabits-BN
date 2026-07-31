@@ -8,12 +8,13 @@ namespace Application.Finance.Analytics.Common
         /// <summary>
         /// Groups transactions by their assigned category and computes each category's amount and its
         /// share of the group total. Category names/parents are resolved from the provided lookup.
+        /// Sums <c>NetAmount</c>: what came back via corrections was never really spent or earned.
         /// </summary>
         public static List<CategoryBreakdownItemDto> BuildBreakdown(
             IReadOnlyCollection<FinanceTransaction> transactions,
             IReadOnlyDictionary<int, FinanceCategory> categoriesById)
         {
-            var total = transactions.Sum(t => t.Amount);
+            var total = transactions.Sum(t => t.NetAmount);
 
             return transactions
                 .GroupBy(t => t.CategoryId)
@@ -22,7 +23,7 @@ namespace Application.Finance.Analytics.Common
                     FinanceCategory? category =
                         group.Key is int id && categoriesById.TryGetValue(id, out var found) ? found : null;
 
-                    var amount = group.Sum(t => t.Amount);
+                    var amount = group.Sum(t => t.NetAmount);
 
                     return new CategoryBreakdownItemDto
                     {

@@ -13,12 +13,22 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.HasIndex(t => new { t.UserProfileId, t.OccurredOn });
             builder.HasIndex(t => new { t.UserProfileId, t.CategoryId, t.OccurredOn });
+            builder.HasIndex(t => t.CorrectsTransactionId);
+
+            // Computed from Amount and CorrectedAmount — never stored.
+            builder.Ignore(t => t.NetAmount);
+            builder.Ignore(t => t.IsCorrection);
 
             builder.Property(t => t.Type)
                 .IsRequired();
 
             builder.Property(t => t.Amount)
                 .HasPrecision(18, 2)
+                .IsRequired();
+
+            builder.Property(t => t.CorrectedAmount)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m)
                 .IsRequired();
 
             builder.Property(t => t.OccurredOn)
@@ -38,6 +48,14 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)
                 .HasForeignKey(t => t.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Self-reference: a correction points at the transaction it corrects. Restrict, same posture as
+            // FinanceCategory.ParentCategoryId — the application layer removes corrections first and returns a
+            // friendly error rather than letting the database cascade.
+            builder.HasMany(t => t.Corrections)
+                .WithOne(t => t.CorrectsTransaction)
+                .HasForeignKey(t => t.CorrectsTransactionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

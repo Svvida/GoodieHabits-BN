@@ -30,8 +30,8 @@ namespace Application.Finance.Analytics.Queries.GetYearlySummary
             var months = new List<MonthlyTotalsDto>(12);
             for (var month = 1; month <= 12; month++)
             {
-                var monthIncome = income.Where(t => t.OccurredOn.Month == month).Sum(t => t.Amount);
-                var monthExpense = expense.Where(t => t.OccurredOn.Month == month).Sum(t => t.Amount);
+                var monthIncome = income.Where(t => t.OccurredOn.Month == month).Sum(t => t.NetAmount);
+                var monthExpense = expense.Where(t => t.OccurredOn.Month == month).Sum(t => t.NetAmount);
                 months.Add(new MonthlyTotalsDto
                 {
                     Month = month,
@@ -41,8 +41,8 @@ namespace Application.Finance.Analytics.Queries.GetYearlySummary
                 });
             }
 
-            var totalIncome = income.Sum(t => t.Amount);
-            var totalExpense = expense.Sum(t => t.Amount);
+            var totalIncome = income.Sum(t => t.NetAmount);
+            var totalExpense = expense.Sum(t => t.NetAmount);
 
             return new YearlySummaryDto
             {

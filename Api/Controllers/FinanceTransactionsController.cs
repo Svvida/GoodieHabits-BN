@@ -1,5 +1,6 @@
 using Api.Helpers;
 using Application.Common.Dtos;
+using Application.Finance.Transactions.Commands.AddCorrection;
 using Application.Finance.Transactions.Commands.CreateTransaction;
 using Application.Finance.Transactions.Commands.DeleteTransaction;
 using Application.Finance.Transactions.Commands.UpdateTransaction;
@@ -56,6 +57,22 @@ namespace Api.Controllers
             int id, [FromBody] UpdateTransactionRequest request, CancellationToken cancellationToken = default)
         {
             var command = mapper.Map<UpdateTransactionCommand>(request) with
+            {
+                TransactionId = id,
+                UserProfileId = User.GetCurrentUserProfileId()
+            };
+            return Ok(await sender.Send(command, cancellationToken).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Records money coming back against a transaction (refund, payback, reimbursement). Returns the
+        /// corrected transaction with its refreshed net amount and the new correction embedded.
+        /// </summary>
+        [HttpPost("{id:int}/corrections")]
+        public async Task<ActionResult<TransactionDto>> AddCorrectionAsync(
+            int id, [FromBody] AddCorrectionRequest request, CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<AddCorrectionCommand>(request) with
             {
                 TransactionId = id,
                 UserProfileId = User.GetCurrentUserProfileId()

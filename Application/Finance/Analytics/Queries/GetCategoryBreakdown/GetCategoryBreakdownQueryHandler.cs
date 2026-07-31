@@ -28,7 +28,7 @@ namespace Application.Finance.Analytics.Queries.GetCategoryBreakdown
                 Year = request.Year,
                 Month = request.Month,
                 Currency = profile?.Currency ?? "USD",
-                Total = transactions.Sum(t => t.Amount),
+                Total = transactions.Sum(t => t.NetAmount),
                 Items = FinanceAnalyticsHelper.BuildBreakdown(transactions, categoriesById),
             };
         }

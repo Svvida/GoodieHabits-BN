@@ -34,7 +34,7 @@ namespace Application.Finance.Analytics.Queries.GetBudgetProgress
                 var spent = expenses
                     .Where(t => t.OccurredOn >= start && t.OccurredOn <= end)
                     .Where(t => budget.CategoryId == null || t.CategoryId == budget.CategoryId)
-                    .Sum(t => t.Amount);
+                    .Sum(t => t.NetAmount);
 
                 var progress = BudgetProgressCalculator.Calculate(budget.LimitAmount, spent);
 

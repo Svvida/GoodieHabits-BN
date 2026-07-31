@@ -11,8 +11,22 @@ namespace Application.Finance.Transactions.Commands.DeleteTransaction
         {
             // Owned lookup ensures a user can only hard-delete their own transaction.
             var transaction = await unitOfWork.FinanceTransactions
-                .GetOwnedByIdAsync(request.TransactionId, request.UserProfileId, false, cancellationToken).ConfigureAwait(false)
+                .GetOwnedWithCorrectionsAsync(request.TransactionId, request.UserProfileId, false, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Transaction with ID {request.TransactionId} not found.");
+
+            if (transaction.IsCorrection)
+            {
+                // Give the money back to the parent's net figure before the row disappears.
+                var parent = await unitOfWork.FinanceTransactions
+                    .GetOwnedByIdAsync(transaction.CorrectsTransactionId!.Value, request.UserProfileId, false, cancellationToken).ConfigureAwait(false);
+
+                parent?.RevertCorrection(transaction.Amount);
+            }
+            else if (transaction.Corrections.Count > 0)
+            {
+                // The self-FK is Restrict, so the corrections have to go in the same unit of work.
+                unitOfWork.FinanceTransactions.RemoveRange(transaction.Corrections);
+            }
 
             unitOfWork.FinanceTransactions.Remove(transaction);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

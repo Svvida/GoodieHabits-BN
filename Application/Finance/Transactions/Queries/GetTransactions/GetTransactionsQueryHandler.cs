@@ -25,6 +25,24 @@ namespace Application.Finance.Transactions.Queries.GetTransactions
 
             var dtos = items.Select(mapper.Map<TransactionDto>).ToList();
 
+            // Corrections are excluded from the page itself and attached to their parent here — a correction may
+            // fall outside the requested filter (a different month, typically) and must still travel with it.
+            var corrections = await unitOfWork.FinanceTransactions
+                .GetCorrectionsForParentsAsync(items.Select(t => t.Id), cancellationToken).ConfigureAwait(false);
+
+            if (corrections.Count > 0)
+            {
+                var byParent = corrections
+                    .GroupBy(c => c.CorrectsTransactionId!.Value)
+                    .ToDictionary(group => group.Key, group => group.Select(mapper.Map<TransactionDto>).ToList());
+
+                foreach (var dto in dtos)
+                {
+                    if (byParent.TryGetValue(dto.Id, out var parentCorrections))
+                        dto.Corrections = parentCorrections;
+                }
+            }
+
             return new PagedResult<TransactionDto>(dtos, request.Page, request.PageSize, totalCount);
         }
     }
