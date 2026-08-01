@@ -71,9 +71,14 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<UserProfile>> GetProfilesWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
         {
+            // EndDate is a calendar date, so it is only a loose pre-filter here (widened by a day to
+            // cover local-vs-UTC date skew); Quest.ResetCompletedStatus re-checks against the user's
+            // real local date. NextResetAt is a genuine instant and is compared exactly.
+            var earliestEndDate = DateOnly.FromDateTime(nowUtc).AddDays(-1);
+
             return await _context.UserProfiles
-                .Include(a => a.Quests.Where(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
-                .Where(a => a.Quests.Any(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateTime.MaxValue) > nowUtc)))
+                .Include(a => a.Quests.Where(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateOnly.MaxValue) >= earliestEndDate)))
+                .Where(a => a.Quests.Any(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateOnly.MaxValue) >= earliestEndDate)))
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

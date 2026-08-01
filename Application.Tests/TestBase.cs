@@ -49,11 +49,16 @@ namespace Application.Tests
             _unitOfWork = new UnitOfWork(_context);
 
             _urlBuilderMock = new Mock<IUrlBuilder>();
-            // (Optional but good practice) Set up a default behavior for the mock
-            _urlBuilderMock.Setup(b => b.BuildThumbnailAvatarUrl(It.IsAny<string>()))
-                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
-            _urlBuilderMock.Setup(b => b.BuildProfilePageAvatarUrl(It.IsAny<string>()))
-                           .Returns((string publicId) => string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}");
+            // Every IUrlBuilder method needs a stub: an un-stubbed one silently returns null, which
+            // surfaces as a null URL in a mapped DTO rather than as an obvious mocking failure.
+            static string BuildMockUrl(string publicId) =>
+                string.IsNullOrEmpty(publicId) ? string.Empty : $"mock_url_for_{publicId}";
+
+            _urlBuilderMock.Setup(b => b.BuildThumbnailAvatarUrl(It.IsAny<string>())).Returns(BuildMockUrl);
+            _urlBuilderMock.Setup(b => b.BuildProfilePageAvatarUrl(It.IsAny<string>())).Returns(BuildMockUrl);
+            _urlBuilderMock.Setup(b => b.BuildShopItemThumbnailUrl(It.IsAny<string>())).Returns(BuildMockUrl);
+            _urlBuilderMock.Setup(b => b.BuildCosmeticUrl(It.IsAny<string>())).Returns(BuildMockUrl);
+            _urlBuilderMock.Setup(b => b.BuildPetUrl(It.IsAny<string>())).Returns(BuildMockUrl);
 
             _levelCalculatorMock = new Mock<ILevelCalculator>();
             _levelCalculatorMock

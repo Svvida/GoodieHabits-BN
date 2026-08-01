@@ -39,7 +39,7 @@ namespace Application.Quests.Commands.UpdateQuest
             var now = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
             if (quest.IsRepeatable())
             {
-                quest.SetNextResetAt();
+                quest.SetNextResetAt(now);
                 quest.GenerateMissingOccurrences(now);
             }
 

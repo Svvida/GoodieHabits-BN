@@ -1,12 +1,13 @@
 ﻿using Application.Quests.Commands.CreateQuest;
 using Domain.Interfaces;
 using FluentValidation;
+using NodaTime;
 
 namespace Application.Quests.Commands.CreateQuest.Validators
 {
     public class CreateMonthlyQuestCommandValidator : CreateQuestCommandValidator<CreateMonthlyQuestCommand>
     {
-        public CreateMonthlyQuestCommandValidator(IUnitOfWork unitOfWork) : base(unitOfWork)
+        public CreateMonthlyQuestCommandValidator(IUnitOfWork unitOfWork, IClock clock) : base(unitOfWork, clock)
         {
             RuleFor(x => x.StartDay)
                 .NotNull()

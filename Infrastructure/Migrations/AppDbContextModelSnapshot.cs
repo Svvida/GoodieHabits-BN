@@ -1242,8 +1242,8 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("NVARCHAR");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
 
                     b.Property<bool>("IsCompleted")
                         .ValueGeneratedOnAdd()
@@ -1266,8 +1266,8 @@ namespace Infrastructure.Migrations
                     b.Property<TimeOnly?>("ScheduledTime")
                         .HasColumnType("time");
 
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1343,11 +1343,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("OccurrenceEnd")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsBackfilled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
-                    b.Property<DateTime>("OccurrenceStart")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
 
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
@@ -1361,11 +1366,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CompletedAt");
 
-                    b.HasIndex("OccurrenceStart");
-
                     b.HasIndex("QuestId");
 
-                    b.HasIndex("QuestId", "OccurrenceStart", "OccurrenceEnd")
+                    b.HasIndex("QuestId", "PeriodStart")
                         .IsUnique();
 
                     b.ToTable("QuestOccurrences", (string)null);

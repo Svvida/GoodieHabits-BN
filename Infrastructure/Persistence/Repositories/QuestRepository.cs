@@ -10,8 +10,7 @@ namespace Infrastructure.Persistence.Repositories
     {
         public async Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(
             int userProfileId,
-            DateTime todayStart,
-            DateTime todayEnd,
+            DateOnly today,
             WeekdayEnum userLocalWeekday,
             int userLocalDayOfMonth,
             SeasonEnum currentSeason,
@@ -22,31 +21,31 @@ namespace Infrastructure.Persistence.Repositories
                 .Where(q =>
                     // ONE TIME
                     q.QuestType == QuestTypeEnum.OneTime &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        (q.StartDate ?? DateOnly.MinValue) <= today &&
+                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
                         (q.StartDate.HasValue || q.EndDate.HasValue)
 
                     // DAILY
                     || q.QuestType == QuestTypeEnum.Daily &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart
+                        (q.StartDate ?? DateOnly.MinValue) <= today &&
+                        (q.EndDate ?? DateOnly.MaxValue) >= today
 
                     // WEEKLY
                     || q.QuestType == QuestTypeEnum.Weekly &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        (q.StartDate ?? DateOnly.MinValue) <= today &&
+                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
                         q.WeeklyQuest_Days.Any(wd => wd.Weekday == userLocalWeekday)
 
                     // MONTHLY
                     || q.QuestType == QuestTypeEnum.Monthly &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        (q.StartDate ?? DateOnly.MinValue) <= today &&
+                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
                         (q.MonthlyQuest_Days!.StartDay <= userLocalDayOfMonth && q.MonthlyQuest_Days.EndDay >= userLocalDayOfMonth)
 
                     // SEASONAL
                     || q.QuestType == QuestTypeEnum.Seasonal &&
-                        (q.StartDate ?? DateTime.MinValue) <= todayEnd &&
-                        (q.EndDate ?? DateTime.MaxValue) >= todayStart &&
+                        (q.StartDate ?? DateOnly.MinValue) <= today &&
+                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
                         q.SeasonalQuest_Season!.Season == currentSeason
                 )
                 .Include(q => q.Statistics)
@@ -143,7 +142,7 @@ namespace Infrastructure.Persistence.Repositories
                 .Where(q => q.Id == questId && q.QuestType == questType && q.UserProfileId == userProfileId);
 
             query = query
-                .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
+                .Include(q => q.QuestOccurrences)
                 .Include(q => q.UserProfile)
                 .Include(q => q.Quest_QuestLabels)
                     .ThenInclude(ql => ql.QuestLabel);
@@ -161,36 +160,43 @@ namespace Infrastructure.Persistence.Repositories
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(DateTime utcNow, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(DateOnly utcToday, CancellationToken cancellationToken = default)
         {
+            // Bounds are widened by a day on each side because each user's local "today" may differ
+            // from the server's UTC date; the domain re-checks the real local date per quest.
             return await _context.Quests
                 .Where(q => q.QuestType == QuestTypeEnum.Daily ||
                             q.QuestType == QuestTypeEnum.Weekly ||
                             q.QuestType == QuestTypeEnum.Monthly)
-                .Where(q => (q.EndDate ?? DateTime.MaxValue) > utcNow && (q.StartDate ?? DateTime.MinValue) <= utcNow)
+                .Where(q => (q.EndDate ?? DateOnly.MaxValue) >= utcToday.AddDays(-1) &&
+                            (q.StartDate ?? DateOnly.MinValue) <= utcToday.AddDays(1))
+                .Include(q => q.UserProfile)
                 .Include(q => q.Statistics)
                 .Include(q => q.QuestOccurrences)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForOccurrencesProcessingAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+
+        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForOccurrencesProcessingAsync(DateOnly utcToday, CancellationToken cancellationToken = default)
         {
             var query =
                 from quest in _context.Quests
-                let latestOccurrenceEnd = _context.QuestOccurrences
+                let latestPeriodEnd = _context.QuestOccurrences
                     .Where(qo => qo.QuestId == quest.Id)
-                    .Max(qo => (DateTime?)qo.OccurrenceEnd)
+                    .Max(qo => (DateOnly?)qo.PeriodEnd)
                 where quest.QuestType == QuestTypeEnum.Daily ||
                       quest.QuestType == QuestTypeEnum.Weekly ||
                       quest.QuestType == QuestTypeEnum.Monthly
-                where (quest.EndDate ?? DateTime.MaxValue) >= nowUtc &&
-                      (quest.StartDate ?? DateTime.MinValue) <= nowUtc
-                where latestOccurrenceEnd == null || latestOccurrenceEnd < nowUtc
+                where (quest.EndDate ?? DateOnly.MaxValue) >= utcToday.AddDays(-1) &&
+                      (quest.StartDate ?? DateOnly.MinValue) <= utcToday.AddDays(1)
+                where latestPeriodEnd == null || latestPeriodEnd < utcToday.AddDays(1)
                 select quest;
 
             return await query
                 .Include(q => q.UserProfile)
-                .Include(q => q.QuestOccurrences.OrderByDescending(qo => qo.OccurrenceEnd).Take(1))
+                // All occurrences, not just the latest: generation dedupes against this collection in
+                // memory, and a partial load would let it emit rows that collide with the unique index.
+                .Include(q => q.QuestOccurrences)
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)
                 .ToListAsync(cancellationToken)
@@ -209,7 +215,7 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int userProfileId, DateTime now, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Quest>> GetQuestEligibleForGoalAsync(int userProfileId, DateOnly today, CancellationToken cancellationToken = default)
         {
             var activeUserGoalsIds = await _context.UserGoals
                 .Where(g => g.UserProfileId == userProfileId && !g.IsExpired)
@@ -221,7 +227,7 @@ namespace Infrastructure.Persistence.Repositories
             return await _context.Quests
                 .Where(q => q.UserProfileId == userProfileId &&
                             !q.IsCompleted &&
-                            (q.EndDate ?? DateTime.MaxValue) > now &&
+                            (q.EndDate ?? DateOnly.MaxValue) >= today &&
                             !activeUserGoalsIds.Contains(q.Id))
                 .Include(q => q.WeeklyQuest_Days)
                 .Include(q => q.MonthlyQuest_Days)

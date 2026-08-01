@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using NodaTime;
@@ -6,82 +6,78 @@ using NodaTime.Extensions;
 
 namespace Domain.Calculators
 {
+    /// <summary>
+    /// Works out when a repeatable quest's completed flag should next be cleared.
+    /// <para>
+    /// Unlike occurrence periods, this genuinely *is* an instant — it is the moment the background
+    /// reset job should act — so it stays a UTC <see cref="DateTime"/>. The date arithmetic is done on
+    /// the user's local calendar and converted to UTC exactly once, at the end.
+    /// </para>
+    /// </summary>
     public static class NextResetDateCalculator
     {
-        public static DateTime? Calculate(Quest quest)
+        public static DateTime? Calculate(Quest quest, DateTime nowUtc)
         {
-            Instant nowUtc = SystemClock.Instance.GetCurrentInstant();
-            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone]
+            DateTimeZone userTimeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(quest.UserProfile.TimeZone)
                 ?? throw new InvalidArgumentException("Invalid time zone during next reset date calculation.");
 
-            ZonedDateTime nowLocal = nowUtc.InZone(userTimeZone);
+            LocalDate todayLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc))
+                .InZone(userTimeZone)
+                .Date;
 
-            return quest.QuestType switch
+            LocalDate? nextResetLocal = quest.QuestType switch
             {
-                QuestTypeEnum.Daily => CalculateDaily(quest, nowLocal, userTimeZone),
-                QuestTypeEnum.Weekly => CalculateWeekly(quest, nowLocal, userTimeZone),
-                QuestTypeEnum.Monthly => CalculateMonthly(quest, nowLocal, userTimeZone),
+                QuestTypeEnum.Daily => todayLocal.PlusDays(1),
+                QuestTypeEnum.Weekly => CalculateWeekly(quest, todayLocal),
+                QuestTypeEnum.Monthly => CalculateMonthly(quest, todayLocal),
                 _ => null,
             };
-        }
 
-        private static DateTime? CalculateDaily(Quest quest, ZonedDateTime nowLocal, DateTimeZone userTimeZone)
-        {
-            LocalDateTime nextResetLocal = nowLocal.Date.PlusDays(1).AtMidnight();
-            DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
-            if (quest.EndDate.HasValue && nextResetUtc >= quest.EndDate)
+            if (nextResetLocal is null)
                 return null;
-            return nextResetUtc;
+
+            var nextResetDate = new DateOnly(nextResetLocal.Value.Year, nextResetLocal.Value.Month, nextResetLocal.Value.Day);
+            if (quest.EndDate.HasValue && nextResetDate > quest.EndDate.Value)
+                return null;
+
+            return nextResetLocal.Value.AtMidnight().InZoneLeniently(userTimeZone).ToDateTimeUtc();
         }
 
-        private static DateTime? CalculateWeekly(Quest quest, ZonedDateTime nowLocal, DateTimeZone userTimeZone)
+        private static LocalDate? CalculateWeekly(Quest quest, LocalDate todayLocal)
         {
-            // Select all available days for the quest and order them by day of the week
-            var availableDays = quest.WeeklyQuest_Days.Select(wqd => (DayOfWeek)wqd.Weekday).OrderBy(wd => wd).ToList();
+            // Ordered on the same numbering as System.DayOfWeek (Sunday = 0).
+            var availableDays = quest.WeeklyQuest_Days
+                .Select(wqd => (int)wqd.Weekday)
+                .OrderBy(wd => wd)
+                .ToList();
 
-            // Should never happen because the quest should have at least one day
+            // Should never happen — a weekly quest always has at least one day.
             if (availableDays.Count == 0)
                 return null;
 
-            DayOfWeek currentDay = nowLocal.DayOfWeek.ToDayOfWeek();
-            DayOfWeek? nextResetDay = availableDays.FirstOrDefault(wd => wd > currentDay);
+            int currentDay = (int)todayLocal.DayOfWeek.ToDayOfWeek();
 
-            // If there is no future day, wrap around to the first available day
-            if (!availableDays.Any(wd => wd > currentDay))
-                nextResetDay = availableDays.First();
+            int daysUntilNextReset = availableDays
+                .Select(day => (day - currentDay + 7) % 7)
+                .Where(offset => offset > 0)
+                .DefaultIfEmpty(7)
+                .Min();
 
-            // Calculate the number of days until the next reset day and make sure it is not negative number
-            int daysUntilNextReset = ((int)nextResetDay - (int)currentDay + 7) % 7;
-            // If the next reset day is the same as the current day, the quest will reset in 7 days
-            if (daysUntilNextReset == 0)
-                daysUntilNextReset = 7;
-
-            LocalDateTime nextResetLocal = nowLocal.Date.PlusDays(daysUntilNextReset).AtMidnight();
-            DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
-
-            if (quest.EndDate.HasValue && nextResetUtc >= quest.EndDate)
-                return null;
-
-            return nextResetUtc;
+            return todayLocal.PlusDays(daysUntilNextReset);
         }
 
-        private static DateTime? CalculateMonthly(Quest quest, ZonedDateTime nowLocal, DateTimeZone userTimeZone)
+        private static LocalDate CalculateMonthly(Quest quest, LocalDate todayLocal)
         {
-            YearMonth nextResetMonth = nowLocal.Date.PlusMonths(1).ToYearMonth();
+            var nextResetMonth = todayLocal.PlusMonths(1);
 
             int startDay = quest.MonthlyQuest_Days!.StartDay;
-            int lastDayOfMonth = nextResetMonth.ToDateInterval().End.Day;
+            int lastDayOfMonth = CalendarSystem.Iso.GetDaysInMonth(nextResetMonth.Year, nextResetMonth.Month);
 
+            // Clamp so e.g. "the 31st" still resets in a short month.
             if (startDay > lastDayOfMonth)
-                startDay = lastDayOfMonth; // If the start day is greater than the last day of the month, set it to the last day of the month
+                startDay = lastDayOfMonth;
 
-            LocalDateTime nextResetLocal = nextResetMonth.OnDayOfMonth(startDay).AtMidnight();
-            DateTime nextResetUtc = nextResetLocal.InZoneLeniently(userTimeZone).WithZone(DateTimeZone.Utc).ToDateTimeUtc();
-
-            if (quest.EndDate.HasValue && nextResetUtc >= quest.EndDate)
-                return null;
-
-            return nextResetUtc;
+            return new LocalDate(nextResetMonth.Year, nextResetMonth.Month, startDay);
         }
     }
 }

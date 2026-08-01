@@ -240,12 +240,30 @@ namespace Domain.Models
             return expiredCount;
         }
 
+        /// <summary>
+        /// Projects a UTC instant onto this user's local calendar date. This is the single place
+        /// where "what day is it for this user" is decided — quest occurrence periods are calendar
+        /// facts, so every period boundary is derived through here.
+        /// </summary>
+        public DateOnly LocalDateOn(DateTime instantUtc)
+        {
+            var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(TimeZone)
+                ?? throw new Exceptions.InvalidTimeZoneException(Id, TimeZone);
+
+            var localDate = Instant.FromDateTimeUtc(DateTime.SpecifyKind(instantUtc, DateTimeKind.Utc))
+                .InZone(zone)
+                .Date;
+
+            return new DateOnly(localDate.Year, localDate.Month, localDate.Day);
+        }
+
         public int ResetQuests(DateTime nowUtc)
         {
             int resetCount = 0;
+            var today = LocalDateOn(nowUtc);
             foreach (var quest in Quests)
             {
-                if (quest.ResetCompletedStatus(nowUtc))
+                if (quest.ResetCompletedStatus(nowUtc, today))
                     resetCount++;
             }
             DecrementCompletedQuestsAfterReset(resetCount);

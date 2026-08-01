@@ -8,8 +8,8 @@ namespace Application.Quests.Commands.UpdateQuest
     {
         public string Title { get; init; } = null!;
         public string? Description { get; init; } = null;
-        public DateTime? StartDate { get; init; } = null;
-        public DateTime? EndDate { get; init; } = null;
+        public DateOnly? StartDate { get; init; } = null;
+        public DateOnly? EndDate { get; init; } = null;
         public string? Emoji { get; init; } = null;
         public string? Priority { get; init; } = null;
         public string? Difficulty { get; init; } = null;

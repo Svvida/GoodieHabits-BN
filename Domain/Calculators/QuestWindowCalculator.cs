@@ -1,103 +1,77 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Models;
 using Domain.ValueObjects;
-using NodaTime;
 
 namespace Domain.Calculators
 {
+    /// <summary>
+    /// Generates the local calendar periods a repeatable quest should own occurrences for.
+    /// <para>
+    /// This is pure calendar arithmetic — no timezone conversion happens here. The caller has already
+    /// resolved "which local day is it for this user" via <see cref="UserProfile.LocalDateOn"/>, which
+    /// is what makes occurrence periods stable when the user's timezone changes.
+    /// </para>
+    /// </summary>
     public static class QuestWindowCalculator
     {
-        public static IReadOnlyList<QuestOccurrenceWindow> GenerateWindows(Quest quest, DateTime fromUtc, DateTime toUtc)
+        public static IReadOnlyList<QuestOccurrenceWindow> GenerateWindows(Quest quest, DateOnly fromDate, DateOnly toDate)
         {
-            var userZone = DateTimeZoneProviders.Tzdb[quest.UserProfile.TimeZone];
+            if (toDate < fromDate)
+                return [];
 
             return quest.QuestType switch
             {
-                QuestTypeEnum.Daily => GenerateDailyWindows(fromUtc, toUtc, userZone),
-                QuestTypeEnum.Weekly => GenerateWeeklyWindows(quest, fromUtc, toUtc, userZone),
-                QuestTypeEnum.Monthly => GenerateMonthlyWindows(quest, fromUtc, toUtc, userZone),
+                QuestTypeEnum.Daily => GenerateDailyWindows(fromDate, toDate),
+                QuestTypeEnum.Weekly => GenerateWeeklyWindows(quest, fromDate, toDate),
+                QuestTypeEnum.Monthly => GenerateMonthlyWindows(quest, fromDate, toDate),
                 _ => []
             };
         }
 
-        private static IReadOnlyList<QuestOccurrenceWindow> GenerateDailyWindows(DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateDailyWindows(DateOnly fromDate, DateOnly toDate)
         {
             var windows = new List<QuestOccurrenceWindow>();
-            var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-            var toLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(toUtc, DateTimeKind.Utc)).InZone(userZone).Date;
 
-            for (var date = fromLocal; date <= toLocal; date = date.PlusDays(1))
-            {
-                var start = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                var end = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                windows.Add(new QuestOccurrenceWindow(start, end));
-            }
+            for (var date = fromDate; date <= toDate; date = date.AddDays(1))
+                windows.Add(new QuestOccurrenceWindow(date, date));
 
             return windows;
         }
 
-        private static IReadOnlyList<QuestOccurrenceWindow> GenerateWeeklyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateWeeklyWindows(Quest quest, DateOnly fromDate, DateOnly toDate)
         {
-            var windows = new List<QuestOccurrenceWindow>();
             var scheduledWeekdays = quest.WeeklyQuest_Days.Select(d => d.Weekday).ToHashSet();
+            var windows = new List<QuestOccurrenceWindow>();
 
-            var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-            var toLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(toUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-
-            for (var date = fromLocal; date <= toLocal; date = date.PlusDays(1))
+            for (var date = fromDate; date <= toDate; date = date.AddDays(1))
             {
-                var weekday = ToWeekDayEnum(date.DayOfWeek);
-                if (scheduledWeekdays.Contains(weekday))
-                {
-                    var start = date.AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    var end = date.PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                    windows.Add(new QuestOccurrenceWindow(start, end));
-                }
+                if (scheduledWeekdays.Contains((WeekdayEnum)date.DayOfWeek))
+                    windows.Add(new QuestOccurrenceWindow(date, date));
             }
 
             return windows;
         }
 
-        private static IReadOnlyList<QuestOccurrenceWindow> GenerateMonthlyWindows(Quest quest, DateTime fromUtc, DateTime toUtc, DateTimeZone userZone)
+        private static IReadOnlyList<QuestOccurrenceWindow> GenerateMonthlyWindows(Quest quest, DateOnly fromDate, DateOnly toDate)
         {
-            var windows = new List<QuestOccurrenceWindow>();
             var startDay = quest.MonthlyQuest_Days!.StartDay;
             var endDay = quest.MonthlyQuest_Days!.EndDay;
 
-            var fromLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).InZone(userZone).Date;
-            var toLocal = Instant.FromDateTimeUtc(DateTime.SpecifyKind(toUtc, DateTimeKind.Utc)).InZone(userZone).Date;
+            var windows = new List<QuestOccurrenceWindow>();
+            var lastMonth = new DateOnly(toDate.Year, toDate.Month, 1);
 
-            var startMonth = new YearMonth(fromLocal.Year, fromLocal.Month);
-            var endMonth = new YearMonth(toLocal.Year, toLocal.Month);
-
-            for (var ym = startMonth; ym <= endMonth; ym = ym.PlusMonths(1))
+            for (var month = new DateOnly(fromDate.Year, fromDate.Month, 1); month <= lastMonth; month = month.AddMonths(1))
             {
-                var daysInMonth = ym.ToDateInterval().End.Day;
-                var sDay = Math.Min(startDay, daysInMonth);
-                var eDay = Math.Min(endDay, daysInMonth);
+                // Clamp to the real length of the month so e.g. "the 31st" still yields a period in February.
+                var daysInMonth = DateTime.DaysInMonth(month.Year, month.Month);
+                var start = new DateOnly(month.Year, month.Month, Math.Min(startDay, daysInMonth));
+                var end = new DateOnly(month.Year, month.Month, Math.Min(endDay, daysInMonth));
 
-                var start = ym.OnDayOfMonth(sDay).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-                var end = ym.OnDayOfMonth(eDay).PlusDays(1).AtMidnight().InZoneLeniently(userZone).ToDateTimeUtc();
-
-                if (end > start)
+                if (end >= start)
                     windows.Add(new QuestOccurrenceWindow(start, end));
             }
 
             return windows;
-        }
-        private static WeekdayEnum ToWeekDayEnum(IsoDayOfWeek isoDayOfWeek)
-        {
-            return isoDayOfWeek switch
-            {
-                IsoDayOfWeek.Monday => WeekdayEnum.Monday,
-                IsoDayOfWeek.Tuesday => WeekdayEnum.Tuesday,
-                IsoDayOfWeek.Wednesday => WeekdayEnum.Wednesday,
-                IsoDayOfWeek.Thursday => WeekdayEnum.Thursday,
-                IsoDayOfWeek.Friday => WeekdayEnum.Friday,
-                IsoDayOfWeek.Saturday => WeekdayEnum.Saturday,
-                IsoDayOfWeek.Sunday => WeekdayEnum.Sunday,
-                _ => throw new ArgumentOutOfRangeException(nameof(isoDayOfWeek), isoDayOfWeek, null)
-            };
         }
     }
 }

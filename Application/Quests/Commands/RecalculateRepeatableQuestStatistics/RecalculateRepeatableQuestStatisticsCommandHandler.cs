@@ -9,7 +9,9 @@ namespace Application.Quests.Commands.RecalculateRepeatableQuestStatistics
         public async Task<int> Handle(RecalculateRepeatableQuestStatisticsCommand request, CancellationToken cancellationToken)
         {
             var utcNow = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            var quests = await unitOfWork.Quests.GetRepeatableQuestsForStatsProcessingAsync(utcNow, cancellationToken).ConfigureAwait(false);
+            var quests = await unitOfWork.Quests
+                .GetRepeatableQuestsForStatsProcessingAsync(DateOnly.FromDateTime(utcNow), cancellationToken)
+                .ConfigureAwait(false);
 
             if (!quests.Any())
                 return 0; // No quests to process
