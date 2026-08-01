@@ -14,6 +14,7 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasIndex(t => new { t.UserProfileId, t.OccurredOn });
             builder.HasIndex(t => new { t.UserProfileId, t.CategoryId, t.OccurredOn });
             builder.HasIndex(t => t.CorrectsTransactionId);
+            builder.HasIndex(t => t.RecurringTransactionId);
 
             // Computed from Amount and CorrectedAmount — never stored.
             builder.Ignore(t => t.NetAmount);
@@ -35,6 +36,11 @@ namespace Infrastructure.Persistence.Configuration
                 .HasColumnType("date")
                 .IsRequired();
 
+            // Existing rows are things that already happened, so they backfill to paid via the column default.
+            builder.Property(t => t.IsPaid)
+                .HasDefaultValue(true)
+                .IsRequired();
+
             builder.Property(t => t.Note)
                 .HasMaxLength(FinanceTransaction.NoteMaxLength);
 
@@ -48,6 +54,14 @@ namespace Infrastructure.Persistence.Configuration
             builder.HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)
                 .HasForeignKey(t => t.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Provenance link to the template that generated this row. Restrict, with the delete handler
+            // clearing the FK first: a materialized transaction is the user's own record and must outlive the
+            // template it came from.
+            builder.HasOne(t => t.RecurringTransaction)
+                .WithMany(r => r.Transactions)
+                .HasForeignKey(t => t.RecurringTransactionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Self-reference: a correction points at the transaction it corrects. Restrict, same posture as

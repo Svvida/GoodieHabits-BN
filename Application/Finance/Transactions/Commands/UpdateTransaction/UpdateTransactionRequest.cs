@@ -7,5 +7,6 @@ namespace Application.Finance.Transactions.Commands.UpdateTransaction
         decimal Amount,
         DateOnly OccurredOn,
         int? CategoryId,
-        string? Note);
+        string? Note,
+        bool? IsPaid = null);
 }

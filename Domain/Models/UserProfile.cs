@@ -55,6 +55,7 @@ namespace Domain.Models
         public ICollection<FinanceCategory> FinanceCategories { get; private set; } = [];
         public ICollection<FinanceTransaction> FinanceTransactions { get; private set; } = [];
         public ICollection<Budget> Budgets { get; private set; } = [];
+        public ICollection<RecurringTransaction> RecurringTransactions { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
@@ -112,6 +113,7 @@ namespace Domain.Models
             FinanceCategories.Clear();
             FinanceTransactions.Clear();
             Budgets.Clear();
+            RecurringTransactions.Clear();
         }
 
         public void UpdateCurrency(string currency)

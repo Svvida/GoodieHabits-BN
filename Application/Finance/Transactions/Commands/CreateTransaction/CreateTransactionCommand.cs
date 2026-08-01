@@ -10,5 +10,6 @@ namespace Application.Finance.Transactions.Commands.CreateTransaction
         DateOnly OccurredOn,
         int? CategoryId,
         string? Note,
+        bool? IsPaid,
         int UserProfileId) : ICommand<TransactionDto>;
 }

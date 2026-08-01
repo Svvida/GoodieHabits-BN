@@ -26,14 +26,24 @@ namespace Application.Finance.Analytics.Queries.GetBudgetProgress
                 .GetUserCategoryTreeAsync(request.UserProfileId, true, cancellationToken).ConfigureAwait(false);
             var categoriesById = categories.ToDictionary(c => c.Id);
 
+            // A budget on a main category covers everything filed under it, including its sub-categories —
+            // a "Mieszkanie" budget has to see the "Prąd" spending or it reads as permanently unspent. The tree
+            // is two levels deep, so one level of children is the whole story.
+            var subCategoryIdsByParent = categories
+                .Where(c => c.ParentCategoryId is not null)
+                .GroupBy(c => c.ParentCategoryId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(c => c.Id).ToHashSet());
+
             var result = new List<BudgetProgressItemDto>(budgets.Count);
             foreach (var budget in budgets)
             {
                 var (start, end) = FinancePeriodCalculator.ForPeriod(budget.Period, budget.Year, budget.Month);
 
+                var scope = ResolveScope(budget.CategoryId, subCategoryIdsByParent);
+
                 var spent = expenses
                     .Where(t => t.OccurredOn >= start && t.OccurredOn <= end)
-                    .Where(t => budget.CategoryId == null || t.CategoryId == budget.CategoryId)
+                    .Where(t => scope is null || (t.CategoryId is int categoryId && scope.Contains(categoryId)))
                     .Sum(t => t.NetAmount);
 
                 var progress = BudgetProgressCalculator.Calculate(budget.LimitAmount, spent);
@@ -55,6 +65,21 @@ namespace Application.Finance.Analytics.Queries.GetBudgetProgress
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// The category ids a budget's spending is drawn from: the budgeted category plus its sub-categories.
+        /// <c>null</c> means an overall budget, which is scoped to every expense regardless of category.
+        /// </summary>
+        private static HashSet<int>? ResolveScope(int? budgetCategoryId, Dictionary<int, HashSet<int>> subCategoryIdsByParent)
+        {
+            if (budgetCategoryId is not int categoryId)
+                return null;
+
+            if (!subCategoryIdsByParent.TryGetValue(categoryId, out var subCategoryIds))
+                return [categoryId];
+
+            return [categoryId, .. subCategoryIds];
         }
     }
 }

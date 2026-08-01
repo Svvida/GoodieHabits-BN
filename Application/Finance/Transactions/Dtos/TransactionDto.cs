@@ -11,6 +11,13 @@ namespace Application.Finance.Transactions.Dtos
         public DateOnly OccurredOn { get; set; }
         public string? Note { get; set; }
 
+        /// <summary>
+        /// Whether the money has moved yet. Descriptive only — an unpaid transaction is counted in every
+        /// aggregate exactly as if it were paid, including the opening balance. Always <c>true</c> on a
+        /// correction. Rows created from a recurring template start unpaid when they are expenses.
+        /// </summary>
+        public bool IsPaid { get; set; }
+
         /// <summary>Set when this row is a correction of another transaction; null for ordinary transactions.</summary>
         public int? CorrectsTransactionId { get; set; }
 

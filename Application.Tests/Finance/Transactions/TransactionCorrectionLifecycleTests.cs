@@ -38,7 +38,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, parent, correction) = await ArrangeCorrectedDinnerAsync();
 
             await _update.Handle(
-                new UpdateTransactionCommand(correction.Id, correction.Type, 120m, PaidBack, correction.CategoryId, null, profile.Id),
+                new UpdateTransactionCommand(correction.Id, correction.Type, 120m, PaidBack, correction.CategoryId, null, null, profile.Id),
                 CancellationToken.None);
 
             var reloaded = await _context.FinanceTransactions.SingleAsync(t => t.Id == parent.Id);
@@ -52,7 +52,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, _, correction) = await ArrangeCorrectedDinnerAsync();
 
             var act = () => _update.Handle(
-                new UpdateTransactionCommand(correction.Id, FinanceTransactionTypeEnum.Income, 300m, PaidBack, correction.CategoryId, null, profile.Id),
+                new UpdateTransactionCommand(correction.Id, FinanceTransactionTypeEnum.Income, 300m, PaidBack, correction.CategoryId, null, null, profile.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<ConflictException>();
@@ -64,7 +64,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, _, correction) = await ArrangeCorrectedDinnerAsync();
 
             var act = () => _update.Handle(
-                new UpdateTransactionCommand(correction.Id, correction.Type, 300m, PaidBack, 9002, null, profile.Id),
+                new UpdateTransactionCommand(correction.Id, correction.Type, 300m, PaidBack, 9002, null, null, profile.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<ConflictException>();
@@ -76,7 +76,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, _, correction) = await ArrangeCorrectedDinnerAsync();
 
             var result = await _update.Handle(
-                new UpdateTransactionCommand(correction.Id, correction.Type, 300m, new DateOnly(2026, 3, 1), correction.CategoryId, "note", profile.Id),
+                new UpdateTransactionCommand(correction.Id, correction.Type, 300m, new DateOnly(2026, 3, 1), correction.CategoryId, "note", null, profile.Id),
                 CancellationToken.None);
 
             result.Note.Should().Be("note");
@@ -89,7 +89,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, _, correction) = await ArrangeCorrectedDinnerAsync();
 
             var act = () => _update.Handle(
-                new UpdateTransactionCommand(correction.Id, correction.Type, 401m, PaidBack, correction.CategoryId, null, profile.Id),
+                new UpdateTransactionCommand(correction.Id, correction.Type, 401m, PaidBack, correction.CategoryId, null, null, profile.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<ConflictException>();
@@ -101,7 +101,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, parent, _) = await ArrangeCorrectedDinnerAsync();
 
             var act = () => _update.Handle(
-                new UpdateTransactionCommand(parent.Id, FinanceTransactionTypeEnum.Income, 400m, Dinner, null, null, profile.Id),
+                new UpdateTransactionCommand(parent.Id, FinanceTransactionTypeEnum.Income, 400m, Dinner, null, null, null, profile.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<ConflictException>();
@@ -113,7 +113,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, parent, _) = await ArrangeCorrectedDinnerAsync();
 
             var act = () => _update.Handle(
-                new UpdateTransactionCommand(parent.Id, parent.Type, 250m, Dinner, parent.CategoryId, null, profile.Id),
+                new UpdateTransactionCommand(parent.Id, parent.Type, 250m, Dinner, parent.CategoryId, null, null, profile.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<ConflictException>();
@@ -125,7 +125,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, parent, correction) = await ArrangeCorrectedDinnerAsync();
 
             await _update.Handle(
-                new UpdateTransactionCommand(parent.Id, parent.Type, 400m, Dinner, null, null, profile.Id),
+                new UpdateTransactionCommand(parent.Id, parent.Type, 400m, Dinner, null, null, null, profile.Id),
                 CancellationToken.None);
 
             var reloaded = await _context.FinanceTransactions.SingleAsync(t => t.Id == correction.Id);

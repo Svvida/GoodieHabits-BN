@@ -28,6 +28,25 @@ namespace Domain.Models
         public DateOnly OccurredOn { get; private set; }
         public string? Note { get; private set; }
 
+        /// <summary>
+        /// Whether the money has actually moved yet — mainly meaningful for expenses dated today or later.
+        /// <para>
+        /// Deliberately <em>pure metadata</em>, exactly like <see cref="FinanceCategory.IsSavings"/>: an unpaid
+        /// transaction is aggregated as if it were already paid, so totals, breakdowns, budget progress, trend
+        /// and the opening balance all treat paid and unpaid alike. A logged-but-unpaid bill is money already
+        /// spoken for; excluding it would make the dashboard optimistic on precisely the days it needs to be
+        /// accurate. Presentation is the client's call.
+        /// </para>
+        /// </summary>
+        public bool IsPaid { get; private set; } = true;
+
+        /// <summary>
+        /// The recurring template that produced this row, or null when it was entered by hand. Provenance only
+        /// — a materialized row is an ordinary transaction in every other respect, and survives the template
+        /// being deleted (the delete handler clears this).
+        /// </summary>
+        public int? RecurringTransactionId { get; private set; }
+
         /// <summary>The transaction this one corrects, or null when this is an ordinary transaction.</summary>
         public int? CorrectsTransactionId { get; private set; }
 
@@ -44,6 +63,7 @@ namespace Domain.Models
 
         public UserProfile UserProfile { get; set; } = null!;
         public FinanceCategory? Category { get; set; }
+        public RecurringTransaction? RecurringTransaction { get; set; }
         public FinanceTransaction? CorrectsTransaction { get; set; }
         public ICollection<FinanceTransaction> Corrections { get; set; } = [];
 
@@ -56,6 +76,7 @@ namespace Domain.Models
             DateOnly occurredOn,
             int? categoryId,
             string? note,
+            bool isPaid = true,
             FinanceTransaction? correctsTransaction = null)
         {
             if (userProfileId <= 0)
@@ -70,6 +91,7 @@ namespace Domain.Models
             OccurredOn = occurredOn;
             CategoryId = categoryId;
             Note = note?.Trim();
+            IsPaid = isPaid;
 
             if (correctsTransaction is not null)
             {
@@ -84,14 +106,16 @@ namespace Domain.Models
             decimal amount,
             DateOnly occurredOn,
             int? categoryId = null,
-            string? note = null)
-            => new(userProfileId, type, amount, occurredOn, categoryId, note);
+            string? note = null,
+            bool isPaid = true)
+            => new(userProfileId, type, amount, occurredOn, categoryId, note, isPaid);
 
         /// <summary>
         /// Creates a correction against <paramref name="parent"/>. <see cref="Type"/> and <see cref="CategoryId"/>
         /// are copied from the parent — the caller never supplies them, because the link, not the type, is what
         /// carries the fact that the money flowed the other way. Registering the amount on the parent is the
         /// caller's job (<see cref="ApplyCorrection"/>), so that both happen in one unit of work.
+        /// <para><see cref="IsPaid"/> is always <c>true</c> here — money that has come back has come back.</para>
         /// </summary>
         public static FinanceTransaction CreateCorrection(
             int userProfileId,
@@ -115,8 +139,38 @@ namespace Domain.Models
                 occurredOn,
                 parent.CategoryId,
                 note,
+                isPaid: true,
                 parent);
         }
+
+        /// <summary>
+        /// Materializes <paramref name="template"/> into a real transaction for <paramref name="occurredOn"/>.
+        /// Expenses start <b>unpaid</b> — the money genuinely has not moved yet, and that is what gives the
+        /// client an "upcoming bills" view for free. Income starts paid, where the distinction has no meaning.
+        /// </summary>
+        public static FinanceTransaction CreateRecurring(RecurringTransaction template, DateOnly occurredOn)
+        {
+            ArgumentNullException.ThrowIfNull(template);
+
+            var transaction = new FinanceTransaction(
+                template.UserProfileId,
+                template.Type,
+                template.Amount,
+                occurredOn,
+                template.CategoryId,
+                template.Note,
+                isPaid: template.Type != FinanceTransactionTypeEnum.Expense);
+
+            transaction.RecurringTransactionId = template.Id;
+            transaction.RecurringTransaction = template;
+
+            return transaction;
+        }
+
+        public void MarkPaid(bool isPaid) => IsPaid = isPaid;
+
+        /// <summary>Detaches this row from the template that produced it, so the template can be deleted.</summary>
+        public void ClearRecurringTemplate() => RecurringTransactionId = null;
 
         public void UpdateAmount(decimal amount)
         {

@@ -3,6 +3,7 @@ using Application.Common.Dtos;
 using Application.Finance.Transactions.Commands.AddCorrection;
 using Application.Finance.Transactions.Commands.CreateTransaction;
 using Application.Finance.Transactions.Commands.DeleteTransaction;
+using Application.Finance.Transactions.Commands.UpdatePaidStatus;
 using Application.Finance.Transactions.Commands.UpdateTransaction;
 using Application.Finance.Transactions.Dtos;
 using Application.Finance.Transactions.Queries.GetTransactionById;
@@ -73,6 +74,22 @@ namespace Api.Controllers
             int id, [FromBody] AddCorrectionRequest request, CancellationToken cancellationToken = default)
         {
             var command = mapper.Map<AddCorrectionCommand>(request) with
+            {
+                TransactionId = id,
+                UserProfileId = User.GetCurrentUserProfileId()
+            };
+            return Ok(await sender.Send(command, cancellationToken).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Flips a transaction between paid and unpaid without round-tripping the whole object. Descriptive
+        /// only — it changes no aggregate.
+        /// </summary>
+        [HttpPatch("{id:int}/paid-status")]
+        public async Task<ActionResult<TransactionDto>> UpdatePaidStatusAsync(
+            int id, [FromBody] UpdatePaidStatusRequest request, CancellationToken cancellationToken = default)
+        {
+            var command = mapper.Map<UpdatePaidStatusCommand>(request) with
             {
                 TransactionId = id,
                 UserProfileId = User.GetCurrentUserProfileId()

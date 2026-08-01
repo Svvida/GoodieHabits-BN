@@ -45,6 +45,22 @@ namespace Domain.Interfaces.Repositories
             FinanceTransactionTypeEnum? type,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Netted per-month, per-type totals for everything the user logged up to and including
+        /// (<paramref name="upToYear"/>, <paramref name="upToMonth"/>), oldest first. A grouped projection, so
+        /// the opening-balance fold never loads transaction rows. Corrections are excluded and their value is
+        /// taken off the parent's month, consistent with every other aggregate.
+        /// </summary>
+        Task<IReadOnlyList<MonthlyTotal>> GetMonthlyTotalsAsync(
+            int userProfileId, int upToYear, int upToMonth, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Tracked transactions already materialized from a recurring template. Used to detach them before the
+        /// template is deleted, and to skip months that have already been generated.
+        /// </summary>
+        Task<IReadOnlyList<FinanceTransaction>> GetForRecurringTemplateAsync(
+            int recurringTransactionId, CancellationToken cancellationToken = default);
+
         /// <summary>True if any transaction references any of the given category ids. Used as a delete guard.</summary>
         Task<bool> AnyForCategoriesAsync(IEnumerable<int> categoryIds, CancellationToken cancellationToken = default);
     }

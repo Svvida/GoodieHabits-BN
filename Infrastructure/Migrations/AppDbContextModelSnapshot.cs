@@ -1053,12 +1053,20 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsPaid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Note")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
                     b.Property<DateOnly>("OccurredOn")
                         .HasColumnType("date");
+
+                    b.Property<int?>("RecurringTransactionId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -1074,6 +1082,8 @@ namespace Infrastructure.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("CorrectsTransactionId");
+
+                    b.HasIndex("RecurringTransactionId");
 
                     b.HasIndex("UserProfileId", "OccurredOn");
 
@@ -1421,6 +1431,59 @@ namespace Infrastructure.Migrations
                     b.HasIndex("QuestLabelId");
 
                     b.ToTable("Quest_QuestLabel", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.RecurringTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DayOfMonth")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateOnly?>("LastMaterializedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.HasIndex("IsActive", "LastMaterializedOn");
+
+                    b.ToTable("RecurringTransactions", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.SeasonalQuest_Season", b =>
@@ -2123,6 +2186,11 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("CorrectsTransactionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Models.RecurringTransaction", "RecurringTransaction")
+                        .WithMany("Transactions")
+                        .HasForeignKey("RecurringTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Models.UserProfile", "UserProfile")
                         .WithMany("FinanceTransactions")
                         .HasForeignKey("UserProfileId")
@@ -2132,6 +2200,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("CorrectsTransaction");
+
+                    b.Navigation("RecurringTransaction");
 
                     b.Navigation("UserProfile");
                 });
@@ -2257,6 +2327,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest");
 
                     b.Navigation("QuestLabel");
+                });
+
+            modelBuilder.Entity("Domain.Models.RecurringTransaction", b =>
+                {
+                    b.HasOne("Domain.Models.FinanceCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("RecurringTransactions")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Domain.Models.SeasonalQuest_Season", b =>
@@ -2413,6 +2501,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest_QuestLabels");
                 });
 
+            modelBuilder.Entity("Domain.Models.RecurringTransaction", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
             modelBuilder.Entity("Domain.Models.ShopItem", b =>
                 {
                     b.Navigation("ActiveUserEffects");
@@ -2445,6 +2538,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("ReceivedBlocks");
 
                     b.Navigation("ReceivedFriendInvitations");
+
+                    b.Navigation("RecurringTransactions");
 
                     b.Navigation("SentBlocks");
 

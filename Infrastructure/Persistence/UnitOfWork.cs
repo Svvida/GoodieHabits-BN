@@ -23,6 +23,7 @@ namespace Infrastructure.Persistence
         private IFinanceCategoryRepository? _financeCategoryRepository;
         private IFinanceTransactionRepository? _financeTransactionRepository;
         private IBudgetRepository? _budgetRepository;
+        private IRecurringTransactionRepository? _recurringTransactionRepository;
 
         public IAccountRepository Accounts => _accountRepository ??= new AccountRepository(_context);
         public IUserProfileRepository UserProfiles => _userProfileRepository ??= new UserProfileRepository(_context);
@@ -39,6 +40,7 @@ namespace Infrastructure.Persistence
         public IFinanceCategoryRepository FinanceCategories => _financeCategoryRepository ??= new FinanceCategoryRepository(_context);
         public IFinanceTransactionRepository FinanceTransactions => _financeTransactionRepository ??= new FinanceTransactionRepository(_context);
         public IBudgetRepository Budgets => _budgetRepository ??= new BudgetRepository(_context);
+        public IRecurringTransactionRepository RecurringTransactions => _recurringTransactionRepository ??= new RecurringTransactionRepository(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

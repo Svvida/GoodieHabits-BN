@@ -19,6 +19,7 @@ namespace Domain.Interfaces
         IFinanceCategoryRepository FinanceCategories { get; }
         IFinanceTransactionRepository FinanceTransactions { get; }
         IBudgetRepository Budgets { get; }
+        IRecurringTransactionRepository RecurringTransactions { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

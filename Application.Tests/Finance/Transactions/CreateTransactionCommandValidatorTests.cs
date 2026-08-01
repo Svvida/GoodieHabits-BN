@@ -10,7 +10,7 @@ namespace Application.Tests.Finance.Transactions
         private readonly CreateTransactionCommandValidator _validator = new();
 
         private static CreateTransactionCommand Valid() =>
-            new(FinanceTransactionTypeEnum.Expense, 25m, new DateOnly(2026, 1, 15), 3, "coffee", 1);
+            new(FinanceTransactionTypeEnum.Expense, 25m, new DateOnly(2026, 1, 15), 3, "coffee", null, 1);
 
         [Fact]
         public void Should_Pass_ForValidCommand()

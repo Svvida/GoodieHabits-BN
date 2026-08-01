@@ -31,6 +31,7 @@ namespace Infrastructure.Persistence
         public DbSet<FinanceCategory> FinanceCategories { get; set; }
         public DbSet<FinanceTransaction> FinanceTransactions { get; set; }
         public DbSet<Budget> Budgets { get; set; }
+        public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
 
         public override int SaveChanges()
         {
@@ -85,6 +86,7 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new FinanceCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new FinanceTransactionConfiguration());
             modelBuilder.ApplyConfiguration(new BudgetConfiguration());
+            modelBuilder.ApplyConfiguration(new RecurringTransactionConfiguration());
 
             modelBuilder.Entity<Badge>().HasData(
                 new Badge(1, BadgeTypeEnum.CompleteDailySeven, "Daily Streak: 7", "One week of daily quests in a row!", "#008000"),

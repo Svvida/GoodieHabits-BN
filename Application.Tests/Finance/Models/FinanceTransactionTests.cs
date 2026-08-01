@@ -230,5 +230,56 @@ namespace Application.Tests.Finance.Models
             transaction.CategoryId.Should().BeNull();
             transaction.Note.Should().BeNull();
         }
+
+        [Fact]
+        public void Create_ShouldDefaultToPaid()
+        {
+            var transaction = FinanceTransaction.Create(1, FinanceTransactionTypeEnum.Expense, 10m, SampleDate);
+
+            transaction.IsPaid.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Create_ShouldDefaultToPaid_EvenForAFutureDate()
+        {
+            // A date-dependent implicit default would surprise API clients; the caller says so explicitly instead.
+            var transaction = FinanceTransaction.Create(
+                1, FinanceTransactionTypeEnum.Expense, 10m, SampleDate.AddYears(5));
+
+            transaction.IsPaid.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Create_ShouldHonourAnExplicitUnpaidFlag()
+        {
+            var transaction = FinanceTransaction.Create(
+                1, FinanceTransactionTypeEnum.Expense, 10m, SampleDate, isPaid: false);
+
+            transaction.IsPaid.Should().BeFalse();
+        }
+
+        [Fact]
+        public void MarkPaid_ShouldFlipInBothDirections()
+        {
+            var transaction = FinanceTransaction.Create(1, FinanceTransactionTypeEnum.Expense, 10m, SampleDate);
+
+            transaction.MarkPaid(false);
+            transaction.IsPaid.Should().BeFalse();
+
+            transaction.MarkPaid(true);
+            transaction.IsPaid.Should().BeTrue();
+        }
+
+        [Fact]
+        public void CreateCorrection_ShouldAlwaysBePaid()
+        {
+            // Money that has come back has come back — even when the parent is still unpaid.
+            var parent = FinanceTransaction.Create(
+                1, FinanceTransactionTypeEnum.Expense, 400m, SampleDate, 5, isPaid: false);
+
+            var correction = FinanceTransaction.CreateCorrection(1, parent, 300m, SampleDate);
+
+            correction.IsPaid.Should().BeTrue();
+        }
     }
 }

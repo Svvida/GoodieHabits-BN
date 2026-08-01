@@ -29,7 +29,10 @@ namespace Application.Finance.Transactions.Commands.CreateTransaction
                 request.Amount,
                 request.OccurredOn,
                 request.CategoryId,
-                request.Note);
+                request.Note,
+                // Omitted means paid, regardless of the date — a date-dependent implicit default would surprise
+                // API clients, and the app always sends an explicit value.
+                request.IsPaid ?? true);
 
             await unitOfWork.FinanceTransactions.AddAsync(transaction, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

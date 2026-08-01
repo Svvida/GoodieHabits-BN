@@ -23,6 +23,11 @@ namespace Application.Finance.Analytics.Queries.GetMonthlySummary
 
             var currency = await GetCurrencyAsync(request.UserProfileId, cancellationToken).ConfigureAwait(false);
 
+            // A grouped projection over months, not transactions — cheap enough to compute per read, so nothing
+            // is denormalized here (unlike CorrectedAmount, which had five call sites to simplify).
+            var monthlyTotals = await unitOfWork.FinanceTransactions
+                .GetMonthlyTotalsAsync(request.UserProfileId, request.Year, request.Month, cancellationToken).ConfigureAwait(false);
+
             var income = transactions.Where(t => t.Type == FinanceTransactionTypeEnum.Income).ToList();
             var expense = transactions.Where(t => t.Type == FinanceTransactionTypeEnum.Expense).ToList();
 
@@ -37,6 +42,7 @@ namespace Application.Finance.Analytics.Queries.GetMonthlySummary
                 TotalIncome = totalIncome,
                 TotalExpense = totalExpense,
                 Net = totalIncome - totalExpense,
+                OpeningBalance = OpeningBalanceCalculator.Calculate(monthlyTotals, request.Year, request.Month),
                 ExpenseByCategory = FinanceAnalyticsHelper.BuildBreakdown(expense, categoriesById),
                 IncomeByCategory = FinanceAnalyticsHelper.BuildBreakdown(income, categoriesById),
             };

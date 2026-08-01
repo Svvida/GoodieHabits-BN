@@ -55,6 +55,8 @@ namespace Application.Finance.Transactions.Commands.UpdateTransaction
             transaction.UpdateDate(request.OccurredOn);
             transaction.Recategorize(request.CategoryId);
             transaction.UpdateNote(request.Note);
+            // PUT is full replacement, so an omitted flag means paid — same default as the create path.
+            transaction.MarkPaid(request.IsPaid ?? true);
 
             // Corrections inherit the parent's category, so recategorizing cascades — blocking it instead would
             // mean "you can't recategorize a dinner you got a refund for".
@@ -91,6 +93,8 @@ namespace Application.Finance.Transactions.Commands.UpdateTransaction
             correction.UpdateAmount(request.Amount);
             correction.UpdateDate(request.OccurredOn);
             correction.UpdateNote(request.Note);
+            // IsPaid is deliberately left alone: a correction is money that has already come back, so it is
+            // always paid. Nothing to conflict over — unlike type and category, the client cannot change it.
         }
     }
 }

@@ -335,6 +335,7 @@ namespace Api
             builder.Services.AddHostedService<ExpireGoalsTask>();
             builder.Services.AddHostedService<ProcessOccurrencesTask>();
             builder.Services.AddHostedService<RecalculateRepeatableQuestStatisticsTask>();
+            builder.Services.AddHostedService<GenerateRecurringTransactionsTask>();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

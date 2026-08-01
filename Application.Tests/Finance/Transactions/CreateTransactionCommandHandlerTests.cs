@@ -22,7 +22,7 @@ namespace Application.Tests.Finance.Transactions
             var profile = await CreateProfileAsync();
             var category = await AddCategoryAsync(FinanceCategory.CreateMain(profile.Id, "Food", FinanceTransactionTypeEnum.Expense), 9001);
 
-            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Expense, 25m, new DateOnly(2026, 1, 15), category.Id, "lunch", profile.Id);
+            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Expense, 25m, new DateOnly(2026, 1, 15), category.Id, "lunch", null, profile.Id);
             var result = await _handler.Handle(command, CancellationToken.None);
 
             result.Amount.Should().Be(25m);
@@ -37,7 +37,7 @@ namespace Application.Tests.Finance.Transactions
             var profile = await CreateProfileAsync();
             var expenseCategory = await AddCategoryAsync(FinanceCategory.CreateMain(profile.Id, "Food", FinanceTransactionTypeEnum.Expense), 9001);
 
-            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Income, 25m, new DateOnly(2026, 1, 15), expenseCategory.Id, null, profile.Id);
+            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Income, 25m, new DateOnly(2026, 1, 15), expenseCategory.Id, null, null, profile.Id);
 
             var act = () => _handler.Handle(command, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>();
@@ -49,7 +49,7 @@ namespace Application.Tests.Finance.Transactions
             await ResetFinanceAsync();
             var profile = await CreateProfileAsync();
 
-            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Income, 1000m, new DateOnly(2026, 1, 1), null, "salary", profile.Id);
+            var command = new CreateTransactionCommand(FinanceTransactionTypeEnum.Income, 1000m, new DateOnly(2026, 1, 1), null, "salary", null, profile.Id);
             var result = await _handler.Handle(command, CancellationToken.None);
 
             result.CategoryId.Should().BeNull();

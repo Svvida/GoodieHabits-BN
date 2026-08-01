@@ -85,6 +85,42 @@ namespace Infrastructure.Persistence.Repositories
             return (items, totalCount);
         }
 
+        public async Task<IReadOnlyList<FinanceTransaction>> GetForRecurringTemplateAsync(
+            int recurringTransactionId, CancellationToken cancellationToken = default)
+        {
+            return await _context.FinanceTransactions
+                .Where(t => t.RecurringTransactionId == recurringTransactionId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IReadOnlyList<MonthlyTotal>> GetMonthlyTotalsAsync(
+            int userProfileId, int upToYear, int upToMonth, CancellationToken cancellationToken = default)
+        {
+            // Amount - CorrectedAmount rather than NetAmount: both are plain columns, so the SUM translates to
+            // SQL. NetAmount is a computed CLR property and would force the whole history into memory.
+            var cutoff = new DateOnly(upToYear, upToMonth, 1).AddMonths(1);
+
+            var totals = await _context.FinanceTransactions
+                .AsNoTracking()
+                .Where(t => t.UserProfileId == userProfileId
+                    && t.CorrectsTransactionId == null
+                    && t.OccurredOn < cutoff)
+                .GroupBy(t => new { t.OccurredOn.Year, t.OccurredOn.Month, t.Type })
+                .Select(g => new MonthlyTotal(
+                    g.Key.Year,
+                    g.Key.Month,
+                    g.Key.Type,
+                    g.Sum(t => t.Amount - t.CorrectedAmount)))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return totals
+                .OrderBy(t => t.Year)
+                .ThenBy(t => t.Month)
+                .ToList();
+        }
+
         public async Task<IReadOnlyList<FinanceTransaction>> GetForPeriodAsync(
             int userProfileId,
             DateOnly from,
