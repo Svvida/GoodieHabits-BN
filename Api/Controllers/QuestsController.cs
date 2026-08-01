@@ -5,6 +5,8 @@ using Application.Quests.Commands.UpdateQuest;
 using Application.Quests.Commands.UpdateQuestCompletion;
 using Application.Quests.Dtos;
 using Application.Quests.Queries.GetActiveQuests;
+using Application.Quests.Queries.GetHabitsOverview;
+using Application.Quests.Queries.GetQuestAnalytics;
 using Application.Quests.Queries.GetQuestById;
 using Application.Quests.Queries.GetQuestsByType;
 using Application.Quests.Queries.GetQuestsEligibleForGoal;
@@ -80,6 +82,44 @@ namespace Api.Controllers
             var quests = await sender.Send(query, cancellationToken);
 
             return Ok(quests);
+        }
+
+        /// <summary>
+        /// Completion analytics for one repeatable quest: windowed summary, calendar cells, a trend
+        /// series and a per-weekday breakdown. Dates are inclusive calendar dates ("YYYY-MM-DD") and
+        /// default to the last 90 days in the user's own timezone.
+        /// </summary>
+        [HttpGet("{questId:int}/analytics")]
+        public async Task<ActionResult<GetQuestAnalyticsResponse>> GetQuestAnalytics(
+            int questId,
+            [FromQuery] DateOnly? from = null,
+            [FromQuery] DateOnly? to = null,
+            [FromQuery] AnalyticsGranularityEnum granularity = AnalyticsGranularityEnum.Week,
+            CancellationToken cancellationToken = default)
+        {
+            var query = new GetQuestAnalyticsQuery(
+                questId,
+                JwtHelpers.GetCurrentUserProfileId(User),
+                from,
+                to,
+                granularity);
+
+            return Ok(await sender.Send(query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Cross-quest analytics: a per-habit summary, a combined roll-up and a per-day completion-rate
+        /// series for dashboards. Defaults to the last 30 days in the user's own timezone.
+        /// </summary>
+        [HttpGet("analytics/overview")]
+        public async Task<ActionResult<GetHabitsOverviewResponse>> GetHabitsOverview(
+            [FromQuery] DateOnly? from = null,
+            [FromQuery] DateOnly? to = null,
+            CancellationToken cancellationToken = default)
+        {
+            var query = new GetHabitsOverviewQuery(JwtHelpers.GetCurrentUserProfileId(User), from, to);
+
+            return Ok(await sender.Send(query, cancellationToken));
         }
 
         [HttpGet("eligible-for-goal")]

@@ -38,10 +38,13 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            // SQL `date` — the quest's active range is a calendar fact, not an instant.
             builder.Property(q => q.StartDate)
+                .HasColumnType("date")
                 .IsRequired(false);
 
             builder.Property(q => q.EndDate)
+                .HasColumnType("date")
                 .IsRequired(false);
 
             builder.Property(q => q.Emoji)

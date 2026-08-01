@@ -1,12 +1,13 @@
 ﻿using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
+using NodaTime;
 
 namespace Application.Quests.Commands.CreateQuest.Validators
 {
     public class CreateWeeklyQuestCommandValidator : CreateQuestCommandValidator<CreateWeeklyQuestCommand>
     {
-        public CreateWeeklyQuestCommandValidator(IUnitOfWork unitOfWork) : base(unitOfWork)
+        public CreateWeeklyQuestCommandValidator(IUnitOfWork unitOfWork, IClock clock) : base(unitOfWork, clock)
         {
             RuleFor(x => x.Weekdays)
                 .NotEmpty().WithMessage("{PropertyName} is required.");

@@ -46,7 +46,7 @@ namespace Application.Quests.Commands.CreateQuest
 
             if (quest.IsRepeatable())
             {
-                quest.SetNextResetAt();
+                quest.SetNextResetAt(nowUtc);
                 quest.InitializeOccurrences(nowUtc);
                 quest.RecalculateStatistics(nowUtc);
             }

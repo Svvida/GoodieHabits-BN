@@ -16,8 +16,16 @@ namespace Domain.Models
         public PriorityEnum? Priority { get; private set; } = null;
         public bool IsCompleted { get; set; } = false;
         public string? Emoji { get; private set; } = null;
-        public DateTime? StartDate { get; private set; } = null;
-        public DateTime? EndDate { get; private set; } = null;
+
+        /// <summary>
+        /// Calendar date the quest becomes active, in the user's local calendar (inclusive).
+        /// A calendar fact, not an instant — see <see cref="QuestOccurrence"/>.
+        /// </summary>
+        public DateOnly? StartDate { get; private set; } = null;
+
+        /// <summary>Calendar date the quest stops being active, in the user's local calendar (inclusive).</summary>
+        public DateOnly? EndDate { get; private set; } = null;
+
         public DateTime? LastCompletedAt { get; set; } = null;
         public DateTime? NextResetAt { get; set; } = null;
         public bool WasEverCompleted { get; set; } = false;
@@ -43,8 +51,8 @@ namespace Domain.Models
             string? description = null,
             PriorityEnum? priority = null,
             string? emoji = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
+            DateOnly? startDate = null,
+            DateOnly? endDate = null,
             DifficultyEnum? difficulty = null,
             TimeOnly? scheduledTime = null,
             HashSet<int>? labelIds = null)
@@ -84,8 +92,8 @@ namespace Domain.Models
             string? description = null,
             PriorityEnum? priority = null,
             string? emoji = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
+            DateOnly? startDate = null,
+            DateOnly? endDate = null,
             DifficultyEnum? difficulty = null,
             TimeOnly? scheduledTime = null,
             HashSet<int>? labelIds = null)
@@ -118,12 +126,12 @@ namespace Domain.Models
         {
             ScheduledTime = scheduledTime;
         }
-        public void SetNextResetAt()
+        public void SetNextResetAt(DateTime nowUtc)
         {
-            NextResetAt = NextResetDateCalculator.Calculate(this);
+            NextResetAt = NextResetDateCalculator.Calculate(this, nowUtc);
         }
 
-        public void UpdateDates(DateTime? newStartDate, DateTime? newEndDate)
+        public void UpdateDates(DateOnly? newStartDate, DateOnly? newEndDate)
         {
             if (newStartDate.HasValue && newEndDate.HasValue)
             {
@@ -158,13 +166,13 @@ namespace Domain.Models
 
             if (IsRepeatable())
             {
-                NextResetAt = NextResetDateCalculator.Calculate(this);
+                var today = LocalToday(nowUtc);
+                NextResetAt = NextResetDateCalculator.Calculate(this, nowUtc);
 
-                var occurrenceToComplete = GetOrCreateCurrentOccurrence(nowUtc);
-                if (occurrenceToComplete is not null)
-                    occurrenceToComplete.MarkAsCompleted(nowUtc);
-                else
-                    throw new NoOccurrenceToMarkAsCompletedException(Id);
+                var occurrenceToComplete = GetOrCreateCurrentOccurrence(today)
+                    ?? throw new NoOccurrenceToMarkAsCompletedException(Id);
+
+                occurrenceToComplete.MarkAsCompleted(nowUtc, today);
 
                 RecalculateStatistics(nowUtc);
             }
@@ -236,8 +244,8 @@ namespace Domain.Models
             }
 
             // 3. Timeliness Bonus (End Date)
-            // If EndDate exists AND we are completing it before or exactly at that time
-            if (EndDate.HasValue && nowUtc <= EndDate.Value)
+            // If EndDate exists AND we are completing it on or before that local calendar day
+            if (EndDate.HasValue && LocalToday(nowUtc) <= EndDate.Value)
             {
                 // "On Time" bonus. 
                 // You can make this flat (e.g., 5 XP) or a multiplier.
@@ -255,8 +263,13 @@ namespace Domain.Models
 
             if (IsRepeatable())
             {
-                var lastOccurrence = QuestOccurrences.OrderByDescending(o => o.CompletedAt).FirstOrDefault(o => o.WasCompleted);
-                lastOccurrence?.MarkAsIncompleted();
+                var today = LocalToday(utcNow);
+
+                // Prefer the period the user is actually in; fall back to the most recently completed one.
+                var occurrenceToRevert = QuestOccurrences.FirstOrDefault(o => o.WasCompleted && o.Covers(today))
+                    ?? QuestOccurrences.Where(o => o.WasCompleted).OrderByDescending(o => o.CompletedAt).FirstOrDefault();
+
+                occurrenceToRevert?.MarkAsIncompleted();
                 RecalculateStatistics(utcNow);
             }
 
@@ -265,9 +278,9 @@ namespace Domain.Models
             UserProfile.RevertQuestCompletion(QuestType);
         }
 
-        public QuestOccurrence AddOccurrence(DateTime start, DateTime end)
+        public QuestOccurrence AddOccurrence(DateOnly periodStart, DateOnly periodEnd)
         {
-            var occurrence = QuestOccurrence.Create(this, start, end);
+            var occurrence = QuestOccurrence.Create(this, periodStart, periodEnd);
             QuestOccurrences.Add(occurrence);
             return occurrence;
         }
@@ -304,11 +317,11 @@ namespace Domain.Models
             AddDomainEvent(new QuestDeletedEvent(Id, UserProfileId, IsCompleted, WasEverCompleted));
         }
 
-        public bool ResetCompletedStatus(DateTime nowUtc)
+        public bool ResetCompletedStatus(DateTime nowUtc, DateOnly today)
         {
             if (!IsCompleted || !IsRepeatable())
                 return false;
-            if (EndDate.HasValue && EndDate < nowUtc)
+            if (EndDate.HasValue && EndDate.Value < today)
                 return false;
             if (!NextResetAt.HasValue || NextResetAt > nowUtc)
                 return false;
@@ -317,42 +330,70 @@ namespace Domain.Models
             return true;
         }
 
-        public int GenerateMissingOccurrences(DateTime utcNow)
+        public int GenerateMissingOccurrences(DateTime utcNow) => GenerateMissingOccurrencesOn(LocalToday(utcNow));
+
+        public int GenerateMissingOccurrencesOn(DateOnly today)
         {
-            if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
+            if (!IsActiveOn(today))
                 return 0;
 
-            DateTime fromDate = QuestOccurrences.OrderByDescending(o => o.OccurrenceEnd).FirstOrDefault()?.OccurrenceEnd ?? StartDate ?? CreatedAt;
+            // Resume from the day after the latest period we already have.
+            DateOnly fromDate = QuestOccurrences.Count > 0
+                ? QuestOccurrences.Max(o => o.PeriodEnd).AddDays(1)
+                : StartDate ?? LocalToday(CreatedAt);
 
-            return GenerateAndAddWindows(fromDate, utcNow);
+            return GenerateAndAddWindows(fromDate, today);
         }
 
         public void InitializeOccurrences(DateTime utcNow)
         {
-            if (!IsRepeatable() || (StartDate.HasValue && StartDate > utcNow) || (EndDate.HasValue && EndDate < utcNow))
+            var today = LocalToday(utcNow);
+
+            if (!IsActiveOn(today))
                 return;
 
-            DateTime fromDate = StartDate ?? CreatedAt;
-            GenerateAndAddWindows(fromDate, utcNow);
+            GenerateAndAddWindows(StartDate ?? LocalToday(CreatedAt), today);
         }
 
-        private int GenerateAndAddWindows(DateTime fromDate, DateTime toDate)
+        private bool IsActiveOn(DateOnly date)
         {
+            if (!IsRepeatable())
+                return false;
+            if (StartDate.HasValue && StartDate.Value > date)
+                return false;
+            if (EndDate.HasValue && EndDate.Value < date)
+                return false;
+
+            return true;
+        }
+
+        private int GenerateAndAddWindows(DateOnly fromDate, DateOnly toDate)
+        {
+            // Never generate periods outside the quest's active range.
+            if (StartDate.HasValue && fromDate < StartDate.Value)
+                fromDate = StartDate.Value;
+            if (EndDate.HasValue && toDate > EndDate.Value)
+                toDate = EndDate.Value;
+
             if (fromDate > toDate)
                 return 0;
 
             var windows = QuestWindowCalculator.GenerateWindows(this, fromDate, toDate);
 
-            List<QuestOccurrence> generatedOccurrences = [];
+            // PeriodStart alone identifies a period — the DB enforces the same via a unique index.
+            var existingPeriodStarts = QuestOccurrences.Select(qo => qo.PeriodStart).ToHashSet();
+
+            int generatedCount = 0;
             foreach (var window in windows)
             {
-                if (QuestOccurrences.Any(qo => qo.OccurrenceStart == window.Start && qo.OccurrenceEnd == window.End))
+                if (!existingPeriodStarts.Add(window.Start))
                     continue;
 
-                var newOccurrence = AddOccurrence(window.Start, window.End);
-                generatedOccurrences.Add(newOccurrence);
+                AddOccurrence(window.Start, window.End);
+                generatedCount++;
             }
-            return generatedOccurrences.Count;
+
+            return generatedCount;
         }
 
         public void RecalculateStatistics(DateTime nowUtc)
@@ -361,43 +402,43 @@ namespace Domain.Models
                 return;
 
             Statistics ??= QuestStatistics.Create(this);
-
-            var newStats = QuestStatisticsCalculator.Calculate(QuestOccurrences, nowUtc);
-            if (Statistics is null)
-            {
-                Statistics = QuestStatistics.Create(this);
-                Statistics.UpdateFrom(newStats);
-            }
-            else
-            {
-                Statistics.UpdateFrom(newStats);
-            }
+            Statistics.UpdateFrom(QuestStatisticsCalculator.Calculate(QuestOccurrences, LocalToday(nowUtc)));
         }
 
-        private QuestOccurrence? GetOrCreateCurrentOccurrence(DateTime utcNow)
+        private QuestOccurrence? GetOrCreateCurrentOccurrence(DateOnly today)
         {
-            // Find existing current occurrence
-            var current = QuestOccurrences.FirstOrDefault(o => o.OccurrenceStart <= utcNow && o.OccurrenceEnd >= utcNow);
-            if (current != null)
+            var current = QuestOccurrences.FirstOrDefault(o => o.Covers(today));
+            if (current is not null)
                 return current;
 
-            // If none, generate missing ones
-            GenerateMissingOccurrences(utcNow); // This adds new ones to the _occurrences list
+            // None yet for today — catch up on any periods the background job hasn't created.
+            GenerateMissingOccurrencesOn(today);
 
-            // Try to find the current one again
-            current = QuestOccurrences.FirstOrDefault(o => o.OccurrenceStart <= utcNow && o.OccurrenceEnd >= utcNow);
-            if (current != null)
+            current = QuestOccurrences.FirstOrDefault(o => o.Covers(today));
+            if (current is not null)
                 return current;
 
-            // If still none, check for grace period on last occurrence
-            var last = QuestOccurrences.OrderByDescending(o => o.OccurrenceEnd).FirstOrDefault();
-            if (last != null && utcNow <= last.OccurrenceEnd.AddHours(24))
-            {
+            // Still nothing (e.g. a weekly quest completed the morning after its scheduled day):
+            // allow backfilling the most recent period within the grace window.
+            var last = QuestOccurrences.OrderByDescending(o => o.PeriodEnd).FirstOrDefault();
+            if (last is not null && last.PeriodEnd >= today.AddDays(-BackfillGraceDays))
                 return last;
-            }
 
             return null;
         }
 
+        /// <summary>
+        /// How many elapsed days a completion may still be attributed backwards to. Occurrences
+        /// completed this way are flagged via <see cref="QuestOccurrence.IsBackfilled"/>.
+        /// </summary>
+        private const int BackfillGraceDays = 1;
+
+        private DateOnly LocalToday(DateTime instantUtc)
+        {
+            if (UserProfile is null)
+                throw new InvalidArgumentException($"UserProfile must be loaded to resolve local dates for quest {Id}.");
+
+            return UserProfile.LocalDateOn(instantUtc);
+        }
     }
 }

@@ -11,7 +11,9 @@ namespace Application.Quests.Commands.GenerateMissingOccurrences
         public async Task<int> Handle(GenerateMissingOccurrencesCommand request, CancellationToken cancellationToken)
         {
             var nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            var quests = await unitOfWork.Quests.GetRepeatableQuestsForOccurrencesProcessingAsync(nowUtc, cancellationToken).ConfigureAwait(false);
+            var quests = await unitOfWork.Quests
+                .GetRepeatableQuestsForOccurrencesProcessingAsync(DateOnly.FromDateTime(nowUtc), cancellationToken)
+                .ConfigureAwait(false);
 
             if (!quests.Any())
             {

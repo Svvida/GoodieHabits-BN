@@ -18,7 +18,7 @@ namespace Application.Quests.Commands.UpdateQuest.Validators
                 .WithMessage("{PropertyName} must be a valid season.");
 
             RuleFor(x => x)
-                .Must(x => SeasonHelper.IsDateWithinSeason(x.StartDate, x.EndDate, Enum.Parse<SeasonEnum>(x.Season), clock.GetCurrentInstant().ToDateTimeUtc()))
+                .Must(x => SeasonHelper.IsDateWithinSeason(x.StartDate, x.EndDate, Enum.Parse<SeasonEnum>(x.Season), DateOnly.FromDateTime(clock.GetCurrentInstant().ToDateTimeUtc())))
                 .WithMessage("StartDate and EndDate must be within the selected season.");
         }
     }

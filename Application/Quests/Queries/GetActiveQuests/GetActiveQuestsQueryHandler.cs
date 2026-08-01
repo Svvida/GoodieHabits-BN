@@ -21,31 +21,22 @@ namespace Application.Quests.Queries.GetActiveQuests
             var userProfile = await unitOfWork.UserProfiles.GetByIdAsync(request.UserProfileId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Account with ID {request.UserProfileId} not found.");
 
-            var userTimeZone = DateTimeZoneProviders.Tzdb[userProfile.TimeZone]
-                ?? throw new InvalidArgumentException($"Invalid timezone: {userProfile.TimeZone}");
-
             Instant utcNow = SystemClock.Instance.GetCurrentInstant();
-            // Get Local Time
-            LocalDateTime localNow = utcNow.InZone(userTimeZone).LocalDateTime;
 
-            // Calculate Search Range
-            DateTime todayStart = localNow.Date.AtStartOfDayInZone(userTimeZone).ToDateTimeUtc();
-            DateTime todayEnd = todayStart.AddDays(1).AddTicks(-1);
+            // A quest's active range is a calendar fact, so the whole query works off the user's local date.
+            DateOnly today = userProfile.LocalDateOn(utcNow.ToDateTimeUtc());
 
-            // Extract the exact Day/Weekday for the User
-            var userLocalWeekday = (WeekdayEnum)localNow.DayOfWeek.ToDayOfWeek();
-            var userLocalDayOfMonth = localNow.Day;
+            var userLocalWeekday = (WeekdayEnum)today.DayOfWeek;
+            var userLocalDayOfMonth = today.Day;
 
-            logger.LogDebug("Today start: {TodayStart}, Today end: {TodayEnd}",
-                todayStart.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-                todayEnd.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
+            logger.LogDebug("Resolving active quests for user {UserProfileId} on local date {Today}.",
+                request.UserProfileId, today);
 
-            SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason(utcNow.ToDateTimeUtc());
+            SeasonEnum currentSeason = SeasonHelper.GetCurrentSeason(today);
 
             var quests = await unitOfWork.Quests.GetActiveQuestsForDisplayAsync(
                 request.UserProfileId,
-                todayStart,
-                todayEnd,
+                today,
                 userLocalWeekday,
                 userLocalDayOfMonth,
                 currentSeason,

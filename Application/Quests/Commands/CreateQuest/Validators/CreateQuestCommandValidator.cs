@@ -2,13 +2,17 @@
 using Domain.Enums;
 using Domain.Interfaces;
 using FluentValidation;
+using NodaTime;
 
 namespace Application.Quests.Commands.CreateQuest.Validators
 {
     public class CreateQuestCommandValidator<T> : AbstractValidator<T> where T : CreateQuestCommand
     {
-        public CreateQuestCommandValidator(IUnitOfWork unitOfWork)
+        public CreateQuestCommandValidator(IUnitOfWork unitOfWork, IClock clock)
         {
+            // One day of slack absorbs the gap between the server's UTC date and the user's local one.
+            var earliestAllowedDate = DateOnly.FromDateTime(clock.GetCurrentInstant().ToDateTimeUtc()).AddDays(-1);
+
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("{PropertyName} is required")
                 .Length(1, 100).WithMessage("{PropertyName} must be between {MinLength} and {MaxLength} characters.");
@@ -23,11 +27,11 @@ namespace Application.Quests.Commands.CreateQuest.Validators
                 .WithMessage("You must provide a valid single emoji.");
 
             RuleFor(x => x.StartDate)
-                .GreaterThanOrEqualTo(_ => DateTime.UtcNow.Date.AddDays(-1)).When(x => x.StartDate.HasValue)
+                .GreaterThanOrEqualTo(_ => earliestAllowedDate).When(x => x.StartDate.HasValue)
                 .WithMessage("{PropertyName} must be greater then or equal to today's date.");
 
             RuleFor(x => x.EndDate)
-                .GreaterThanOrEqualTo(_ => DateTime.UtcNow.Date.AddDays(-1)).When(x => x.EndDate.HasValue)
+                .GreaterThanOrEqualTo(_ => earliestAllowedDate).When(x => x.EndDate.HasValue)
                 .WithMessage("{PropertyName} must be greater than or equal to today's date")
                 .GreaterThanOrEqualTo(x => x.StartDate).When(x => x.StartDate.HasValue && x.EndDate.HasValue)
                 .WithMessage("{PropertyName} must be greater than {ComparisonProperty}");

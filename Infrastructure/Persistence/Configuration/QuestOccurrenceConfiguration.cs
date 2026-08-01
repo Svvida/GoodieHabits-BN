@@ -12,9 +12,10 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.HasKey(qo => qo.Id);
             builder.HasIndex(qo => qo.QuestId);
-            builder.HasIndex(qo => qo.OccurrenceStart);
             builder.HasIndex(qo => qo.CompletedAt);
-            builder.HasIndex(qo => new { qo.QuestId, qo.OccurrenceStart, qo.OccurrenceEnd })
+
+            // Analytics read path: "all periods for these quests between two dates".
+            builder.HasIndex(qo => new { qo.QuestId, qo.PeriodStart })
                 .IsUnique();
 
             builder.Property(qo => qo.Id)
@@ -24,10 +25,13 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(qo => qo.QuestId)
                 .IsRequired();
 
-            builder.Property(qo => qo.OccurrenceStart)
+            // SQL `date` — a calendar fact, deliberately not a UTC instant.
+            builder.Property(qo => qo.PeriodStart)
+                .HasColumnType("date")
                 .IsRequired();
 
-            builder.Property(qo => qo.OccurrenceEnd)
+            builder.Property(qo => qo.PeriodEnd)
+                .HasColumnType("date")
                 .IsRequired();
 
             builder.Property(qo => qo.WasCompleted)
@@ -36,6 +40,10 @@ namespace Infrastructure.Persistence.Configuration
 
             builder.Property(qo => qo.CompletedAt)
                 .IsRequired(false);
+
+            builder.Property(qo => qo.IsBackfilled)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             builder.HasOne(qo => qo.Quest)
                 .WithMany(q => q.QuestOccurrences)

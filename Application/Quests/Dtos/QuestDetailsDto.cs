@@ -15,8 +15,8 @@ namespace Application.Quests.Dtos
         public string QuestType { get; init; } = null!;
         public string Title { get; init; } = null!;
         public string? Description { get; init; }
-        public DateTime? StartDate { get; init; }
-        public DateTime? EndDate { get; init; }
+        public DateOnly? StartDate { get; init; }
+        public DateOnly? EndDate { get; init; }
         public string? Emoji { get; init; }
         public bool IsCompleted { get; init; }
         public string? Priority { get; init; }

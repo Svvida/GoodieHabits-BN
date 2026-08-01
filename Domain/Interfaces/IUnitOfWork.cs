@@ -8,6 +8,7 @@ namespace Domain.Interfaces
         IUserProfileRepository UserProfiles { get; }
         IUserGoalRepository UserGoals { get; }
         IQuestRepository Quests { get; }
+        IQuestOccurrenceRepository QuestOccurrences { get; }
         IQuestLabelRepository QuestLabels { get; }
         INotificationRepository Notifications { get; }
         IBadgeRepository Badges { get; }
