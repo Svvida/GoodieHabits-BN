@@ -20,6 +20,9 @@ namespace Domain.Models
         public int Coins { get; set; } = 0;
         // Finance
         public string Currency { get; private set; } = "USD";
+        // Workouts — the unit every logged weight is displayed in. Like Currency, changing it does NOT convert
+        // historical values; weights are stored exactly as the user typed them.
+        public string WeightUnit { get; private set; } = SupportedWeightUnits.Default;
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int CompletedDailyQuests { get; set; } = 0;
@@ -56,6 +59,11 @@ namespace Domain.Models
         public ICollection<FinanceTransaction> FinanceTransactions { get; private set; } = [];
         public ICollection<Budget> Budgets { get; private set; } = [];
         public ICollection<RecurringTransaction> RecurringTransactions { get; private set; } = [];
+        public ICollection<Exercise> Exercises { get; private set; } = [];
+        public ICollection<WorkoutRoutine> WorkoutRoutines { get; private set; } = [];
+        public ICollection<WorkoutSession> WorkoutSessions { get; private set; } = [];
+        public ICollection<Supplement> Supplements { get; private set; } = [];
+        public ICollection<SupplementIntake> SupplementIntakes { get; private set; } = [];
 
         public UserProfile() { }
         public UserProfile(Account account, string nickname, string timeZone = "Etc/Utc")
@@ -121,6 +129,17 @@ namespace Domain.Models
             if (!SupportedCurrencies.IsSupported(currency))
                 throw new InvalidArgumentException($"Currency '{currency}' is not supported.");
             Currency = currency.Trim().ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Sets the unit logged weights are read in. Deliberately does not convert anything already stored —
+        /// same call as <see cref="UpdateCurrency"/>, and the module docs state it as a contract line.
+        /// </summary>
+        public void UpdateWeightUnit(string weightUnit)
+        {
+            if (!SupportedWeightUnits.IsSupported(weightUnit))
+                throw new InvalidArgumentException($"Weight unit '{weightUnit}' is not supported.");
+            WeightUnit = weightUnit.Trim().ToLowerInvariant();
         }
 
         public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards, QuestTypeEnum questType)

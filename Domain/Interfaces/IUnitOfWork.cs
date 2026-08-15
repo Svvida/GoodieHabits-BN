@@ -21,6 +21,11 @@ namespace Domain.Interfaces
         IFinanceTransactionRepository FinanceTransactions { get; }
         IBudgetRepository Budgets { get; }
         IRecurringTransactionRepository RecurringTransactions { get; }
+        IExerciseRepository Exercises { get; }
+        IWorkoutRoutineRepository WorkoutRoutines { get; }
+        IWorkoutSessionRepository WorkoutSessions { get; }
+        ISupplementRepository Supplements { get; }
+        ISupplementIntakeRepository SupplementIntakes { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

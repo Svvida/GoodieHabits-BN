@@ -345,6 +345,1173 @@ namespace Infrastructure.Migrations
                     b.ToTable("Budgets", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.Exercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Equipment")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsSystem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("MetricType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MuscleGroup")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.HasIndex("UserProfileId", "MuscleGroup");
+
+                    b.ToTable("Exercises", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki klasyczne"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki szerokie"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki diamentowe"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki z nogami na podwyższeniu"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki na podwyższeniu (łatwiejsze)"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki archer"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki wybuchowe (z klaśnięciem)"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki na jednej ręce"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Dipy na poręczach"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 7,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 1,
+                            Name = "Pompki na kółkach gimnastycznych"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Wyciskanie sztangi leżąc"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Wyciskanie sztangi skos góra"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Wyciskanie hantli leżąc"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Rozpiętki hantlami"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 5,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Rozpiętki na bramie"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 1,
+                            Name = "Wyciskanie na maszynie"
+                        },
+                        new
+                        {
+                            Id = 100,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie nachwytem"
+                        },
+                        new
+                        {
+                            Id = 101,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie podchwytem"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie chwytem neutralnym"
+                        },
+                        new
+                        {
+                            Id = 103,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie szerokim chwytem"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie australijskie"
+                        },
+                        new
+                        {
+                            Id = 105,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 6,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie z gumą"
+                        },
+                        new
+                        {
+                            Id = 106,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Podciąganie łopatkowe"
+                        },
+                        new
+                        {
+                            Id = 107,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 2,
+                            Name = "Muscle-up"
+                        },
+                        new
+                        {
+                            Id = 108,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 2,
+                            Name = "Front lever (wytrzymanie)"
+                        },
+                        new
+                        {
+                            Id = 109,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 2,
+                            Name = "Zwis na drążku"
+                        },
+                        new
+                        {
+                            Id = 110,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 2,
+                            Name = "Superman (wytrzymanie)"
+                        },
+                        new
+                        {
+                            Id = 111,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 2,
+                            Name = "Wiosłowanie sztangą"
+                        },
+                        new
+                        {
+                            Id = 112,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 2,
+                            Name = "Wiosłowanie hantlem"
+                        },
+                        new
+                        {
+                            Id = 113,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 5,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 2,
+                            Name = "Ściąganie drążka wyciągu górnego"
+                        },
+                        new
+                        {
+                            Id = 114,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 5,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 2,
+                            Name = "Wiosłowanie na wyciągu siedząc"
+                        },
+                        new
+                        {
+                            Id = 115,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 2,
+                            Name = "Martwy ciąg"
+                        },
+                        new
+                        {
+                            Id = 200,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 3,
+                            Name = "Pike push-ups"
+                        },
+                        new
+                        {
+                            Id = 201,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 3,
+                            Name = "Pompki w staniu na rękach"
+                        },
+                        new
+                        {
+                            Id = 202,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 3,
+                            Name = "Stanie na rękach (wytrzymanie)"
+                        },
+                        new
+                        {
+                            Id = 203,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 3,
+                            Name = "Wyciskanie żołnierskie"
+                        },
+                        new
+                        {
+                            Id = 204,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 3,
+                            Name = "Wyciskanie hantli nad głowę"
+                        },
+                        new
+                        {
+                            Id = 205,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 3,
+                            Name = "Wznosy bokiem"
+                        },
+                        new
+                        {
+                            Id = 206,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 3,
+                            Name = "Wznosy w opadzie tułowia"
+                        },
+                        new
+                        {
+                            Id = 207,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 5,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 3,
+                            Name = "Face pull"
+                        },
+                        new
+                        {
+                            Id = 208,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 6,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 3,
+                            Name = "Krążenia ramion z gumą"
+                        },
+                        new
+                        {
+                            Id = 300,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 5,
+                            Name = "Dipy na ławce (triceps)"
+                        },
+                        new
+                        {
+                            Id = 301,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 5,
+                            Name = "Pompki francuskie na drążku"
+                        },
+                        new
+                        {
+                            Id = 302,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 5,
+                            Name = "Wyciskanie francuskie"
+                        },
+                        new
+                        {
+                            Id = 303,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 5,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 5,
+                            Name = "Prostowanie ramion na wyciągu"
+                        },
+                        new
+                        {
+                            Id = 304,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 4,
+                            Name = "Podciąganie podchwytem wąsko"
+                        },
+                        new
+                        {
+                            Id = 305,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 4,
+                            Name = "Uginanie ramion ze sztangą"
+                        },
+                        new
+                        {
+                            Id = 306,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 4,
+                            Name = "Uginanie ramion z hantlami"
+                        },
+                        new
+                        {
+                            Id = 307,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 4,
+                            Name = "Uginanie młotkowe"
+                        },
+                        new
+                        {
+                            Id = 308,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 6,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 4,
+                            Name = "Uginanie ramion z gumą"
+                        },
+                        new
+                        {
+                            Id = 309,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 6,
+                            Name = "Zwis na ręczniku (chwyt)"
+                        },
+                        new
+                        {
+                            Id = 310,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 6,
+                            Name = "Uginanie nadgarstków"
+                        },
+                        new
+                        {
+                            Id = 311,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 2,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 3,
+                            MuscleGroup = 6,
+                            Name = "Spacer farmera"
+                        },
+                        new
+                        {
+                            Id = 400,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 7,
+                            Name = "Plank (deska)"
+                        },
+                        new
+                        {
+                            Id = 401,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 7,
+                            Name = "Plank bokiem"
+                        },
+                        new
+                        {
+                            Id = 402,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 7,
+                            Name = "Hollow body hold"
+                        },
+                        new
+                        {
+                            Id = 403,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 7,
+                            Name = "L-sit (wytrzymanie)"
+                        },
+                        new
+                        {
+                            Id = 404,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Brzuszki"
+                        },
+                        new
+                        {
+                            Id = 405,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Wznosy nóg leżąc"
+                        },
+                        new
+                        {
+                            Id = 406,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Unoszenie kolan w zwisie"
+                        },
+                        new
+                        {
+                            Id = 407,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Unoszenie nóg w zwisie"
+                        },
+                        new
+                        {
+                            Id = 408,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Toes to bar"
+                        },
+                        new
+                        {
+                            Id = 409,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Rowerek"
+                        },
+                        new
+                        {
+                            Id = 410,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Russian twist"
+                        },
+                        new
+                        {
+                            Id = 411,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Mountain climbers"
+                        },
+                        new
+                        {
+                            Id = 412,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Dragon flag"
+                        },
+                        new
+                        {
+                            Id = 413,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 7,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 7,
+                            Name = "Ab wheel (kółko)"
+                        },
+                        new
+                        {
+                            Id = 500,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Przysiady"
+                        },
+                        new
+                        {
+                            Id = 501,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Przysiady bułgarskie"
+                        },
+                        new
+                        {
+                            Id = 502,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Przysiad pistolet"
+                        },
+                        new
+                        {
+                            Id = 503,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Wykroki"
+                        },
+                        new
+                        {
+                            Id = 504,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Wchodzenie na podwyższenie"
+                        },
+                        new
+                        {
+                            Id = 505,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 9,
+                            Name = "Przysiad przy ścianie (wytrzymanie)"
+                        },
+                        new
+                        {
+                            Id = 506,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 9,
+                            Name = "Wyskoki z przysiadu"
+                        },
+                        new
+                        {
+                            Id = 507,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 9,
+                            Name = "Przysiad ze sztangą"
+                        },
+                        new
+                        {
+                            Id = 508,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 9,
+                            Name = "Przysiad przedni"
+                        },
+                        new
+                        {
+                            Id = 509,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 9,
+                            Name = "Wyciskanie nogami na maszynie"
+                        },
+                        new
+                        {
+                            Id = 510,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 9,
+                            Name = "Prostowanie nóg na maszynie"
+                        },
+                        new
+                        {
+                            Id = 511,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 10,
+                            Name = "Nordic curl"
+                        },
+                        new
+                        {
+                            Id = 512,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 10,
+                            Name = "Uginanie nóg leżąc"
+                        },
+                        new
+                        {
+                            Id = 513,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 10,
+                            Name = "Martwy ciąg na prostych nogach"
+                        },
+                        new
+                        {
+                            Id = 514,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 8,
+                            Name = "Mostek biodrowy"
+                        },
+                        new
+                        {
+                            Id = 515,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 8,
+                            Name = "Hip thrust"
+                        },
+                        new
+                        {
+                            Id = 516,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 11,
+                            Name = "Wspięcia na palce"
+                        },
+                        new
+                        {
+                            Id = 517,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 11,
+                            Name = "Wspięcia na palce ze sztangą"
+                        },
+                        new
+                        {
+                            Id = 600,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 0,
+                            MuscleGroup = 12,
+                            Name = "Burpees"
+                        },
+                        new
+                        {
+                            Id = 601,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 3,
+                            MuscleGroup = 12,
+                            Name = "Bear crawl"
+                        },
+                        new
+                        {
+                            Id = 602,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 3,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 12,
+                            Name = "Swing kettlebell"
+                        },
+                        new
+                        {
+                            Id = 603,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 3,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 12,
+                            Name = "Turkish get-up"
+                        },
+                        new
+                        {
+                            Id = 604,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 1,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 1,
+                            MuscleGroup = 12,
+                            Name = "Thruster"
+                        },
+                        new
+                        {
+                            Id = 605,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 12,
+                            Name = "Rozgrzewka"
+                        },
+                        new
+                        {
+                            Id = 606,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 12,
+                            Name = "Rozciąganie"
+                        },
+                        new
+                        {
+                            Id = 700,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Bieg"
+                        },
+                        new
+                        {
+                            Id = 701,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Spacer / marsz"
+                        },
+                        new
+                        {
+                            Id = 702,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 7,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Rower"
+                        },
+                        new
+                        {
+                            Id = 703,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Bieżnia"
+                        },
+                        new
+                        {
+                            Id = 704,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 13,
+                            Name = "Orbitrek"
+                        },
+                        new
+                        {
+                            Id = 705,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 4,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Wioślarz"
+                        },
+                        new
+                        {
+                            Id = 706,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 7,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 13,
+                            Name = "Skakanka"
+                        },
+                        new
+                        {
+                            Id = 707,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 4,
+                            MuscleGroup = 13,
+                            Name = "Pływanie"
+                        },
+                        new
+                        {
+                            Id = 708,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Equipment = 0,
+                            IsArchived = false,
+                            IsSystem = true,
+                            MetricType = 2,
+                            MuscleGroup = 13,
+                            Name = "Interwały (HIIT)"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Models.FinanceCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -1950,6 +3117,152 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Models.Supplement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("DefaultAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Unit")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("Supplements", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.SupplementIntake", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ScheduleSlotId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TakenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("TakenOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WorkoutSessionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplementId");
+
+                    b.HasIndex("WorkoutSessionId");
+
+                    b.HasIndex("ScheduleSlotId", "TakenOn")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SupplementIntakes_ScheduleSlotId_TakenOn")
+                        .HasFilter("[ScheduleSlotId] IS NOT NULL");
+
+                    b.HasIndex("UserProfileId", "TakenOn");
+
+                    b.ToTable("SupplementIntakes", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.SupplementScheduleSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int?>("OffsetMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplementId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly?>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Timing")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplementId");
+
+                    b.ToTable("SupplementScheduleSlots", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.UserBlock", b =>
                 {
                     b.Property<int>("BlockerUserProfileId")
@@ -2191,6 +3504,13 @@ namespace Infrastructure.Migrations
                     b.Property<string>("UploadedAvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("WeightUnit")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)")
+                        .HasDefaultValue("kg");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId")
@@ -2245,6 +3565,270 @@ namespace Infrastructure.Migrations
                     b.ToTable("WeeklyQuest_Days", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.WorkoutRoutine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("WorkoutRoutines", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutRoutineExercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RestSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TargetDistance")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int?>("TargetDurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetReps")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetSets")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TargetWeight")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkoutRoutineId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.HasIndex("WorkoutRoutineId", "Order");
+
+                    b.ToTable("WorkoutRoutineExercises", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateOnly>("PerformedOn")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("RoutineId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoutineId");
+
+                    b.HasIndex("UserProfileId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WorkoutSessions_UserProfileId_ActiveOnly")
+                        .HasFilter("[Status] = 0");
+
+                    b.HasIndex("UserProfileId", "PerformedOn");
+
+                    b.ToTable("WorkoutSessions", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSessionExercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ExerciseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExerciseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MetricType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RestSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TargetDistance")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int?>("TargetDurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetReps")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetSets")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TargetWeight")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkoutSessionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.HasIndex("WorkoutSessionId", "Order");
+
+                    b.ToTable("WorkoutSessionExercises", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Distance")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Reps")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Rpe")
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
+
+                    b.Property<int>("SetNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SetType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Weight")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int>("WorkoutSessionExerciseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkoutSessionExerciseId", "SetNumber");
+
+                    b.ToTable("WorkoutSets", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.ActiveUserEffect", b =>
                 {
                     b.HasOne("Domain.Models.ShopItem", "SourceItem")
@@ -2278,6 +3862,16 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.Exercise", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("Exercises")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("UserProfile");
                 });
@@ -2483,6 +4077,61 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest");
                 });
 
+            modelBuilder.Entity("Domain.Models.Supplement", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("Supplements")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.SupplementIntake", b =>
+                {
+                    b.HasOne("Domain.Models.SupplementScheduleSlot", "ScheduleSlot")
+                        .WithMany("Intakes")
+                        .HasForeignKey("ScheduleSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.Supplement", "Supplement")
+                        .WithMany("Intakes")
+                        .HasForeignKey("SupplementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("SupplementIntakes")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.WorkoutSession", "WorkoutSession")
+                        .WithMany("SupplementIntakes")
+                        .HasForeignKey("WorkoutSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ScheduleSlot");
+
+                    b.Navigation("Supplement");
+
+                    b.Navigation("UserProfile");
+
+                    b.Navigation("WorkoutSession");
+                });
+
+            modelBuilder.Entity("Domain.Models.SupplementScheduleSlot", b =>
+                {
+                    b.HasOne("Domain.Models.Supplement", "Supplement")
+                        .WithMany("Slots")
+                        .HasForeignKey("SupplementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Supplement");
+                });
+
             modelBuilder.Entity("Domain.Models.UserBlock", b =>
                 {
                     b.HasOne("Domain.Models.UserProfile", "BlockedUserProfile")
@@ -2581,6 +4230,83 @@ namespace Infrastructure.Migrations
                     b.Navigation("Quest");
                 });
 
+            modelBuilder.Entity("Domain.Models.WorkoutRoutine", b =>
+                {
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("WorkoutRoutines")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutRoutineExercise", b =>
+                {
+                    b.HasOne("Domain.Models.Exercise", "Exercise")
+                        .WithMany("RoutineExercises")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.WorkoutRoutine", "WorkoutRoutine")
+                        .WithMany("Exercises")
+                        .HasForeignKey("WorkoutRoutineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("WorkoutRoutine");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSession", b =>
+                {
+                    b.HasOne("Domain.Models.WorkoutRoutine", "Routine")
+                        .WithMany()
+                        .HasForeignKey("RoutineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("WorkoutSessions")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Routine");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSessionExercise", b =>
+                {
+                    b.HasOne("Domain.Models.Exercise", "Exercise")
+                        .WithMany("SessionExercises")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Models.WorkoutSession", "WorkoutSession")
+                        .WithMany("Exercises")
+                        .HasForeignKey("WorkoutSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("WorkoutSession");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSet", b =>
+                {
+                    b.HasOne("Domain.Models.WorkoutSessionExercise", "WorkoutSessionExercise")
+                        .WithMany("Sets")
+                        .HasForeignKey("WorkoutSessionExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkoutSessionExercise");
+                });
+
             modelBuilder.Entity("Domain.Models.Account", b =>
                 {
                     b.Navigation("Profile")
@@ -2590,6 +4316,13 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.Badge", b =>
                 {
                     b.Navigation("UserProfile_Badges");
+                });
+
+            modelBuilder.Entity("Domain.Models.Exercise", b =>
+                {
+                    b.Navigation("RoutineExercises");
+
+                    b.Navigation("SessionExercises");
                 });
 
             modelBuilder.Entity("Domain.Models.FinanceCategory", b =>
@@ -2638,11 +4371,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserInventories");
                 });
 
+            modelBuilder.Entity("Domain.Models.Supplement", b =>
+                {
+                    b.Navigation("Intakes");
+
+                    b.Navigation("Slots");
+                });
+
+            modelBuilder.Entity("Domain.Models.SupplementScheduleSlot", b =>
+                {
+                    b.Navigation("Intakes");
+                });
+
             modelBuilder.Entity("Domain.Models.UserProfile", b =>
                 {
                     b.Navigation("ActiveUserEffects");
 
                     b.Navigation("Budgets");
+
+                    b.Navigation("Exercises");
 
                     b.Navigation("FinanceCategories");
 
@@ -2670,9 +4417,34 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("SentFriendInvitations");
 
+                    b.Navigation("SupplementIntakes");
+
+                    b.Navigation("Supplements");
+
                     b.Navigation("UserGoals");
 
                     b.Navigation("UserProfile_Badges");
+
+                    b.Navigation("WorkoutRoutines");
+
+                    b.Navigation("WorkoutSessions");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutRoutine", b =>
+                {
+                    b.Navigation("Exercises");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSession", b =>
+                {
+                    b.Navigation("Exercises");
+
+                    b.Navigation("SupplementIntakes");
+                });
+
+            modelBuilder.Entity("Domain.Models.WorkoutSessionExercise", b =>
+                {
+                    b.Navigation("Sets");
                 });
 #pragma warning restore 612, 618
         }

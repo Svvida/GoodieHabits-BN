@@ -117,7 +117,7 @@ Naming conventions you can rely on:
 - Mapping: `XxxMappingProfile` implementing Mapster's `IRegister`, auto-discovered by `TypeAdapterConfig.Scan(applicationAssembly)`.
 
 ### Feature domains present today
-`Accounts`, `Auth`, `Badges`, `Finance` (§13), `FriendInvitations`, `Friendships`, `Inventories`, `Leaderboard`, `Nicknames`, `Notifications`, `QuestLabels`, `Quests`, `Shop`, `Statistics`, `UserBlocks`, `UserGoals`, `UserProfiles`, plus shared `Common`.
+`Accounts`, `Auth`, `Badges`, `Finance` (§13), `FriendInvitations`, `Friendships`, `Inventories`, `Leaderboard`, `Nicknames`, `Notifications`, `QuestLabels`, `Quests`, `Shop`, `Statistics`, `Supplements` (§14), `UserBlocks`, `UserGoals`, `UserProfiles`, `Workouts` (§14), plus shared `Common`.
 
 ### Notable patterns inside slices
 - **Strategy pattern**, registered as multiple DI implementations of one interface and selected at runtime:
@@ -276,6 +276,7 @@ To add a use case (the **finance module**, §13, is the most recent worked examp
 | External integrations | `Infrastructure/{Authentication,Email,Photos,Notifications,Services}/` |
 | Test setup | `Application.Tests/TestBase.cs` |
 | Finance module (detail) | `docs/finance-module.md` (decisions, model rules, API surface, seeding hazards) |
+| Workouts & Supplements (detail) | `docs/workouts-module.md` (decisions, model rules, API surface, seeding hazards) |
 
 ---
 
@@ -328,3 +329,63 @@ several of which are load-bearing in non-obvious ways.
   up, and expect the same hazard in any other table mixing `HasData` with user data.
 - **Deferred (designed-for, not built):** multiple wallets + transfers, multi-currency (`Money` VO + FX),
   gamification hooks, receipt attachments. Finance stays independent of Quests.
+
+---
+
+## 14. Workouts & Supplements modules
+
+Two **sibling** feature domains — training (exercise library, routines, performed sessions, analytics) and
+supplements (catalog, schedule, daily checklist, adherence) — both keyed on **`UserProfile`** and following
+every convention above. **Core is built and green** (208 tests inside 668 total). This section is the
+overview; the decisions and their rationale live in **[`docs/workouts-module.md`](./docs/workouts-module.md)**
+— read it before changing any of the rules below.
+
+- **They are siblings, not parent/child.** The only link is a nullable `WorkoutSessionId` on a supplement
+  intake. This is forced by the product requirement that a supplement plan works on a rest day, so it cannot
+  hang off a session; the in-training panel is `GET /supplements/checklist` filtered to
+  `PreWorkout`/`PostWorkout`, and *that filter is the entire integration*. Same posture as Finance vs Quests.
+- **Entities** (`Domain/Models/`): `Exercise` (single entity discriminated by `ExerciseMetricEnum`, mirroring
+  `Quest`; system rows seeded via `HasData` with `UserProfileId = null`), `WorkoutRoutine` +
+  `WorkoutRoutineExercise` (template), `WorkoutSession` + `WorkoutSessionExercise` + `WorkoutSet` (the
+  aggregate that records what happened), `Supplement` + `SupplementScheduleSlot` + `SupplementIntake`,
+  plus the `ExerciseBest` projection type.
+- **Time:** `PerformedOn` / `TakenOn` are `DateOnly` (SQL `date`) — calendar facts, for the same reason as
+  `FinanceTransaction.OccurredOn` and quest occurrence periods (§6). `StartedAt` / `CompletedAt` / `TakenAt`
+  stay UTC instants. "Today" always comes from `UserProfile.LocalDateOn`.
+- **Weight unit is one setting per user** (`UserProfile.WeightUnit`, default `kg`) and changing it **never**
+  converts stored values — the `UserProfile.Currency` call, repeated.
+- **Template vs record:** starting a session *copies* the routine's exercises and snapshots each exercise's
+  name and metric. Editing or deleting a routine never reaches a session already performed from it (deleting
+  nulls `RoutineId`, `Restrict` + handler). Identical to `RecurringTransaction → FinanceTransaction`.
+- **Metric declares what a set *requires*, never what it forbids** — weight on a `Reps` exercise is a
+  weighted pull-up, not an error. The check lives in the entity (it needs the entry's snapshotted metric), so
+  it surfaces as an `AppException`-driven 400 rather than a FluentValidation failure.
+- **Two logging paths, one row shape:** granular `POST .../sets` for live logging, and
+  `PUT /sessions/{id}/log` as **full replacement** so an offline sync retry is idempotent. Every mutating
+  session endpoint returns the whole session.
+- **At most one `InProgress` session per user** — filtered unique index on `Status = 0`, with the handler
+  turning it into a 409 that names the active session.
+- **`UNIQUE (ScheduleSlotId, TakenOn)`** (filtered) makes double-ticking a dose structurally impossible — the
+  `UNIQUE (QuestId, PeriodStart)` lesson applied up front. The checkbox is an idempotent `PUT` carrying
+  intent; ad-hoc doses are a separate, deliberately repeatable `POST`.
+- **Calculators** (`Domain/Calculators/`, pure and DB-free): `WorkoutVolumeCalculator`, `OneRepMaxCalculator`
+  (Epley), `SupplementAdherenceCalculator` (reuses the quest elapsed-period denominator rule).
+- **Gamification hook ships, rewards do not:** `WorkoutSessionCompletedEvent` +
+  `BadgeTriggerEnum.WorkoutSessionCompleted` are raised and published on finish (never on abandon); no
+  `IBadgeAwardingStrategy` consumes them yet, so adding XP/coins later needs no migration.
+- **API:** thin controllers under `/api/workouts/{exercises,routines,sessions,analytics,settings}` and
+  `/api/supplements{,/checklist,/intakes,/analytics}`. **No `Program.cs` registration was needed** — the
+  existing assembly scans pick everything up and all five repositories hang off `IUnitOfWork`.
+- **FE contract:** `docs/workouts-api-schema.ts` (hand-written TS) + `docs/swagger.json`, with the FE guide in
+  `docs/trening-frontend.md`.
+- ⚠️ **`Exercises` mixes `HasData` ids with user rows on one IDENTITY sequence.** The table's first migration
+  reseeds the identity to **100 000** — the fix that was retrofitted to `FinanceCategories` after a production
+  `PK` collision, applied here from day one. System exercises live below it in documented per-muscle id
+  blocks; never seed at or above 100 000.
+- ⚠️ **Grouped projections are where InMemory lies.** `GetPersonalRecordsAsync` was first written with an
+  ordered sub-select inside its `GroupBy` — green in tests, untranslatable in SQL Server. It uses plain
+  aggregates only; keep it that way.
+- **Deferred (designed-for, not built):** supersets/dropsets (reserved `WorkoutSetTypeEnum` slots), rest
+  timer, multi-week plans above `WorkoutRoutine`, weekday-scoped supplement slots, per-user hiding of system
+  exercises, bodyweight & measurements, progress photos, supplement reminders, and the XP/coin/badge strategy
+  behind the hook above.

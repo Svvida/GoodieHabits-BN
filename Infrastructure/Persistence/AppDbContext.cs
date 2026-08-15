@@ -32,6 +32,15 @@ namespace Infrastructure.Persistence
         public DbSet<FinanceTransaction> FinanceTransactions { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
+        public DbSet<Exercise> Exercises { get; set; }
+        public DbSet<WorkoutRoutine> WorkoutRoutines { get; set; }
+        public DbSet<WorkoutRoutineExercise> WorkoutRoutineExercises { get; set; }
+        public DbSet<WorkoutSession> WorkoutSessions { get; set; }
+        public DbSet<WorkoutSessionExercise> WorkoutSessionExercises { get; set; }
+        public DbSet<WorkoutSet> WorkoutSets { get; set; }
+        public DbSet<Supplement> Supplements { get; set; }
+        public DbSet<SupplementScheduleSlot> SupplementScheduleSlots { get; set; }
+        public DbSet<SupplementIntake> SupplementIntakes { get; set; }
 
         public override int SaveChanges()
         {
@@ -87,6 +96,15 @@ namespace Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new FinanceTransactionConfiguration());
             modelBuilder.ApplyConfiguration(new BudgetConfiguration());
             modelBuilder.ApplyConfiguration(new RecurringTransactionConfiguration());
+            modelBuilder.ApplyConfiguration(new ExerciseConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkoutRoutineConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkoutRoutineExerciseConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkoutSessionConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkoutSessionExerciseConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkoutSetConfiguration());
+            modelBuilder.ApplyConfiguration(new SupplementConfiguration());
+            modelBuilder.ApplyConfiguration(new SupplementScheduleSlotConfiguration());
+            modelBuilder.ApplyConfiguration(new SupplementIntakeConfiguration());
 
             modelBuilder.Entity<Badge>().HasData(
                 new Badge(1, BadgeTypeEnum.CompleteDailySeven, "Daily Streak: 7", "One week of daily quests in a row!", "#008000"),

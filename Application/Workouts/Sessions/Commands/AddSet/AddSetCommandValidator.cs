@@ -1,0 +1,19 @@
+using Application.Workouts.Sessions.Common;
+using FluentValidation;
+
+namespace Application.Workouts.Sessions.Commands.AddSet
+{
+    public class AddSetCommandValidator : AbstractValidator<AddSetCommand>
+    {
+        public AddSetCommandValidator()
+        {
+            RuleFor(c => c.SessionId).GreaterThan(0).WithMessage("SessionId must be greater than 0.");
+            RuleFor(c => c.EntryId).GreaterThan(0).WithMessage("EntryId must be greater than 0.");
+            RuleFor(c => c.Set).NotNull().WithMessage("Set is required.");
+
+            RuleFor(c => c.Set)
+                .SetValidator(new SessionSetInputValidator()!)
+                .When(c => c.Set is not null);
+        }
+    }
+}

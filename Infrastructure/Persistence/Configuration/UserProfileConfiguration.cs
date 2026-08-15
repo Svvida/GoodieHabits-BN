@@ -1,4 +1,5 @@
 ﻿using Domain.Models;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +23,13 @@ namespace Infrastructure.Persistence.Configuration
             builder.Property(p => p.Currency)
                 .IsRequired()
                 .HasDefaultValue("USD")
+                .HasMaxLength(3);
+
+            // Workouts: display unit for logged weights. Existing rows backfill to kg via the column default.
+            // Like Currency, changing it never converts stored values.
+            builder.Property(p => p.WeightUnit)
+                .IsRequired()
+                .HasDefaultValue(SupportedWeightUnits.Default)
                 .HasMaxLength(3);
 
             builder.Property(p => p.Nickname)
