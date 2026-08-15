@@ -303,6 +303,37 @@ The same shape covers: product returns · partial refunds · double charges/char
   savings because `ExpenseByCategory` plus the category tree is sufficient information, but it cannot compute
   corrections, which need per-transaction parentage the FE only ever sees one page of. Recorded here so the next
   analytics change doesn't conflate the two.
+- **`IsSavings` stays strictly inherited by sub-categories — this closes the other half of open question #3**
+  (settled 2026-08-01). FE reported that "Spłata długów", then a sub of "Finanse i Oszczędności", was being
+  presented as savings; paying someone back is money gone, not money set aside. The fix was taxonomic, not a
+  domain change: sub-categories still inherit `IsSavings` from their parent, and the debt rows moved to a new
+  main category **"Długi i Pożyczki" (id 8, `IsSavings: false`)** holding "Spłata długów" (147) and
+  "Pożyczki udzielone" (148). Per-sub `IsSavings` overrides were considered and rejected — a budget on a main
+  category rolls up all of its subs (§ `GetBudgetProgressQueryHandler`), so subs that disagree about savings-ness
+  make that total meaningless, and it would force the FE to abandon its one-line rule ("children of an
+  `isSavings` main are savings"). **Sub-categories disagreeing about `IsSavings` is the signal that they belong
+  under different mains** — let the taxonomy carry it, not a per-row exception.
+- **Money lent out is `IsSavings: false`,** even though you expect it back. Repayment is recorded as a
+  *correction* against the original expense, which nets it to zero on its own; flagging it as savings would
+  instead park an unrepaid loan under "set aside" indefinitely — precisely the case where it isn't.
+- **⚠️ Seeded category ids share one IDENTITY sequence with user-created categories** (discovered 2026-08-09 the
+  hard way: a seed migration failed on `PK_FinanceCategories` because user rows had taken 150-153). `HasData`
+  writes explicit ids under `IDENTITY_INSERT`, which *raises* the counter but never reserves a range, so the
+  sequence eventually walks into whatever the next seed migration wants to use. Fixed permanently by reseeding
+  the identity to **100 000**: system categories live below it, user categories above, and inserting a lower
+  explicit id never drags the counter back down. **Ids 149-157 are burned** (150-153 are live user rows) —
+  number new system categories from 167 up. Same hazard applies to any other table that mixes `HasData` seed
+  rows with user-generated ones.
+- **A trip is a main category, not a sub of "Rozrywka i Inne"** (added 2026-08-09 after auditing two months of
+  real transactions). A trip's cost spans several kinds of spending — bed, transport, food, tickets — so the
+  number worth having is the total for the trip, which only a main category can roll up. In the audited data a
+  single holiday accounted for **22.6% of two months of spending** while being invisible, split across
+  "Wyjścia ze znajomymi" and "Nieprzewidziane wydatki".
+- **No generic "Inne" for expenses, deliberately.** The same audit found that 98% of what had accumulated in
+  "Nieprzewidziane wydatki" had an obvious home that simply did not exist yet (travel, furnishings, toiletries,
+  electronics). A catch-all bucket hides that signal instead of surfacing it: a growing "don't know" pile is
+  supposed to mean *a category is missing*, and "Nieprzewidziane" should keep its literal meaning — a sudden,
+  unplanned expense.
 
 ### 11.1 — Domain (`Domain/`) — ✅ DONE
 

@@ -32,6 +32,7 @@ Podkategorie **nie muszą** mieć własnej ikony/koloru — mogą być `null` i 
 | Ubezpieczenie nieruchomości |
 | Serwis / Naprawy domowe |
 | Środki czystości |
+| Wyposażenie i meble ⬅ **nowe (id 165)** |
 
 ### 2. Transport
 `icon: car-outline` · `color: #F59E0B` · `isSavings: false`
@@ -61,6 +62,11 @@ Podkategorie **nie muszą** mieć własnej ikony/koloru — mogą być `null` i 
 | Siłownia / Karnet sportowy |
 | Kosmetyczka / Fryzjer |
 | Odzież i obuwie |
+| Higiena i kosmetyki ⬅ **nowe (id 164)** |
+
+> „Higiena i kosmetyki" to **produkty** (pasta do zębów, dezodorant, drogeria), w odróżnieniu od „Kosmetyczka /
+> Fryzjer", które są **usługami**. Bez tego lądowały w „Środkach czystości" (chemia domowa) albo w „Zakupach
+> spożywczych" — co rozjeżdżało obie tamte kategorie.
 
 ### 4. Rozwój i Edukacja
 `icon: school-outline` · `color: #8B5CF6` · `isSavings: false`
@@ -86,6 +92,11 @@ Podkategorie **nie muszą** mieć własnej ikony/koloru — mogą być `null` i 
 | Prezenty |
 | Wyjścia ze znajomymi |
 | Nieprzewidziane wydatki |
+| Elektronika i sprzęt ⬅ **nowe (id 166)** |
+
+> „Nieprzewidziane wydatki" znaczy **nagły, niezaplanowany wydatek** (awaria, wizyta u weterynarza) — a nie
+> „nie wiem, gdzie to wrzucić". Świadomie **nie ma** ogólnej kategorii „Inne" dla wydatków: jak ta kategoria
+> zaczyna puchnąć, to sygnał, że brakuje jakiejś konkretnej, a nie że potrzebny jest większy worek.
 
 ### 6. Finanse i Oszczędności ⚠️ `isSavings: true`
 `icon: trending-up-outline` · `color: #14B8A6` · **`isSavings: true`**
@@ -98,7 +109,42 @@ Ta kategoria (i jej podkategorie) jest wykluczana z sumy "wydano" na Pulpicie i 
 | IKE / IKZE |
 | Inwestycje (ETF / Giełda) |
 | Oszczędności celowe |
-| Spłata długów |
+
+### 7. Długi i Pożyczki `isSavings: false`
+`icon: swap-horizontal-outline` · `color: #EF4444` · `isSavings: false` · **id 8**
+
+| Podkategoria | id |
+|---|---|
+| Spłata długów | 147 |
+| Pożyczki udzielone | 148 |
+
+⚠️ **Zmiana z 2026-08-01.** "Spłata długów" była wcześniej podkategorią "Finanse i Oszczędności" i dziedziczyła
+po niej `isSavings: true`, przez co oddawanie komuś pieniędzy pokazywało się jako "Odłożone w tym miesiącu".
+Oddanie długu to pieniądze, które znikają na dobre, więc kategoria wyszła spod oszczędności do własnej głównej.
+Jej `id` (147) się **nie zmieniło** — zmieniło się `parentCategoryId` (teraz `8`) i `isSavings` (teraz `false`).
+
+`Pożyczki udzielone` to lustrzane odbicie: pieniądze, które **ja komuś** pożyczam. Zapisuje się je jako zwykły
+wydatek, a gdy ktoś odda — jako **korekcję** tej transakcji (`POST /transactions/{id}/corrections`), nie jako
+osobny przychód. Korekcja dziedziczy typ i kategorię po rodzicu i zbija jego `netAmount`, więc spłacona pożyczka
+sama znika z wydatków, a niespłacona słusznie w nich zostaje. Dlatego ta kategoria ma `isSavings: false` —
+inaczej nieoddana pożyczka siedziałaby w "Odłożone" w nieskończoność.
+
+### 8. Podróże i Wakacje `isSavings: false`
+`icon: airplane-outline` · `color: #0EA5E9` · `isSavings: false` · **id 9**
+
+| Podkategoria | id |
+|---|---|
+| Noclegi | 158 |
+| Przejazdy / Loty | 159 |
+| Wynajem auta | 160 |
+| Jedzenie na wyjeździe | 161 |
+| Atrakcje i wycieczki | 162 |
+| Ubezpieczenie podróżne | 163 |
+
+Wyjazd jest kategorią **główną**, a nie podkategorią „Rozrywki", bo jego koszt to suma kilku różnych rodzajów
+wydatków (nocleg, dojazd, jedzenie, atrakcje), a liczba, którą realnie chcesz zobaczyć, to **łączny koszt
+wyjazdu**. Wcześniej wyjazd rozłaził się po „Wyjściach ze znajomymi" i „Nieprzewidzianych wydatkach", przez co
+obie te kategorie kłamały.
 
 ---
 
@@ -123,8 +169,8 @@ Bez podkategorii (płaska lista). W apce nazywane "źródłami przychodu", ale w
 
 ## Podsumowanie liczb
 
-- 6 kategorii wydatków głównych, w tym 1 oznaczona `isSavings: true`
-- 47 podkategorii wydatków łącznie (12+9+8+5+8+5 — ostatnie 5 to podkategorie "Finanse i Oszczędności")
+- 8 kategorii wydatków głównych, w tym 1 oznaczona `isSavings: true`
+- 57 podkategorii wydatków łącznie (13+9+9+5+9+4+2+6, w kolejności sekcji wyżej)
 - 8 kategorii przychodów (płaskie, bez podkategorii)
 - Gotowy JSON do zasilenia backendu: [`finance-categories-seed.json`](./finance-categories-seed.json)
 
@@ -132,4 +178,9 @@ Bez podkategorii (płaska lista). W apce nazywane "źródłami przychodu", ale w
 
 1. **Czy `icon`/`color` na podkategoriach są w ogóle potrzebne backendowi, czy mogą być `null`?** Apka i tak spada na ikonę/kolor rodzica.
 2. **Czy nazwy kategorii można kiedyś zlokalizować (EN/PL)?** Obecny `FinanceCategoryDto.name` to jeden string — jeśli kiedyś chcemy angielską wersję apki z angielskimi nazwami kategorii, backend będzie musiał to wsparć (np. osobne pole albo nagłówek `Accept-Language`).
-3. **Czy `isSavings` powinien być też ustawialny per-podkategoria, czy tylko na kategorii głównej?** Zakładam, że flaga na rodzicu wystarczy (apka i tak traktuje wszystkie dzieci kategorii oznaczonej `isSavings: true` jako oszczędności).
+3. ~~**Czy `isSavings` powinien być też ustawialny per-podkategoria, czy tylko na kategorii głównej?**~~
+   **Rozstrzygnięte 2026-08-01: tylko na kategorii głównej, podkategorie dziedziczą — na stałe.** Wasze
+   założenie („flaga na rodzicu wystarczy") zostaje regułą. Powód: budżet założony na kategorię główną obejmuje
+   wszystkie jej podkategorie, więc podkategorie różniące się `isSavings` czyniłyby taki budżet bez sensu.
+   Jeśli kiedyś jakaś podkategoria „nie pasuje" do `isSavings` rodzica, to znak, że powinna być pod inną
+   główną — dokładnie tak rozwiązaliśmy przypadek „Spłata długów" (patrz kategoria 7 wyżej).

@@ -27,14 +27,21 @@ namespace Application.Quests.Queries.GetHabitsOverview
                 .GetForUserInRangeAsync(request.UserProfileId, from, to, cancellationToken)
                 .ConfigureAwait(false);
 
+            // Group by the id, not the navigation property: the query is AsNoTracking without identity
+            // resolution, so each occurrence row carries its own Quest instance and Quest uses reference
+            // equality — grouping on it would yield one group per occurrence instead of one per quest.
             var perQuest = occurrences
-                .GroupBy(o => o.Quest)
-                .Select(group => new HabitSummaryDto(
-                    group.Key.Id,
-                    group.Key.QuestType.ToString(),
-                    group.Key.Title,
-                    group.Key.Emoji,
-                    QuestAnalyticsCalculator.Summarize(group, today)))
+                .GroupBy(o => o.QuestId)
+                .Select(group =>
+                {
+                    var quest = group.First().Quest;
+                    return new HabitSummaryDto(
+                        quest.Id,
+                        quest.QuestType.ToString(),
+                        quest.Title,
+                        quest.Emoji,
+                        QuestAnalyticsCalculator.Summarize(group, today));
+                })
                 .OrderByDescending(summary => summary.Summary.CompletionRate ?? -1)
                 .ThenBy(summary => summary.Title)
                 .ToList();

@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801205008_PromoteDebtRepaymentToMainCategory")]
+    partial class PromoteDebtRepaymentToMainCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -468,24 +471,13 @@ namespace Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = 8,
+                            Id = 147,
                             Color = "#EF4444",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Icon = "swap-horizontal-outline",
+                            Icon = "arrow-undo-outline",
                             IsSavings = false,
                             IsSystem = true,
-                            Name = "Długi i Pożyczki",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Color = "#0EA5E9",
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Icon = "airplane-outline",
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Podróże i Wakacje",
+                            Name = "Spłata długów",
                             Type = 1
                         },
                         new
@@ -698,16 +690,6 @@ namespace Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = 165,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Wyposażenie i meble",
-                            ParentCategoryId = 1,
-                            Type = 1
-                        },
-                        new
-                        {
                             Id = 113,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsSavings = false,
@@ -878,16 +860,6 @@ namespace Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = 164,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Higiena i kosmetyki",
-                            ParentCategoryId = 3,
-                            Type = 1
-                        },
-                        new
-                        {
                             Id = 130,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsSavings = false,
@@ -1018,16 +990,6 @@ namespace Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = 166,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Elektronika i sprzęt",
-                            ParentCategoryId = 5,
-                            Type = 1
-                        },
-                        new
-                        {
                             Id = 143,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsSavings = true,
@@ -1064,86 +1026,6 @@ namespace Infrastructure.Migrations
                             IsSystem = true,
                             Name = "Oszczędności celowe",
                             ParentCategoryId = 6,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 147,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Spłata długów",
-                            ParentCategoryId = 8,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 148,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Pożyczki udzielone",
-                            ParentCategoryId = 8,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 158,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Noclegi",
-                            ParentCategoryId = 9,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 159,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Przejazdy / Loty",
-                            ParentCategoryId = 9,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 160,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Wynajem auta",
-                            ParentCategoryId = 9,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 161,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Jedzenie na wyjeździe",
-                            ParentCategoryId = 9,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 162,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Atrakcje i wycieczki",
-                            ParentCategoryId = 9,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 163,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsSavings = false,
-                            IsSystem = true,
-                            Name = "Ubezpieczenie podróżne",
-                            ParentCategoryId = 9,
                             Type = 1
                         });
                 });
