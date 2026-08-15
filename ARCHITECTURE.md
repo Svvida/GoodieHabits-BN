@@ -117,7 +117,7 @@ Naming conventions you can rely on:
 - Mapping: `XxxMappingProfile` implementing Mapster's `IRegister`, auto-discovered by `TypeAdapterConfig.Scan(applicationAssembly)`.
 
 ### Feature domains present today
-`Accounts`, `Auth`, `Badges`, `FriendInvitations`, `Friendships`, `Inventories`, `Leaderboard`, `Nicknames`, `Notifications`, `QuestLabels`, `Quests`, `Shop`, `Statistics`, `UserBlocks`, `UserGoals`, `UserProfiles`, plus shared `Common`.
+`Accounts`, `Auth`, `Badges`, `Finance` (§13), `FriendInvitations`, `Friendships`, `Inventories`, `Leaderboard`, `Nicknames`, `Notifications`, `QuestLabels`, `Quests`, `Shop`, `Statistics`, `UserBlocks`, `UserGoals`, `UserProfiles`, plus shared `Common`.
 
 ### Notable patterns inside slices
 - **Strategy pattern**, registered as multiple DI implementations of one interface and selected at runtime:
@@ -246,7 +246,7 @@ When refactoring, aim for: a clear split between **pure unit tests** (Domain log
 
 ## 11. Recipe: add a new feature slice
 
-To add a use case (this is also the path for the upcoming **finance module** — a new feature domain such as `Application/Finance/`):
+To add a use case (the **finance module**, §13, is the most recent worked example of this recipe end to end):
 
 1. **Domain first (if new concepts):** add entity/value-object/enum under `Domain/`, with a `Create` factory, private setters, and behavior methods that enforce invariants. Add a repository interface under `Domain/Interfaces/Repositories/` and register it on `IUnitOfWork` if it needs persistence.
 2. **Persistence:** add an `IEntityTypeConfiguration` under `Infrastructure/Persistence/Configuration/`, a `DbSet` in `AppDbContext`, a repository under `Infrastructure/Persistence/Repositories/` (derive from `BaseRepository<T>`), wire it into `UnitOfWork`, and **add an EF migration**.
@@ -275,41 +275,56 @@ To add a use case (this is also the path for the upcoming **finance module** —
 | Data access | `Infrastructure/Persistence/Repositories/*`, `UnitOfWork.cs`; contracts in `Domain/Interfaces/Repositories/*` |
 | External integrations | `Infrastructure/{Authentication,Email,Photos,Notifications,Services}/` |
 | Test setup | `Application.Tests/TestBase.cs` |
-| Finance module (detail) | `FINANCE_MODULE_PLAN.md` (decisions, build log, FE schema) |
+| Finance module (detail) | `docs/finance-module.md` (decisions, model rules, API surface, seeding hazards) |
 
 ---
 
 ## 13. Finance module
 
-A personal-finance feature domain (income/expense tracking, hierarchical categories, budgets, analytics) built as
-a standard vertical slice under `Application/Finance/`, linked to **`UserProfile`** (not the auth `Account`). It
-follows every convention above; the full design rationale, build log, and open questions live in
-[`FINANCE_MODULE_PLAN.md`](./FINANCE_MODULE_PLAN.md). Key architectural decisions:
+A personal-finance feature domain — income/expense tracking, hierarchical categories, budgets, analytics,
+transaction corrections and monthly recurring templates — built as a standard vertical slice under
+`Application/Finance/` and keyed on **`UserProfile`** (not the auth `Account`). It follows every convention above.
+**Core is built and green** (222 finance tests). This section is the overview; the decisions and their rationale
+live in **[`docs/finance-module.md`](./docs/finance-module.md)** — read it before changing any of the rules below,
+several of which are load-bearing in non-obvious ways.
 
 - **Entities** (`Domain/Models/`): `FinanceTransaction` (single entity discriminated by `FinanceTransactionTypeEnum`,
-  mirroring `Quest`), `FinanceCategory` (self-referencing, one level deep; system rows seeded via `HasData` with
-  `UserProfileId = null`, like `Badge`), `Budget` (overall or per-category, monthly/yearly).
-- **Inheritance rule for categories:** a sub-category derives both `Type` and `IsSavings` from its parent — the
-  values sent for a sub are ignored, and changing `IsSavings` on a main cascades to its subs. `IsSavings` is a
-  descriptive tag only: analytics deliberately treat savings transactions like any other.
+  mirroring `Quest`), `FinanceCategory` (self-referencing, exactly two levels; system rows seeded via `HasData`
+  with `UserProfileId = null`, like `Badge`), `Budget` (overall or per-category, monthly/yearly),
+  `RecurringTransaction` (a monthly template, never itself an aggregate row).
 - **Money & time:** amounts are `decimal(18,2)`, always positive (sign implied by type). A transaction's
   `OccurredOn` is a **`DateOnly`** (SQL `date`) — a calendar fact, deliberately *not* a UTC instant — which
-  sidesteps timezone/month-boundary bugs in analytics. Audit timestamps stay UTC. Currency is a single ISO-4217
-  string per user on `UserProfile.Currency` (allow-list in `Domain/ValueObjects/SupportedCurrencies.cs`).
-- **Calculators** (`Domain/Calculators/`): `FinancePeriodCalculator` (timezone-free `DateOnly` bounds) and
-  `BudgetProgressCalculator` (spent-vs-limit) — pure, DB-free, unit-tested.
-- **Slices:** `Application/Finance/{Categories,Transactions,Budgets,Analytics,Settings}/`. Relational checks
-  (ownership, category/type consistency, uniqueness) live in handlers (→ `NotFound`/`Conflict`); validators cover
-  field rules. Analytics queries aggregate in-memory over `IFinanceTransactionRepository.GetForPeriodAsync`.
-- **API:** thin controllers under `/api/finance/{categories,transactions,budgets,analytics,settings}`. No
-  `Program.cs` changes were needed — handlers/validators/Mapster profiles are picked up by the existing assembly
-  scans, and the three new repositories are exposed through `IUnitOfWork`.
+  sidesteps timezone/month-boundary bugs in analytics (§6 applies the same reasoning to quest occurrences). Audit
+  timestamps stay UTC. Currency is a single ISO-4217 string per user on `UserProfile.Currency` (allow-list in
+  `Domain/ValueObjects/SupportedCurrencies.cs`).
+- **Category inheritance:** a sub-category derives both `Type` and `IsSavings` from its parent — values sent for a
+  sub are ignored, and changing `IsSavings` on a main cascades. `IsSavings` and `IsPaid` are both **pure
+  metadata**: analytics treat savings rows, and unpaid rows, exactly like any other. Presentation is the client's.
+- **Corrections** are a *relation*, not a type: a refund/payback is a `FinanceTransaction` pointing at its parent
+  via `CorrectsTransactionId` and inheriting the parent's `Type` and `CategoryId` (the reserved
+  `FinanceTransactionTypeEnum.Transfer` slot stays reserved for wallets). Netting is materialized on the parent,
+  so **every analytics query sums `NetAmount = Amount - CorrectedAmount`**, and one repository filter
+  (`CorrectsTransactionId == null`) keeps corrections out of all five of them.
+- **Recurring generation** follows the quest-task precedent: SQL-pre-filtered candidates, derived catch-up span,
+  one `SaveChangesAsync`, dispatched from `Api/BackgroundTasks/GenerateRecurringTransactionsTask` (the module's
+  only `Program.cs` registration). It deviates on one point — a `LastMaterializedOn` watermark rather than pure
+  existence-checking, because a materialized transaction is a user-owned record they may delete and must not have
+  resurrected.
+- **Calculators** (`Domain/Calculators/`, pure and DB-free): `FinancePeriodCalculator` (timezone-free `DateOnly`
+  bounds), `BudgetProgressCalculator`, `OpeningBalanceCalculator` (signed running balance, no clamp),
+  `RecurrenceCalculator` (missing months + day-of-month clamping).
+- **Slices:** `Application/Finance/{Categories,Transactions,Budgets,Analytics,RecurringTransactions,Settings}/`.
+  Relational checks (ownership, category/type consistency, uniqueness) live in handlers (→ `NotFound`/`Conflict`);
+  validators cover field rules. Analytics aggregate in memory over
+  `IFinanceTransactionRepository.GetForPeriodAsync`; only the opening-balance totals are a grouped SQL projection.
+- **API:** thin controllers under `/api/finance/{categories,transactions,budgets,analytics,recurring-transactions,settings}`,
+  plus the sub-resource verbs `POST /transactions/{id}/corrections` and `PATCH /transactions/{id}/paid-status`.
+  Handlers/validators/Mapster profiles are picked up by the existing assembly scans and all four repositories are
+  exposed through `IUnitOfWork`.
 - **FE contract:** hand-written TypeScript types in `docs/finance-api-schema.ts` (enums serialize as strings,
   `DateOnly` → `"YYYY-MM-DD"`), alongside the generated `docs/swagger.json`.
-- **Corrections** (specced, not built — Phase 11): refunds/paybacks/reimbursements are modelled as a *relation*
-  between transactions (`CorrectsTransactionId` self-FK), not as a transaction type — the reserved
-  `FinanceTransactionTypeEnum.Transfer` slot stays reserved for wallets. A correction inherits its parent's
-  `Type` and `CategoryId`; netting is materialized on the parent (`NetAmount = Amount - CorrectedAmount`) so the
-  analytics handlers only swap which property they sum. Rationale in `FINANCE_MODULE_PLAN.md` §11.
-- **Deferred (designed-for, not built):** recurring transactions (background task), multiple wallets + transfers,
-  multi-currency (`Money` VO + FX), gamification hooks, receipt attachments.
+- ⚠️ **Seeded category ids share one IDENTITY sequence with user rows.** The identity is reseeded to 100 000 —
+  system categories below, user categories above; ids 149–157 are burned. Number new system categories from 167
+  up, and expect the same hazard in any other table mixing `HasData` with user data.
+- **Deferred (designed-for, not built):** multiple wallets + transfers, multi-currency (`Money` VO + FX),
+  gamification hooks, receipt attachments. Finance stays independent of Quests.
