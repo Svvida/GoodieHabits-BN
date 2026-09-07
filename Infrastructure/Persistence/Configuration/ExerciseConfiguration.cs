@@ -84,6 +84,7 @@ namespace Infrastructure.Persistence.Configuration
             const EquipmentEnum cable = EquipmentEnum.Cable;
             const EquipmentEnum band = EquipmentEnum.ResistanceBand;
             const EquipmentEnum other = EquipmentEnum.Other;
+            const EquipmentEnum rings = EquipmentEnum.Rings;
 
             static Exercise Ex(int id, string name, ExerciseMetricEnum metric, MuscleGroupEnum muscle, EquipmentEnum equipment)
                 => Exercise.CreateSystem(id, name, metric, muscle, equipment);
@@ -99,7 +100,7 @@ namespace Infrastructure.Persistence.Configuration
                 Ex(7, "Pompki wybuchowe (z klaśnięciem)", reps, MuscleGroupEnum.Chest, body),
                 Ex(8, "Pompki na jednej ręce", reps, MuscleGroupEnum.Chest, body),
                 Ex(9, "Dipy na poręczach", reps, MuscleGroupEnum.Chest, body),
-                Ex(10, "Pompki na kółkach gimnastycznych", reps, MuscleGroupEnum.Chest, other),
+                Ex(10, "Pompki na kółkach gimnastycznych", reps, MuscleGroupEnum.Chest, rings),
                 Ex(11, "Wyciskanie sztangi leżąc", load, MuscleGroupEnum.Chest, bar),
                 Ex(12, "Wyciskanie sztangi skos góra", load, MuscleGroupEnum.Chest, bar),
                 Ex(13, "Wyciskanie hantli leżąc", load, MuscleGroupEnum.Chest, db),

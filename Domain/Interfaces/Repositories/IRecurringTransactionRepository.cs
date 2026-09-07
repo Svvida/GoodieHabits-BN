@@ -17,5 +17,8 @@ namespace Domain.Interfaces.Repositories
         /// with nothing to do. Spans all users; this runs as a background sweep.
         /// </summary>
         Task<IReadOnlyList<RecurringTransaction>> GetForMaterializationAsync(DateOnly today, CancellationToken cancellationToken = default);
+
+        /// <summary>True if any template still points at one of these categories. Guards category deletion.</summary>
+        Task<bool> AnyForCategoriesAsync(IEnumerable<int> categoryIds, CancellationToken cancellationToken = default);
     }
 }

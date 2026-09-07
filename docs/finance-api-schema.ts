@@ -339,6 +339,11 @@ export interface GetSpendingTrendQueryParams {
  *    advanced, so a deleted month stays deleted.
  *  - Deleting a template keeps every transaction it already produced; they simply stop being linked to it.
  *    Deleting a materialized transaction does not touch the template.
+ *  - **Edits apply from the next materialization onward** — amount, day, note and category alike. Rows already
+ *    generated keep the values they were created with, so fixing a template never restates closed months. To
+ *    change rows that already exist, edit them: they are ordinary transactions.
+ *  - A category still referenced by a template cannot be deleted: `DELETE /categories` returns 409, exactly as
+ *    it does for a category that still has transactions or budgets.
  *  - `dayOfMonth` past the end of a short month clamps to its last day (31 -> 28/29/30), matching
  *    `remapOccurredOnToMonth`.
  *  - Pausing (`isActive: false`) and later resuming does **not** backfill the dormant months.
@@ -371,6 +376,9 @@ export interface UpdateRecurringTransactionRequest {
   note?: string;                 // "" clears it; omit to leave it alone
   dayOfMonth?: number;
   isActive?: boolean;
+  // `null` clears the category, omitting the key leaves it alone. Must match the template's `type` (which is
+  // immutable); a sub-category is as valid here as a main one. Applies to future rows only.
+  categoryId?: number | null;
 }
 
 // ────────────────────────── Planned routes ───────────────────────────

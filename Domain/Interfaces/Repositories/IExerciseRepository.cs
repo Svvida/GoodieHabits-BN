@@ -14,6 +14,7 @@ namespace Domain.Interfaces.Repositories
             int userProfileId,
             MuscleGroupEnum? muscleGroup,
             ExerciseMetricEnum? metricType,
+            EquipmentEnum? equipment,
             string? search,
             bool includeArchived,
             CancellationToken cancellationToken = default);

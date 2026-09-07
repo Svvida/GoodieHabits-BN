@@ -15,6 +15,7 @@ namespace Application.Workouts.Exercises.Queries.GetExercises
                     request.UserProfileId,
                     request.MuscleGroup,
                     request.MetricType,
+                    request.Equipment,
                     request.Search,
                     request.IncludeArchived,
                     cancellationToken)

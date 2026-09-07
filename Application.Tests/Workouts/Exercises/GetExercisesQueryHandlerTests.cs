@@ -37,7 +37,7 @@ namespace Application.Tests.Workouts.Exercises
             await AddExerciseAsync(profile.Id, "Moje ćwiczenie");
 
             var result = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, null, null, null, false), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, null, null, null, null, false), CancellationToken.None);
 
             result.Should().Contain(e => e.Name == "Moje ćwiczenie" && !e.IsSystem);
             result.Should().Contain(e => e.Name == "Pompki klasyczne" && e.IsSystem);
@@ -51,7 +51,7 @@ namespace Application.Tests.Workouts.Exercises
             await AddExerciseAsync(owner.Id, "Sekretne ćwiczenie");
 
             var result = await _handler.Handle(
-                new GetExercisesQuery(stranger.Id, null, null, null, false), CancellationToken.None);
+                new GetExercisesQuery(stranger.Id, null, null, null, null, false), CancellationToken.None);
 
             result.Should().NotContain(e => e.Name == "Sekretne ćwiczenie");
         }
@@ -63,9 +63,9 @@ namespace Application.Tests.Workouts.Exercises
             await AddExerciseAsync(profile.Id, "Zarchiwizowane", archived: true);
 
             var withoutArchived = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, null, null, null, false), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, null, null, null, null, false), CancellationToken.None);
             var withArchived = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, null, null, null, true), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, null, null, null, null, true), CancellationToken.None);
 
             withoutArchived.Should().NotContain(e => e.Name == "Zarchiwizowane");
             withArchived.Should().Contain(e => e.Name == "Zarchiwizowane");
@@ -77,7 +77,7 @@ namespace Application.Tests.Workouts.Exercises
             var profile = await CreateProfileAsync("a@test.com", "aaa");
 
             var result = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, MuscleGroupEnum.Cardio, null, null, false), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, MuscleGroupEnum.Cardio, null, null, null, false), CancellationToken.None);
 
             result.Should().NotBeEmpty();
             result.Should().OnlyContain(e => e.MuscleGroup == MuscleGroupEnum.Cardio);
@@ -89,7 +89,7 @@ namespace Application.Tests.Workouts.Exercises
             var profile = await CreateProfileAsync("a@test.com", "aaa");
 
             var result = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, null, null, "Podciąganie", false), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, null, null, null, "Podciąganie", false), CancellationToken.None);
 
             result.Should().NotBeEmpty();
             result.Should().OnlyContain(e => e.Name.Contains("Podciąganie"));
@@ -101,10 +101,22 @@ namespace Application.Tests.Workouts.Exercises
             var profile = await CreateProfileAsync("a@test.com", "aaa");
 
             var result = await _handler.Handle(
-                new GetExercisesQuery(profile.Id, null, ExerciseMetricEnum.DistanceAndTime, null, false), CancellationToken.None);
+                new GetExercisesQuery(profile.Id, null, ExerciseMetricEnum.DistanceAndTime, null, null, false), CancellationToken.None);
 
             result.Should().NotBeEmpty();
             result.Should().OnlyContain(e => e.MetricType == ExerciseMetricEnum.DistanceAndTime);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldFilterByEquipment()
+        {
+            var profile = await CreateProfileAsync("a@test.com", "aaa");
+
+            var result = await _handler.Handle(
+                new GetExercisesQuery(profile.Id, null, null, EquipmentEnum.Rings, null, false), CancellationToken.None);
+
+            result.Should().NotBeEmpty();
+            result.Should().OnlyContain(e => e.Equipment == EquipmentEnum.Rings);
         }
     }
 }

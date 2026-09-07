@@ -45,6 +45,41 @@ namespace Application.Tests.Finance.Categories
         }
 
         [Fact]
+        public async Task Handle_ShouldThrowConflict_WhenCategoryIsUsedByARecurringTemplate()
+        {
+            await ResetFinanceAsync();
+            var profile = await CreateProfileAsync();
+            var main = await AddCategoryAsync(FinanceCategory.CreateMain(profile.Id, "Home", FinanceTransactionTypeEnum.Expense), 9001);
+            var sub = await AddCategoryAsync(FinanceCategory.CreateSub(profile.Id, main, "Rent"), 9002);
+
+            // No transaction has been materialized yet — the template alone holds the (Restrict) FK.
+            _context.RecurringTransactions.Add(RecurringTransaction.Create(
+                profile.Id, FinanceTransactionTypeEnum.Expense, 1200m, 5, new DateOnly(2026, 1, 1), sub.Id));
+            await _context.SaveChangesAsync();
+
+            var command = new DeleteFinanceCategoriesCommand(new[] { main.Id, sub.Id }, profile.Id);
+
+            var act = () => _handler.Handle(command, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>();
+        }
+
+        [Fact]
+        public async Task Handle_ShouldThrowConflict_WhenCategoryHasABudget()
+        {
+            await ResetFinanceAsync();
+            var profile = await CreateProfileAsync();
+            var main = await AddCategoryAsync(FinanceCategory.CreateMain(profile.Id, "Home", FinanceTransactionTypeEnum.Expense), 9001);
+
+            _context.Budgets.Add(Budget.Create(profile.Id, main.Id, BudgetPeriodEnum.Monthly, 2026, 1, 1500m));
+            await _context.SaveChangesAsync();
+
+            var command = new DeleteFinanceCategoriesCommand(new[] { main.Id }, profile.Id);
+
+            var act = () => _handler.Handle(command, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>();
+        }
+
+        [Fact]
         public async Task Handle_ShouldThrowConflict_WhenMainHasExcludedChild()
         {
             await ResetFinanceAsync();
@@ -78,6 +113,7 @@ namespace Application.Tests.Finance.Categories
         private async Task ResetFinanceAsync()
         {
             _context.FinanceTransactions.RemoveRange(_context.FinanceTransactions);
+            _context.RecurringTransactions.RemoveRange(_context.RecurringTransactions);
             _context.Budgets.RemoveRange(_context.Budgets);
             _context.FinanceCategories.RemoveRange(_context.FinanceCategories);
             await _context.SaveChangesAsync();

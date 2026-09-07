@@ -66,7 +66,9 @@ export type Equipment =
   | 'Machine'
   | 'Cable'
   | 'ResistanceBand'
-  | 'Other';
+  | 'Other'
+  | 'Calisthenics'  // skill work: muscle-ups, levers, pistols
+  | 'Rings';        // gymnastic rings
 
 export type WorkoutSessionStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
@@ -559,7 +561,7 @@ export interface SupplementAdherenceReportDto {
  * All routes are authenticated (Bearer JWT).
  *
  * Exercises
- *   GET    /api/workouts/exercises                ?muscleGroup= &metricType= &search= &includeArchived=
+ *   GET    /api/workouts/exercises                ?muscleGroup= &metricType= &equipment= &search= &includeArchived=
  *                                                 -> ExerciseDto[]   (system rows + your own)
  *   POST   /api/workouts/exercises                CreateExerciseRequest      -> ExerciseDto
  *   PUT    /api/workouts/exercises/{id}           UpdateExerciseRequest      -> ExerciseDto

@@ -12,6 +12,7 @@ namespace Application.Workouts.Exercises.Queries.GetExercises
         int UserProfileId,
         MuscleGroupEnum? MuscleGroup,
         ExerciseMetricEnum? MetricType,
+        EquipmentEnum? Equipment,
         string? Search,
         bool IncludeArchived) : IQuery<IEnumerable<ExerciseDto>>;
 }

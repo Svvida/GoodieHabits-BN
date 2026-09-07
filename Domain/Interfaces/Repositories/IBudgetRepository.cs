@@ -20,5 +20,8 @@ namespace Domain.Interfaces.Repositories
             int? month,
             int? excludeBudgetId,
             CancellationToken cancellationToken = default);
+
+        /// <summary>True if any budget is scoped to one of these categories. Guards category deletion.</summary>
+        Task<bool> AnyForCategoriesAsync(IEnumerable<int> categoryIds, CancellationToken cancellationToken = default);
     }
 }

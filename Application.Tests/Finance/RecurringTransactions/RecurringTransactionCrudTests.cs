@@ -69,6 +69,20 @@ namespace Application.Tests.Finance.RecurringTransactions
         }
 
         [Fact]
+        public async Task Create_ShouldAcceptASubCategory()
+        {
+            var profile = await ArrangeProfileAsync();
+            var main = await AddCategoryAsync(profile.Id, FinanceTransactionTypeEnum.Expense);
+            var sub = await AddSubCategoryAsync(profile.Id, main, "Rent", 9002);
+
+            var result = await _create.Handle(
+                new CreateRecurringTransactionCommand(FinanceTransactionTypeEnum.Expense, 40m, 10, sub.Id, null, profile.Id),
+                CancellationToken.None);
+
+            result.CategoryId.Should().Be(sub.Id);
+        }
+
+        [Fact]
         public async Task Get_ShouldReturnOnlyTheUsersOwnTemplates()
         {
             var profile = await ArrangeProfileAsync();
@@ -92,7 +106,7 @@ namespace Application.Tests.Finance.RecurringTransactions
             var (profile, template) = await ArrangeTemplateAsync();
 
             var result = await _update.Handle(
-                new UpdateRecurringTransactionCommand(template.Id, 55m, null, null, null, profile.Id),
+                new UpdateRecurringTransactionCommand(template.Id, 55m, null, null, null, null, false, profile.Id),
                 CancellationToken.None);
 
             result.Amount.Should().Be(55m);
@@ -107,14 +121,96 @@ namespace Application.Tests.Finance.RecurringTransactions
             var (profile, template) = await ArrangeTemplateAsync();
 
             var paused = await _update.Handle(
-                new UpdateRecurringTransactionCommand(template.Id, null, null, null, false, profile.Id),
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, false, null, false, profile.Id),
                 CancellationToken.None);
             paused.IsActive.Should().BeFalse();
 
             var resumed = await _update.Handle(
-                new UpdateRecurringTransactionCommand(template.Id, null, null, null, true, profile.Id),
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, true, null, false, profile.Id),
                 CancellationToken.None);
             resumed.IsActive.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Update_ShouldReassignTheCategory()
+        {
+            var (profile, template) = await ArrangeTemplateAsync();
+            var main = await AddCategoryAsync(profile.Id, FinanceTransactionTypeEnum.Expense);
+            var sub = await AddSubCategoryAsync(profile.Id, main, "Rent", 9002);
+
+            var result = await _update.Handle(
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, null, sub.Id, true, profile.Id),
+                CancellationToken.None);
+
+            result.CategoryId.Should().Be(sub.Id);
+        }
+
+        [Fact]
+        public async Task Update_ShouldClearTheCategory_WhenSentAsNull()
+        {
+            var (profile, template) = await ArrangeTemplateAsync();
+            var main = await AddCategoryAsync(profile.Id, FinanceTransactionTypeEnum.Expense);
+            template.UpdateCategory(main.Id);
+            await _context.SaveChangesAsync();
+
+            var result = await _update.Handle(
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, null, null, true, profile.Id),
+                CancellationToken.None);
+
+            result.CategoryId.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Update_ShouldLeaveTheCategoryAlone_WhenTheFieldWasNotSent()
+        {
+            var (profile, template) = await ArrangeTemplateAsync();
+            var main = await AddCategoryAsync(profile.Id, FinanceTransactionTypeEnum.Expense);
+            template.UpdateCategory(main.Id);
+            await _context.SaveChangesAsync();
+
+            // Same null CategoryId as the test above, but flagged as absent from the request body.
+            var result = await _update.Handle(
+                new UpdateRecurringTransactionCommand(template.Id, 55m, null, null, null, null, false, profile.Id),
+                CancellationToken.None);
+
+            result.CategoryId.Should().Be(main.Id);
+        }
+
+        [Fact]
+        public async Task Update_ShouldRejectACategoryOfTheWrongType()
+        {
+            var (profile, template) = await ArrangeTemplateAsync();   // an expense template
+            var income = FinanceCategory.CreateMain(profile.Id, "Salary", FinanceTransactionTypeEnum.Income);
+            income.Id = 9101;
+            _context.FinanceCategories.Add(income);
+            await _context.SaveChangesAsync();
+
+            var act = async () => await _update.Handle(
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, null, income.Id, true, profile.Id),
+                CancellationToken.None);
+
+            await act.Should().ThrowAsync<ConflictException>();
+        }
+
+        [Fact]
+        public async Task Update_ShouldNotRecategorizeAlreadyMaterializedTransactions()
+        {
+            var (profile, template) = await ArrangeTemplateAsync();
+            var main = await AddCategoryAsync(profile.Id, FinanceTransactionTypeEnum.Expense);
+            var sub = await AddSubCategoryAsync(profile.Id, main, "Rent", 9002);
+
+            template.UpdateCategory(main.Id);
+            var materialized = FinanceTransaction.CreateRecurring(template, new DateOnly(2026, 5, 10));
+            _context.FinanceTransactions.Add(materialized);
+            await _context.SaveChangesAsync();
+
+            await _update.Handle(
+                new UpdateRecurringTransactionCommand(template.Id, null, null, null, null, sub.Id, true, profile.Id),
+                CancellationToken.None);
+
+            // Forward-only: the row already generated keeps the category it was created with.
+            var stored = await _context.FinanceTransactions.SingleAsync();
+            stored.CategoryId.Should().Be(main.Id);
         }
 
         [Fact]
@@ -124,7 +220,7 @@ namespace Application.Tests.Finance.RecurringTransactions
             var other = (await AddAccountAsync("other@test.com", "pass", "other")).Profile;
 
             var act = async () => await _update.Handle(
-                new UpdateRecurringTransactionCommand(template.Id, 1m, null, null, null, other.Id),
+                new UpdateRecurringTransactionCommand(template.Id, 1m, null, null, null, null, false, other.Id),
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<NotFoundException>();
@@ -182,6 +278,15 @@ namespace Application.Tests.Finance.RecurringTransactions
             _context.FinanceCategories.Add(category);
             await _context.SaveChangesAsync();
             return category;
+        }
+
+        private async Task<FinanceCategory> AddSubCategoryAsync(int userProfileId, FinanceCategory parent, string name, int id)
+        {
+            var sub = FinanceCategory.CreateSub(userProfileId, parent, name);
+            sub.Id = id;
+            _context.FinanceCategories.Add(sub);
+            await _context.SaveChangesAsync();
+            return sub;
         }
 
         private async Task<(UserProfile Profile, RecurringTransaction Template)> ArrangeTemplateAsync()

@@ -23,12 +23,13 @@ namespace Api.Controllers
         public async Task<ActionResult<IEnumerable<ExerciseDto>>> GetAsync(
             [FromQuery] MuscleGroupEnum? muscleGroup = null,
             [FromQuery] ExerciseMetricEnum? metricType = null,
+            [FromQuery] EquipmentEnum? equipment = null,
             [FromQuery] string? search = null,
             [FromQuery] bool includeArchived = false,
             CancellationToken cancellationToken = default)
         {
             var query = new GetExercisesQuery(
-                User.GetCurrentUserProfileId(), muscleGroup, metricType, search, includeArchived);
+                User.GetCurrentUserProfileId(), muscleGroup, metricType, equipment, search, includeArchived);
 
             return Ok(await sender.Send(query, cancellationToken).ConfigureAwait(false));
         }

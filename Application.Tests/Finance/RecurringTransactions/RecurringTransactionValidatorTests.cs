@@ -16,7 +16,7 @@ namespace Application.Tests.Finance.RecurringTransactions
             new(FinanceTransactionTypeEnum.Expense, 40m, 10, 3, "Netflix", 1);
 
         private static UpdateRecurringTransactionCommand ValidUpdate() =>
-            new(7, null, null, null, null, 1);
+            new(7, null, null, null, null, null, false, 1);
 
         [Fact]
         public void Create_ShouldPass_ForAValidCommand()
@@ -71,6 +71,20 @@ namespace Application.Tests.Finance.RecurringTransactions
         {
             _updateValidator.TestValidate(ValidUpdate() with { Amount = 0m })
                 .ShouldHaveValidationErrorFor(c => c.Amount!.Value);
+        }
+
+        [Fact]
+        public void Update_ShouldHaveError_WhenCategoryIdSentButNotPositive()
+        {
+            _updateValidator.TestValidate(ValidUpdate() with { CategoryId = 0, HasCategoryId = true })
+                .ShouldHaveValidationErrorFor(c => c.CategoryId!.Value);
+        }
+
+        [Fact]
+        public void Update_ShouldPass_WhenCategoryIdSentAsNullToClearIt()
+        {
+            _updateValidator.TestValidate(ValidUpdate() with { CategoryId = null, HasCategoryId = true })
+                .ShouldNotHaveAnyValidationErrors();
         }
 
         [Fact]

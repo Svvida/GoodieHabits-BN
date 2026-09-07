@@ -69,6 +69,10 @@ never appears in any aggregate. `LastMaterializedOn` is the generation watermark
 - **Hard delete for transactions.** Category delete is *blocked* while in use and accepts an **array of ids**
   (bulk, all-or-nothing in one unit of work): the whole request is rejected, naming the offenders, if any id is
   unowned, is a system category, has transactions, or is a main whose subs aren't in the same request.
+  ⚠️ *"In use" means every referencing table, not just transactions.* Recurring templates and budgets carry the
+  same `Restrict` FK, so each needs its own `AnyForCategoriesAsync` guard in the handler; without it the delete
+  passes the checks, fails in the database, and the client gets a 500 where a 409 was intended. A template
+  referencing a category it has not materialized anything for yet is the easy way to hit this.
 - **Guiding principle: flexibility, not restriction.** Category is optional (uncategorized is legal); a
   transaction may tag a main *or* a sub; budgets are opt-in; custom categories are unrestricted.
 
@@ -217,6 +221,17 @@ month-over-month deltas when the payback lands in a later month.
   template old enough to have materialized anything, i.e. every template worth deleting.
 - **Materialized rows are ordinary transactions** — editable, deletable, correctable. Deleting one doesn't delete
   the template; deleting the template doesn't delete already-materialized rows.
+- **Editing a template is forward-only, category included.** `PUT` accepts `categoryId` (main *or* sub, type
+  must match the template's immutable `Type`), but rows already materialized keep the category they were created
+  with. Retro-rewriting them would restate closed months in analytics and budget progress from an edit made for
+  future ones, and would clobber per-row re-categorizations the user made by hand. Same posture `Amount` and
+  `DayOfMonth` already had; "apply to existing rows too" is a client-driven bulk edit, not a side effect of
+  editing the schedule.
+- **The partial `PUT` needs field *presence*, not just a nullable field, for `categoryId`.** `null` means "clear
+  the category" and an omitted key means "leave it alone" — indistinguishable on a plain `int?`, so
+  `UpdateRecurringTransactionRequest` tracks whether the property was touched during deserialization
+  (`HasCategoryId`, `[JsonIgnore]`) and passes that through the command. The empty-string convention on `Note`
+  solves the same problem the way a string allows.
 - Use the injected **`IClock`**, not `SystemClock.Instance` (ARCHITECTURE §9 flags the static as the wrong habit;
   it also makes catch-up untestable without time travel).
 

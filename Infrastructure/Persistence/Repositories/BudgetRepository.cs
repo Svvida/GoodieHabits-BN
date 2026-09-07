@@ -54,5 +54,16 @@ namespace Infrastructure.Persistence.Repositories
                     cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<bool> AnyForCategoriesAsync(IEnumerable<int> categoryIds, CancellationToken cancellationToken = default)
+        {
+            var idList = categoryIds.Distinct().ToList();
+            if (idList.Count == 0)
+                return false;
+
+            return await _context.Budgets
+                .AnyAsync(b => b.CategoryId != null && idList.Contains(b.CategoryId.Value), cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

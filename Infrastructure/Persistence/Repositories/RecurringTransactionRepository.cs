@@ -40,5 +40,17 @@ namespace Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        // Paused templates count too: they still point at the category, and the FK is Restrict either way.
+        public async Task<bool> AnyForCategoriesAsync(IEnumerable<int> categoryIds, CancellationToken cancellationToken = default)
+        {
+            var idList = categoryIds.Distinct().ToList();
+            if (idList.Count == 0)
+                return false;
+
+            return await _context.RecurringTransactions
+                .AnyAsync(r => r.CategoryId != null && idList.Contains(r.CategoryId.Value), cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

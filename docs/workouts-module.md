@@ -189,7 +189,7 @@ All routes are `[Authorize]`, identity via `User.GetCurrentUserProfileId()`. Enu
 
 | Route | Verbs |
 |---|---|
-| `api/workouts/exercises` | `GET` (system + own; `muscleGroup`/`metricType`/`search`/`includeArchived`) · `POST` · `PUT /{id}` · `PATCH /{id}/archived` · `DELETE /{id}` |
+| `api/workouts/exercises` | `GET` (system + own; `muscleGroup`/`metricType`/`equipment`/`search`/`includeArchived`) · `POST` · `PUT /{id}` · `PATCH /{id}/archived` · `DELETE /{id}` |
 | `api/workouts/routines` | `GET` (`?includeArchived`) · `GET /{id}` · `POST` · `PUT /{id}` (full replacement) · `PATCH /{id}/archived` · `DELETE /{id}` |
 | `api/workouts/sessions` | `GET` (`from`/`to`/`status` + paging) · `GET /active` (200, or **204** when nothing runs) · `GET /{id}` · `POST` · `PUT /{id}` (metadata) · `DELETE /{id}` |
 | `api/workouts/sessions/{id}/log` | `PUT` (bulk full replacement, idempotent) |

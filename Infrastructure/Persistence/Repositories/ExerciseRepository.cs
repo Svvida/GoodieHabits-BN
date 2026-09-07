@@ -12,6 +12,7 @@ namespace Infrastructure.Persistence.Repositories
             int userProfileId,
             MuscleGroupEnum? muscleGroup,
             ExerciseMetricEnum? metricType,
+            EquipmentEnum? equipment,
             string? search,
             bool includeArchived,
             CancellationToken cancellationToken = default)
@@ -29,6 +30,9 @@ namespace Infrastructure.Persistence.Repositories
 
             if (metricType.HasValue)
                 query = query.Where(e => e.MetricType == metricType.Value);
+
+            if (equipment.HasValue)
+                query = query.Where(e => e.Equipment == equipment.Value);
 
             if (!string.IsNullOrWhiteSpace(search))
             {

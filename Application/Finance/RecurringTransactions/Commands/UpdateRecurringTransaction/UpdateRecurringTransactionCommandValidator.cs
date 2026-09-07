@@ -20,6 +20,11 @@ namespace Application.Finance.RecurringTransactions.Commands.UpdateRecurringTran
                 .WithMessage($"DayOfMonth must be between {RecurringTransaction.MinDayOfMonth} and {RecurringTransaction.MaxDayOfMonth}.")
                 .When(c => c.DayOfMonth.HasValue);
 
+            // A sent-but-null CategoryId means "clear it" and is legal; a sent id has to be a real one.
+            RuleFor(c => c.CategoryId!.Value)
+                .GreaterThan(0).WithMessage("CategoryId must be greater than 0.")
+                .When(c => c.CategoryId.HasValue);
+
             RuleFor(c => c.Note)
                 .MaximumLength(FinanceTransaction.NoteMaxLength)
                 .WithMessage("Note must not exceed {MaxLength} characters.");

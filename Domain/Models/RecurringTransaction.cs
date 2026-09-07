@@ -108,6 +108,17 @@ namespace Domain.Models
             Note = note?.Trim();
         }
 
+        /// <summary>
+        /// Re-points the template at another category, or clears it when <paramref name="categoryId"/> is null.
+        /// <para>
+        /// Forward-only, on purpose: rows already materialized from this template keep the category they were
+        /// created with. Those rows are the user's own records — editable and individually re-categorizable —
+        /// and rewriting them would silently restate closed months in analytics and budget progress.
+        /// </para>
+        /// Ownership and type consistency are the handler's job, as everywhere else in the finance module.
+        /// </summary>
+        public void UpdateCategory(int? categoryId) => CategoryId = categoryId;
+
         public void UpdateDayOfMonth(int dayOfMonth)
         {
             ValidateDayOfMonth(dayOfMonth);
