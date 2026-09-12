@@ -1,62 +1,49 @@
-﻿using Application.Common;
+using Application.Common;
 using Application.Quests.Dtos;
+using Application.Quests.Utilities;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
-using Domain.Models;
 using MediatR;
 using NodaTime;
 
 namespace Application.Quests.Commands.UpdateQuest
 {
-    public class UpdateQuestCommandHandler<TCommand, TResponse>(
+    public class UpdateQuestCommandHandler(
         IUnitOfWork unitOfWork,
-        IQuestMapper questMappingService)
-        : IRequestHandler<TCommand, TResponse>
-        where TCommand : UpdateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto
+        IQuestMapper questMapper,
+        IClock clock)
+        : IRequestHandler<UpdateQuestCommand, QuestDetailsDto>
     {
-        public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken)
+        public async Task<QuestDetailsDto> Handle(UpdateQuestCommand command, CancellationToken cancellationToken)
         {
-            var quest = await unitOfWork.Quests.GetQuestByIdForUpdateAsync(command.QuestId, command.UserProfileId, command.QuestType, cancellationToken).ConfigureAwait(false)
+            var quest = await unitOfWork.Quests.GetQuestByIdForUpdateAsync(command.QuestId, command.UserProfileId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID {command.QuestId} not found.");
 
+            var nowUtc = clock.GetCurrentInstant().ToDateTimeUtc();
+            var today = quest.UserProfile.LocalDateOn(nowUtc);
+
+            quest.UpdateTitle(command.Title);
             quest.UpdateDescription(command.Description);
-
             quest.UpdatePriority(EnumHelper.ParseNullable<PriorityEnum>(command.Priority));
-
             quest.UpdateEmoji(command.Emoji);
-
             quest.UpdateScheduledTime(command.ScheduledTime);
-
+            quest.UpdateDuration(command.DurationMinutes);
             quest.UpdateDifficulty(EnumHelper.ParseNullable<DifficultyEnum>(command.Difficulty));
-
             quest.UpdateDates(command.StartDate, command.EndDate);
-
             quest.SetLabels(command.Labels);
 
-            await HandleQuestSpecificsAsync(quest, command, cancellationToken).ConfigureAwait(false);
+            // Order matters: the schedule decides which periods exist, the target decides what each asks for.
+            quest.UpdateSchedule(QuestScheduleTranslator.ToSchedule(command.Schedule), nowUtc, today);
+            quest.UpdateTarget(QuestScheduleTranslator.ToTarget(command.Target), nowUtc, today);
 
-            var now = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
-            if (quest.IsRepeatable())
-            {
-                quest.SetNextResetAt(now);
-                quest.GenerateMissingOccurrences(now);
-            }
+            // The date range may have moved, which can open periods that did not exist before.
+            quest.GenerateMissingPeriodsOn(today);
+            quest.RecalculateStatistics(today);
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            var questDetailsDto = questMappingService.MapToDto(quest);
-
-            return (TResponse)questDetailsDto;
-        }
-
-        /// <summary>
-        /// A hook for derived classes to implement quest-type-specific logic.
-        /// </summary>
-        protected virtual Task HandleQuestSpecificsAsync(Quest quest, TCommand command, CancellationToken cancellationToken)
-        {
-            // This method can be overridden in derived handlers to handle specific quest types
-            return Task.CompletedTask;
+            return questMapper.MapToDto(quest, today);
         }
     }
 }

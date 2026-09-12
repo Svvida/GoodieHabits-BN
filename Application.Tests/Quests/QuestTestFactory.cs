@@ -1,5 +1,6 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Models;
+using Domain.ValueObjects;
 
 namespace Application.Tests.Quests
 {
@@ -20,34 +21,38 @@ namespace Application.Tests.Quests
             UserProfile? profile = null,
             DateTime? nowUtc = null,
             DateOnly? startDate = null,
-            DateOnly? endDate = null)
+            DateOnly? endDate = null,
+            decimal target = 1m,
+            int interval = 1)
         {
-            return Quest.Create(
-                title: "Daily habit",
-                userProfile: profile ?? Profile(),
-                questType: QuestTypeEnum.Daily,
-                nowUtc: nowUtc ?? DefaultNowUtc,
-                startDate: startDate,
-                endDate: endDate);
+            return Build("Daily habit", QuestSchedule.Daily(interval), QuestTarget.Create(target),
+                profile, nowUtc, startDate, endDate);
         }
 
-        public static Quest Weekly(
+        /// <summary>The old Weekly quest: due on named weekdays, so a Day schedule with a weekday filter.</summary>
+        public static Quest OnWeekdays(
             IEnumerable<WeekdayEnum> weekdays,
             UserProfile? profile = null,
             DateTime? nowUtc = null,
             DateOnly? startDate = null,
             DateOnly? endDate = null)
         {
-            var quest = Quest.Create(
-                title: "Weekly habit",
-                userProfile: profile ?? Profile(),
-                questType: QuestTypeEnum.Weekly,
-                nowUtc: nowUtc ?? DefaultNowUtc,
-                startDate: startDate,
-                endDate: endDate);
+            return Build("Weekday habit", QuestSchedule.Daily(weekdays: weekdays.ToFlags()), QuestTarget.Once(),
+                profile, nowUtc, startDate, endDate);
+        }
 
-            quest.SetWeekdays(weekdays);
-            return quest;
+        /// <summary>"N times a week, any days" — the shape the old model could not express at all.</summary>
+        public static Quest TimesPerWeek(
+            decimal target,
+            UserProfile? profile = null,
+            DateTime? nowUtc = null,
+            DateOnly? startDate = null,
+            DateOnly? endDate = null,
+            int? maxPerDay = 1)
+        {
+            return Build("Weekly target habit", QuestSchedule.Weekly(),
+                QuestTarget.Create(target, maxCompletionsPerDay: maxPerDay),
+                profile, nowUtc, startDate, endDate);
         }
 
         public static Quest Monthly(
@@ -58,27 +63,58 @@ namespace Application.Tests.Quests
             DateOnly? startDate = null,
             DateOnly? endDate = null)
         {
-            var quest = Quest.Create(
-                title: "Monthly habit",
+            return Build("Monthly habit", QuestSchedule.Monthly(windowStartDay: startDay, windowEndDay: endDay),
+                QuestTarget.Once(), profile, nowUtc, startDate, endDate);
+        }
+
+        public static Quest OneTime(
+            UserProfile? profile = null,
+            DateTime? nowUtc = null,
+            DateOnly? startDate = null,
+            DateOnly? endDate = null,
+            decimal target = 1m)
+        {
+            return Build("One-time quest", QuestSchedule.OneTime(), QuestTarget.Create(target),
+                profile, nowUtc, startDate, endDate);
+        }
+
+        private static Quest Build(
+            string title,
+            QuestSchedule schedule,
+            QuestTarget target,
+            UserProfile? profile,
+            DateTime? nowUtc,
+            DateOnly? startDate,
+            DateOnly? endDate)
+        {
+            return Quest.Create(
+                title: title,
                 userProfile: profile ?? Profile(),
-                questType: QuestTypeEnum.Monthly,
+                schedule: schedule,
+                target: target,
                 nowUtc: nowUtc ?? DefaultNowUtc,
                 startDate: startDate,
                 endDate: endDate);
-
-            quest.SetMonthlyDays(startDay, endDay);
-            return quest;
         }
 
-        /// <summary>Adds a period and optionally marks it completed, bypassing the quest-level flow.</summary>
-        public static QuestOccurrence AddPeriod(Quest quest, DateOnly start, DateOnly? end = null, DateTime? completedAtUtc = null)
+        /// <summary>Adds a period directly, optionally already satisfied, bypassing the completion flow.</summary>
+        public static QuestOccurrence AddPeriod(
+            Quest quest,
+            DateOnly start,
+            DateOnly? end = null,
+            DateTime? completedAtUtc = null,
+            decimal target = 1m,
+            decimal progress = 0m)
         {
-            var occurrence = quest.AddOccurrence(start, end ?? start);
+            var period = QuestOccurrence.Create(quest, start, end ?? start, target);
+            quest.QuestOccurrences.Add(period);
 
             if (completedAtUtc.HasValue)
-                occurrence.MarkAsCompleted(completedAtUtc.Value, start);
+                period.ApplyProgress(target, completedAtUtc.Value, start);
+            else if (progress > 0m)
+                period.ApplyProgress(progress, DefaultNowUtc, start);
 
-            return occurrence;
+            return period;
         }
     }
 }

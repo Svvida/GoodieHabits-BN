@@ -17,7 +17,7 @@ namespace Application.Quests.Commands.DeleteQuest
             var wasQuestActiveGoal = await unitOfWork.UserGoals.IsQuestActiveGoalAsync(notification.QuestId, cancellationToken)
                 .ConfigureAwait(false);
 
-            userProfile.UpdateAfterQuestDeletion(notification.IsQuestCompleted, notification.IsQuestEverCompleted, wasQuestActiveGoal);
+            userProfile.UpdateAfterQuestDeletion(notification.IsQuestEverCompleted, wasQuestActiveGoal);
         }
     }
 }

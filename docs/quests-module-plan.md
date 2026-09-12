@@ -1,6 +1,11 @@
 # Quests — flexible recurrence redesign (plan)
 
-> **Status: design agreed (2026-09-11), nothing built yet.** The seven open questions are settled in §13.
+> **Status: phase 1 core built and verified against production data (2026-09-12).** 736 tests green.
+> **Step 1 of the migration is applied to production; step 2 is deliberately NOT** — the legacy columns
+> still hold their original values, which is what keeps a rollback possible until the FE ships.
+> Instead of the full route shim (§8), `GET /quests?legacyType=` reproduces the old per-type screens.
+> Still open: the FE contract docs (`quests-api-schema.ts`, the Polish guide, ARCHITECTURE §6), and step 2.
+> The seven questions are settled in §13.
 > When this ships, fold the durable parts into a `docs/quests-module.md` reference + `ARCHITECTURE.md` §6 and
 > delete this file, the way `FINANCE_MODULE_PLAN.md` and `workouts-module-plan.md` were handled.
 
@@ -31,13 +36,12 @@ Three structural causes:
 
 ## 2. Findings in the current code (independent of the redesign)
 
-- ⚠️ **Every quest job runs only when the process starts.** `StartupTask` calls `ExecuteAsync` from `StartAsync`,
+- **Every quest job runs only when the process starts.** `StartupTask` calls `ExecuteAsync` from `StartAsync`,
   once. `ResetQuestsTask` is the only code that clears `IsCompleted`, and both `Quest.Complete` and
-  `UpdateQuestCompletionCommandHandler` return early while the flag is set. So a daily quest completed yesterday
-  can't be completed today unless the process restarted in between. The cached `QuestStatistics`
-  (`FailureCount`, `CurrentStreak`) in list views go stale the same way, and goal expiry and recurring finance
-  transactions run on the same startup-only pattern. If the host happens to restart daily, the app depends on
-  that restart without anyone having designed it that way.
+  `UpdateQuestCompletionCommandHandler` return early while the flag is set, so a daily quest completed yesterday
+  cannot be completed today until the process restarts. **On this hosting that restart happens constantly** (§9),
+  so this is fragile rather than broken — it would only bite if the process stayed warm across the user's local
+  midnight. Same for stale `QuestStatistics`, goal expiry and recurring finance transactions.
 - ⚠️ **Coins can be farmed by toggling completion.** `UserProfile.ApplyQuestCompletionRewards` runs
   `Coins += 10` outside the `shouldAssignRewards` branch, and `RevertQuestCompletion` never takes the coins back.
   Complete → uncomplete → complete gives +10 coins on every cycle. XP is protected by the same-day check; coins
@@ -377,17 +381,56 @@ PUT    /api/quests/{id}/periods/{periodStart}/skip    phase 2, idempotent
 
 ---
 
-## 9. Background work
+## 9. Background work, and the hosting constraint
 
-- **Delete** `ResetQuestsTask`, `ResetCompletedQuestsCommand` and `NextResetAt`; there is nothing left to reset.
-- **Convert** `ProcessOccurrencesTask`, `RecalculateRepeatableQuestStatisticsTask` and `ExpireGoalsTask`, plus
-  `GenerateRecurringTransactionsTask` which has the same problem, from `StartupTask` to a periodic
-  `BackgroundService`. Use `PeriodicTimer`, run once at start and then hourly. They are already idempotent, and
-  the unique indexes protect multi-instance hosting.
-- **Reads never write.** When today's period hasn't been materialized yet, `/active` returns a virtual current
-  period with progress 0. The first completion, or the job, materializes it.
+**Hosting (stated 2026-09-12): shared IIS, app-pool idle timeout 15 minutes, two users, no store release
+planned.** There is no always-on process, so `BackgroundService` + `PeriodicTimer`, Hangfire and Quartz are all
+unreliable here — every one of them needs a process that is still alive when the timer fires. **My earlier
+recommendation to convert the startup tasks to periodic services is withdrawn.**
+
+**Correction to §2.** With a 15-minute idle timeout the pool starts on the first request after any gap, so
+`StartupTask` is effectively an on-demand scheduler, and the reset job runs many times a day. The "a daily quest
+completed yesterday can't be completed today" failure needs the process to stay warm across the user's local
+midnight — which with two users essentially never happens. It is fragile in principle, not broken in practice,
+and the original decision was the right one for this environment. I overstated it.
+
+**The redesign removes the need for scheduling rather than asking for more of it:**
+
+| Job today | After phase 1 |
+|---|---|
+| `ResetQuestsTask` | **Deleted.** `isCompleted` is derived from the current period; there is nothing to reset. |
+| `ProcessOccurrencesTask` | On demand. Periods are materialized by the first completion, and by the maintenance pass below. |
+| `RecalculateRepeatableQuestStatisticsTask` | Recalculated whenever a quest's periods change. |
+| `ExpireGoalsTask` | Derived from `EndsAt`; the flag becomes a denormalization the pass keeps in step. |
+
+**The maintenance pass.** One idempotent, per-user pass guarded by a `UserProfile.MaintainedThrough` (`DateOnly`)
+watermark: materialize missing periods up to local today, recalculate statistics, expire goals. It runs at most
+once per user per local day, is bounded by one user's quests, and is invoked from `GET /api/quests/active` — the
+call the app already makes on open. That is a deliberate exception to "reads never write", and this hosting is
+the justification; it is guarded by the watermark and committed separately from the read. The existing startup
+tasks stay as a free safety net.
+
+This also means **nothing in phase 1 depends on a scheduler existing**, and the same watermark pattern would fix
+`GenerateRecurringTransactionsTask` in the finance module.
+
+**What genuinely needs a scheduler**, whenever you get there: reminders and push notifications (phase 2), which
+must fire while the app is closed, and calendar reconciliation (phase 3, though writes can piggyback on quest
+edits). Options, cheapest first:
+
+1. **An external cron calling a secured maintenance endpoint** (`POST /api/maintenance/run` behind a shared
+   secret). A scheduled GitHub Actions workflow is free, and the repo is already on GitHub; cron-job.org or any
+   always-on machine works equally well. Needs nothing from the hosting provider — worth confirming only that
+   inbound requests aren't rate-limited oddly. **This is what I would do.**
+2. **Ask the provider** whether the app pool can have `startMode="AlwaysRunning"`, idle timeout 0 and IIS
+   Application Initialization. Shared hosts often refuse, and it is worth knowing before designing around it.
+3. **Move the API to a host with an always-on tier** (Azure App Service with Always On, Fly.io, Railway, a small
+   VPS) — the right answer around a store release, not before.
+
+Note that option 1 also makes the maintenance pass reliable for users who have not opened the app, which matters
+for "you missed 3 days" style notifications later.
 
 ---
+
 
 ## 10. Google Calendar: what matters now
 
@@ -473,14 +516,14 @@ Completion rows, one per completed occurrence:
 
 ## 12. Phases
 
-**Phase 0: fixes that can ship now, independent of the redesign**
-- Coin farming through completion toggling.
-- Periodic jobs instead of startup-only ones.
-- Local date in eligible-for-goal.
-- `IClock` in the quest handlers.
+**Phase 0: dropped as a separate step.** Of its four items, phase 1 subsumes three — it rewrites the reward path
+(coin farming), rewrites those handlers (`IClock`), and removes the jobs rather than making them periodic, which
+§9 now rules out anyway. The one survivor, the UTC-vs-local date in eligible-for-goal, rides along inside phase 1.
+Nothing here blocks phase 1, and fixing code that phase 1 deletes is throwaway work.
 
 **Phase 1: core**
 - Schedule, target, completion log, and period target/progress (+ calculator).
+- The per-user maintenance pass and its watermark (§9); delete `ResetQuestsTask` and `NextResetAt`.
 - Migration (§11).
 - New API plus the compatibility shim.
 - Catch-up: the 2-day grace window and `GET /api/quests/catch-up` (§5). Ships with the core rather than after it —

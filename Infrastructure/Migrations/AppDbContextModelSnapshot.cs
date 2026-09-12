@@ -2437,31 +2437,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("Friendships", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Models.MonthlyQuest_Days", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("EndDay")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuestId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StartDay")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestId")
-                        .IsUnique();
-
-                    b.ToTable("MonthlyQuest_Days", (string)null);
-                });
-
             modelBuilder.Entity("Domain.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2527,6 +2502,9 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("Difficulty")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("int");
+
                     b.Property<string>("Emoji")
                         .HasMaxLength(10)
                         .HasColumnType("NVARCHAR");
@@ -2534,23 +2512,11 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date");
 
-                    b.Property<bool>("IsCompleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<DateTime?>("LastCompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("NextResetAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("Priority")
                         .HasColumnType("int");
-
-                    b.Property<string>("QuestType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<TimeOnly?>("ScheduledTime")
                         .HasColumnType("time");
@@ -2576,13 +2542,80 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("QuestType");
-
                     b.HasIndex("UserProfileId");
 
-                    b.HasIndex("UserProfileId", "QuestType");
-
                     b.ToTable("Quests", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestCompletion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(9,2)")
+                        .HasDefaultValue(1m);
+
+                    b.Property<Guid?>("ClientRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("CompletedOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsBackfilled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<TimeOnly?>("LocalTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int?>("OccurrenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurrenceId");
+
+                    b.HasIndex("QuestId", "ClientRequestId")
+                        .IsUnique()
+                        .HasFilter("[ClientRequestId] IS NOT NULL");
+
+                    b.HasIndex("QuestId", "CompletedOn");
+
+                    b.HasIndex("UserProfileId", "CompletedOn");
+
+                    b.ToTable("QuestCompletions", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.QuestLabel", b =>
@@ -2629,6 +2662,11 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CoinsAwarded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -2643,13 +2681,39 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly>("PeriodStart")
                         .HasColumnType("date");
 
+                    b.Property<decimal>("Progress")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(9,2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("WasCompleted")
+                    b.Property<DateTime?>("RewardGrantedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SkipReason")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("SkippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TargetAmount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("decimal(9,2)")
+                        .HasDefaultValue(1m);
+
+                    b.Property<int>("XpAwarded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -2699,8 +2763,18 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<int>("PartialCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
+
+                    b.Property<int>("TotalCompletions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -2776,28 +2850,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("IsActive", "LastMaterializedOn");
 
                     b.ToTable("RecurringTransactions", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Models.SeasonalQuest_Season", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("QuestId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Season")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestId")
-                        .IsUnique();
-
-                    b.ToTable("SeasonalQuest_Seasons", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.ShopItem", b =>
@@ -3471,6 +3523,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<DateOnly?>("MaintainedThrough")
+                        .HasColumnType("date");
+
                     b.Property<string>("Nickname")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -3503,6 +3558,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("UploadedAvatarUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WeekStartsOn")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("Monday");
 
                     b.Property<string>("WeightUnit")
                         .IsRequired()
@@ -3542,27 +3604,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UserProfileId", "EarnedAt");
 
                     b.ToTable("UserProfile_Badges", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Models.WeeklyQuest_Day", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("QuestId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Weekday")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestId");
-
-                    b.ToTable("WeeklyQuest_Days", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.WorkoutRoutine", b =>
@@ -3963,17 +4004,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserProfile2");
                 });
 
-            modelBuilder.Entity("Domain.Models.MonthlyQuest_Days", b =>
-                {
-                    b.HasOne("Domain.Models.Quest", "Quest")
-                        .WithOne("MonthlyQuest_Days")
-                        .HasForeignKey("Domain.Models.MonthlyQuest_Days", "QuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Quest");
-                });
-
             modelBuilder.Entity("Domain.Models.Notification", b =>
                 {
                     b.HasOne("Domain.Models.UserProfile", "UserProfile")
@@ -3992,6 +4022,121 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.OwnsOne("Domain.ValueObjects.QuestSchedule", "Schedule", b1 =>
+                        {
+                            b1.Property<int>("QuestId")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Interval")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(1)
+                                .HasColumnName("Schedule_Interval");
+
+                            b1.Property<int?>("MonthWindowEndDay")
+                                .HasColumnType("int")
+                                .HasColumnName("Schedule_MonthWindowEndDay");
+
+                            b1.Property<int?>("MonthWindowStartDay")
+                                .HasColumnType("int")
+                                .HasColumnName("Schedule_MonthWindowStartDay");
+
+                            b1.Property<string>("Unit")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("Schedule_Unit");
+
+                            b1.Property<int?>("Weekdays")
+                                .HasColumnType("int")
+                                .HasColumnName("Schedule_Weekdays");
+
+                            b1.Property<int?>("YearWindowEnd")
+                                .HasColumnType("int")
+                                .HasColumnName("Schedule_YearWindowEnd");
+
+                            b1.Property<int?>("YearWindowStart")
+                                .HasColumnType("int")
+                                .HasColumnName("Schedule_YearWindowStart");
+
+                            b1.HasKey("QuestId");
+
+                            b1.HasIndex("Unit");
+
+                            b1.ToTable("Quests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuestId");
+                        });
+
+                    b.OwnsOne("Domain.ValueObjects.QuestTarget", "Target", b1 =>
+                        {
+                            b1.Property<int>("QuestId")
+                                .HasColumnType("int");
+
+                            b1.Property<decimal>("Amount")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("decimal(9,2)")
+                                .HasDefaultValue(1m)
+                                .HasColumnName("Target_Amount");
+
+                            b1.Property<int?>("MaxCompletionsPerDay")
+                                .HasColumnType("int")
+                                .HasColumnName("Target_MaxCompletionsPerDay");
+
+                            b1.Property<string>("Mode")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasDefaultValue("AtLeast")
+                                .HasColumnName("Target_Mode");
+
+                            b1.Property<string>("Unit")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("Target_Unit");
+
+                            b1.HasKey("QuestId");
+
+                            b1.ToTable("Quests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuestId");
+                        });
+
+                    b.Navigation("Schedule")
+                        .IsRequired();
+
+                    b.Navigation("Target")
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestCompletion", b =>
+                {
+                    b.HasOne("Domain.Models.QuestOccurrence", "Occurrence")
+                        .WithMany("Completions")
+                        .HasForeignKey("OccurrenceId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Domain.Models.Quest", "Quest")
+                        .WithMany("Completions")
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.UserProfile", "UserProfile")
+                        .WithMany("QuestCompletions")
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Occurrence");
+
+                    b.Navigation("Quest");
 
                     b.Navigation("UserProfile");
                 });
@@ -4064,17 +4209,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("UserProfile");
-                });
-
-            modelBuilder.Entity("Domain.Models.SeasonalQuest_Season", b =>
-                {
-                    b.HasOne("Domain.Models.Quest", "Quest")
-                        .WithOne("SeasonalQuest_Season")
-                        .HasForeignKey("Domain.Models.SeasonalQuest_Season", "QuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Quest");
                 });
 
             modelBuilder.Entity("Domain.Models.Supplement", b =>
@@ -4219,17 +4353,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserProfile");
                 });
 
-            modelBuilder.Entity("Domain.Models.WeeklyQuest_Day", b =>
-                {
-                    b.HasOne("Domain.Models.Quest", "Quest")
-                        .WithMany("WeeklyQuest_Days")
-                        .HasForeignKey("QuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Quest");
-                });
-
             modelBuilder.Entity("Domain.Models.WorkoutRoutine", b =>
                 {
                     b.HasOne("Domain.Models.UserProfile", "UserProfile")
@@ -4339,24 +4462,25 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.Quest", b =>
                 {
-                    b.Navigation("MonthlyQuest_Days");
+                    b.Navigation("Completions");
 
                     b.Navigation("QuestOccurrences");
 
                     b.Navigation("Quest_QuestLabels");
 
-                    b.Navigation("SeasonalQuest_Season");
-
                     b.Navigation("Statistics");
 
                     b.Navigation("UserGoal");
-
-                    b.Navigation("WeeklyQuest_Days");
                 });
 
             modelBuilder.Entity("Domain.Models.QuestLabel", b =>
                 {
                     b.Navigation("Quest_QuestLabels");
+                });
+
+            modelBuilder.Entity("Domain.Models.QuestOccurrence", b =>
+                {
+                    b.Navigation("Completions");
                 });
 
             modelBuilder.Entity("Domain.Models.RecurringTransaction", b =>
@@ -4404,6 +4528,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Labels");
 
                     b.Navigation("Notifications");
+
+                    b.Navigation("QuestCompletions");
 
                     b.Navigation("Quests");
 

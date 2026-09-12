@@ -123,7 +123,11 @@ Naming conventions you can rely on:
 - **Strategy pattern**, registered as multiple DI implementations of one interface and selected at runtime:
   - **Badge awarding** — `Application/Badges/Strategies/*`, each an `IBadgeAwardingStrategy` with a `Trigger`. `BadgeAwardingService` resolves `IServiceProvider.GetServices<IBadgeAwardingStrategy>()`, filters by trigger, applies them, then dispatches resulting domain events.
   - **Friend invitation status transitions** — `FriendInvitations/Commands/UpdateInvitationStatus/Strategies/*` implementing `IInvitationStatusUpdateStrategy` (Accept/Reject/Cancel).
-- **Generic base handler with virtual hook** — `CreateQuestCommandHandler<TCommand, TResponse>` holds the shared quest-creation flow; per-type handlers (`CreateDailyQuestCommandHandler`, `CreateWeeklyQuestCommandHandler`, …) derive from it and override `HandleQuestSpecificsAsync`. The same pattern exists for quest updates.
+- **Generic base handler with virtual hook** — *retired in the quest module.* It used to hold the shared
+  quest-creation flow with one derived handler per `QuestType`; the recurrence is data now (§6), so a
+  single `CreateQuestCommandHandler` covers every quest and the five-way parallel hierarchy of commands,
+  handlers, validators, requests and DTOs went with it. The pattern is still worth knowing — it is a
+  reasonable fit when the variants are genuinely behavioural rather than just differently-shaped data.
 
 ---
 
@@ -139,13 +143,48 @@ Located in `Domain/`. This is a **rich domain model**, not anemic.
   - `EntityBase : AggregateRoot` — adds `CreatedAt` / `UpdatedAt` with guards; timestamps are stamped automatically in `AppDbContext.SaveChangesAsync` (`UpdateTimestamps()`).
 - **Value objects** (`Domain/ValueObjects/`): `LevelInfo`, `LevelingOptions`, `QuestOccurrenceWindow`, `QuestStatisticsData`, `ShopItemPayload`, `ActiveEffectValues`, `JwtClaimTypes`, etc.
 - **Enums** (`Domain/Enums/`): `QuestTypeEnum`, `DifficultyEnum`, `PriorityEnum`, `BadgeTypeEnum`, `BadgeTriggerEnum`, `ShopItemTypeEnum`, `CurrencyTypeEnum`, `FriendshipStatus`, `NotificationTypeEnum`, `SeasonEnum`, `WeekdayEnum`, etc.
-- **Pure calculators** (`Domain/Calculators/`): `NextResetDateCalculator`, `QuestStatisticsCalculator`, `QuestWindowCalculator`, `QuestAnalyticsCalculator` — stateless, side-effect-free business math.
+- **Pure calculators** (`Domain/Calculators/`): `QuestPeriodCalculator`, `QuestStatisticsCalculator`,
+  `QuestAnalyticsCalculator`, `QuestRewardCalculator` — stateless, side-effect-free business math.
 - **Domain events** (`Domain/Events/`): e.g. `QuestDeletedEvent`, `BadgeAwardedEvent`.
 - **Exceptions** (`Domain/Exceptions/`): all derive from `AppException`, which carries an HTTP `StatusCode`. Examples: `NotFoundException`, `ConflictException`, `ForbiddenException`, `UnauthorizedException`, `InvalidArgumentException`, `PurchaseItemException`, `FriendshipException`. The API middleware relies on this hierarchy.
 - **Interfaces** (`Domain/Interfaces/`): repository contracts, `IUnitOfWork`, `ITokenGenerator`/`ITokenValidator`, `INicknameGenerator`. These are implemented in Infrastructure.
 
-### The Quest model (worth understanding)
-`Domain/Models/Quest.cs` is a **single entity discriminated by `QuestType`** (Daily/Weekly/Monthly/OneTime/Seasonal) rather than a class hierarchy. Type-specific data lives in **satellite entities**: `MonthlyQuest_Days`, `WeeklyQuest_Day`, `SeasonalQuest_Season`. Repeatable quests (Daily/Weekly/Monthly) also own `QuestOccurrence` records and `QuestStatistics`. The entity encapsulates completion, XP/reward calculation, occurrence generation, reset logic, and statistics recalculation.
+### The Quest model (worth understanding) ⚠️
+
+`Domain/Models/Quest.cs` keeps three things separate that the old model kept in one enum and one boolean:
+
+- **`QuestSchedule`** (owned value object → columns on `Quests`) — which calendar periods exist:
+  a `PeriodUnitEnum` (`None`/`Day`/`Week`/`Month`/`Year`), an "every N units" interval, and optional
+  filters (weekday flags, a day-of-month window, an MMDD year window). It replaces `QuestTypeEnum` and
+  the `WeeklyQuest_Day` / `MonthlyQuest_Days` / `SeasonalQuest_Season` satellite tables.
+- **`QuestTarget`** (owned value object) — what counts as done inside one period: an amount, an optional
+  unit label ("L", "pages"), a mode, and an optional per-day cap. A target of 1 reproduces the old
+  tick-once behaviour exactly.
+- **`QuestCompletion`** (table) — one row per tap, carrying the local day it counts for.
+
+**The period is the unit of accountability.** Streaks, completion rate, rewards and goals are all judged
+per period, never per tap.
+
+**There is no `IsCompleted` column and no `NextResetAt`.** "Is it done?" is derived from the period
+covering today (`Quest.IsCompletedOn`), which is what removed the background reset job — and with it the
+bug where a quest stayed completed because nothing had run to clear it.
+
+One pure `QuestPeriodCalculator` decides when a quest is due, replacing `QuestWindowCalculator`,
+`NextResetDateCalculator`, the per-type `WHERE` in the active-quests query and `SeasonHelper`. The
+active-quests query filters by date range in SQL and applies the schedule rules **in memory** — a second
+copy of those rules in SQL is what drifted apart before, and a user has tens of quests, not thousands.
+
+**Read [`docs/quests-module.md`](./docs/quests-module.md) before changing any of this.** Several rules are
+load-bearing in non-obvious ways; the ones most likely to bite:
+
+- **Periods snapshot their target.** Editing "twice a week" to "three times" must not fail last month.
+- **Any path that generates periods must load *all* of a quest's occurrences** — de-duplication happens
+  in memory and a partial load collides with `UNIQUE (QuestId, PeriodStart)`. Read-only display paths may
+  filter the include precisely because they never generate.
+- **Tap counts come from the completion log, never from walking periods** — off-schedule completions
+  belong to no period, and most queries do not load them.
+- **Rewards are granted once per period, ever**, recorded on the occurrence. Undo never reclaims them and
+  re-completing never pays twice.
 
 ### Quest occurrences are calendar periods, not instants ⚠️
 
@@ -153,32 +192,45 @@ A `QuestOccurrence` is identified by **`PeriodStart`/`PeriodEnd` (`DateOnly`, SQ
 the local calendar days the quest was due, *not* a UTC instant range. Same reasoning as
 `FinanceTransaction.OccurredOn` (§13): a period is a fact about the user's calendar, so it must not move
 when they travel and `UserProfile.TimeZone` changes (which `RefreshAccessToken` does on any token refresh).
-`Quest.StartDate`/`EndDate` are `DateOnly` for the same reason.
+`Quest.StartDate`/`EndDate` and `QuestCompletion.CompletedOn` are `DateOnly` for the same reason.
 
-- **Single source of truth for "what day is it":** `UserProfile.LocalDateOn(instantUtc)`. Everything that
-  needs the user's today goes through it; `QuestWindowCalculator` is then pure calendar arithmetic with no
-  timezone code at all.
-- **`CompletedAt` stays a UTC `DateTime`** — "when the user tapped complete" is a genuine instant, and it is
-  what time-of-day analytics read. `NextResetAt` is likewise a real scheduling instant.
-- **`UNIQUE (QuestId, PeriodStart)`** is what makes duplicate periods structurally impossible. The previous
-  index keyed on UTC instants, so a timezone change silently produced two occurrences for the same local day
-  (inflating `OccurrenceCount`, inventing failures, breaking streaks). Because the DB now enforces this,
-  repository queries that feed occurrence generation must `Include` **all** of a quest's occurrences — a
-  partial load would let in-memory de-duplication miss and blow up on the unique index.
+- **Single source of truth for "what day is it":** `UserProfile.LocalDateOn(instantUtc)` (delegating to
+  `LocalCalendar`). Everything that needs the user's today goes through it; `QuestPeriodCalculator` is
+  then pure calendar arithmetic with no timezone code at all.
+- **`CompletedAt` stays a UTC `DateTime`** — "when the user tapped complete" is a genuine instant.
+  `QuestCompletion.LocalTime` is the wall-clock time **snapshotted at the tap**, because deriving it later
+  from the profile's *current* timezone would shift the hour of every tap made abroad.
+- **`UNIQUE (QuestId, PeriodStart)`** is what makes duplicate periods structurally impossible.
 - **Denominator rule:** a period counts as a failure only once it has fully elapsed relative to the user's
-  local today. `CompletionRate` divides by *evaluated* periods (elapsed + already completed), and is `null`
-  when nothing has been evaluated, so an in-progress day never drags today's percentage down.
-- **Analytics** (`Application/Quests/Queries/{GetQuestAnalytics,GetHabitsOverview}/`) aggregate in memory over
-  `IQuestOccurrenceRepository.GetForQuestInRangeAsync` / `GetForUserInRangeAsync`, mirroring how the finance
-  analytics slices work. `QuestStatistics` remains a denormalized cache for list views, not the query path.
-- **Migration (done — historical note):** shipped as `QuestCalendarPeriods_Step1_AddColumns` (additive) → a
-  one-shot `BackfillQuestOccurrencePeriodsTask` that populated the period columns and de-duplicated the
-  drift damage → `QuestCalendarPeriods_Step2_Finalize` (constraints + drop of the old instant columns; it
-  hard-fails if the backfill has not run). The backfill had to be C# rather than SQL inside the migration
-  because SQL Server's `AT TIME ZONE` speaks Windows timezone ids while the app stores IANA ones. Both
-  migrations remain in history; **the backfill task and its command/service were deleted once applied** — if
-  you ever replay these migrations onto a database that still holds legacy rows, recover that code from git
-  history rather than re-deriving it.
+  local today. `CompletionRate` divides by *evaluated* periods (completed + missed + partial), and is
+  `null` when nothing has been evaluated, so an in-progress day never drags today's percentage down.
+  `ProgressRate` is the partial-credit companion.
+- **Outcomes live in one place** — `QuestOccurrence.OutcomeOn(today)` — so the cached statistics and the
+  analytics endpoints cannot disagree about what "missed" means.
+- **Analytics** (`Application/Quests/Queries/{GetQuestAnalytics,GetHabitsOverview}/`) aggregate in memory
+  over the occurrence and completion repositories, mirroring the finance analytics slices.
+  `QuestStatistics` remains a denormalized cache for list views, not the query path.
+
+### No scheduler: the maintenance pass ⚠️
+
+The API is hosted on **shared IIS with an app pool that shuts down after 15 idle minutes**, so nothing
+timer-based (`BackgroundService`, Hangfire, Quartz) can be relied on to fire.
+
+`IUserMaintenanceService` therefore runs one idempotent pass **per user per local day** — materialize due
+periods, refresh statistics, expire goals, recompute the "currently completed" counter — guarded by the
+`UserProfile.MaintainedThrough` watermark and triggered from `GET /quests/active`, the call the app makes
+on open. A cheap watermark query short-circuits it for the rest of the day.
+
+This is a deliberate exception to "reads never write", and the hosting is the justification.
+`RunMaintenanceTask` remains a startup safety net, not the mechanism.
+
+### Migration status ⚠️
+
+The rebuild ships as two migrations. **`QuestFlexibleRecurrence_Step1_AddColumns` is applied to
+production; `..._Step2_Finalize` is deliberately not**, because the legacy columns it drops are the
+rollback path until the client ships. `QuestRecurrenceBackfill` is shared by both and scoped to
+unmigrated rows so a phased deploy is safe. `dotnet ef database update` with no target would apply step 2
+— always name the target migration, and note `-- production` is the live database.
 
 ---
 
@@ -206,7 +258,12 @@ Located in `Api/`.
 - **`Program.cs`** — the composition root. All DI registration lives here in `ConfigureServices`: MediatR (+ `ValidationBehavior`), FluentValidation (assembly scan), Mapster config scan, EF Core `AppDbContext` (SQL Server), `IUnitOfWork`, auth/JWT, SignalR + custom `IUserIdProvider`, all strategy implementations (badges, invitation status), external service implementations, password hasher, options binding (`JwtSettings`, `LevelingOptions`, `EmailSettings`, `CloudinarySettings`), and hosted background services. `ConfigureMiddleware` sets the pipeline order.
 - **Controllers** (`Api/Controllers/`) — thin, `[ApiController]`, mostly `[Authorize]`, inject `ISender` (+ `IMapper` where needed). They map `Request → Command/Query`, attach identity from claims, `Send`, and return `Ok`/`NoContent`. **No business logic in controllers.**
 - **`Middlewares/ExceptionHandlingMiddleware.cs`** — maps exceptions to HTTP: `ValidationException` → 400 (with field errors), `AppException` → its `StatusCode`, `SecurityTokenException` → 401, anything else → 500. Registered first in the pipeline.
-- **`BackgroundTasks/`** — `IHostedService`s deriving from `StartupTask`. They create a DI scope and dispatch a MediatR command: `ResetQuestsTask`, `ExpireGoalsTask`, `ProcessOccurrencesTask`, `RecalculateRepeatableQuestStatisticsTask`, `GenerateRecurringTransactionsTask`. This keeps scheduled/maintenance work expressed as ordinary application use cases.
+- **`BackgroundTasks/`** — `IHostedService`s deriving from `StartupTask`. They create a DI scope and
+  dispatch a MediatR command: `RunMaintenanceTask`, `GenerateRecurringTransactionsTask`. This keeps
+  scheduled work expressed as ordinary application use cases. ⚠️ **`StartupTask` runs once, at process
+  start** — on this hosting (§6) that is a safety net, not a scheduler. `RunMaintenanceTask` replaced
+  `ResetQuestsTask`, `ProcessOccurrencesTask`, `RecalculateRepeatableQuestStatisticsTask` and
+  `ExpireGoalsTask`; correctness comes from the per-user pass on the read path.
 - **`Converters/`** — custom `System.Text.Json` converters (UTC `DateTime`, `TimeOnly`, string trimming). Registered in `AddControllers().AddJsonOptions(...)` along with `JsonStringEnumConverter` (enums serialize as strings).
 - **`Helpers/`** — `JwtHelpers` (claims → ids as `ClaimsPrincipal` extensions), `ImageValidator`.
 
@@ -275,6 +332,7 @@ To add a use case (the **finance module**, §13, is the most recent worked examp
 | Data access | `Infrastructure/Persistence/Repositories/*`, `UnitOfWork.cs`; contracts in `Domain/Interfaces/Repositories/*` |
 | External integrations | `Infrastructure/{Authentication,Email,Photos,Notifications,Services}/` |
 | Test setup | `Application.Tests/TestBase.cs` |
+| Quest module (detail) | `docs/quests-module.md` (schedule/target model, load-bearing rules, migration status) |
 | Finance module (detail) | `docs/finance-module.md` (decisions, model rules, API surface, seeding hazards) |
 | Workouts & Supplements (detail) | `docs/workouts-module.md` (decisions, model rules, API surface, seeding hazards) |
 

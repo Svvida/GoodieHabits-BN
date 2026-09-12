@@ -1,5 +1,11 @@
 # Questy — nowa analityka i zmiana formatu dat (instrukcja dla zespołu FE)
 
+> ⚠️ **CZĘŚCIOWO NIEAKTUALNE (2026-09-12).** Sekcje o formacie dat (§2) i o modelu okresów (§3) nadal
+> obowiązują. Wszystko o **typach questów** (Daily/Weekly/Monthly/Seasonal/OneTime) i o endpointach
+> per-typ zostało zastąpione przez [`questy-nowy-model-frontend.md`](./questy-nowy-model-frontend.md) —
+> quest ma teraz harmonogram i cel, a nie typ. Kształt `byWeekday` też się zmienił.
+> Ten plik zostaje jako zapis poprzedniej migracji dat.
+
 Dokument opisuje zmiany w module questów po refaktorze wystąpień (`QuestOccurrence`) oraz nowe
 endpointy analityczne. Typy TypeScript: [`docs/quests-api-schema.ts`](./quests-api-schema.ts).
 Pełny kontrakt: `docs/swagger.json`.

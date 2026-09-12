@@ -96,29 +96,69 @@ namespace Application.Tests.Quests.Calculators
         }
 
         [Fact]
-        public void ByWeekday_ShouldSurfaceTheDayTheHabitKeepsSlipping()
+        public void ByWeekday_ShouldCountTheDaysTheHabitActuallyHappensOn()
         {
             var quest = QuestTestFactory.Daily();
-            // Mondays missed, Tuesdays done.
-            QuestTestFactory.AddPeriod(quest, new DateOnly(2020, 8, 3));
-            QuestTestFactory.AddPeriod(quest, new DateOnly(2020, 8, 10));
-            QuestTestFactory.AddPeriod(quest, new DateOnly(2020, 8, 4), completedAtUtc: CompletedAt);
-            QuestTestFactory.AddPeriod(quest, new DateOnly(2020, 8, 11), completedAtUtc: CompletedAt);
+            var nowUtc = new DateTime(2020, 8, 20, 9, 0, 0, DateTimeKind.Utc);
+            var today = new DateOnly(2020, 8, 20);
 
-            var breakdown = QuestAnalyticsCalculator.ByWeekday(quest.QuestOccurrences, new DateOnly(2020, 8, 20));
+            // Two Tuesdays done, no Mondays.
+            quest.AddCompletion(nowUtc, today, completedOn: new DateOnly(2020, 8, 18));
+            quest.AddCompletion(nowUtc, today, completedOn: new DateOnly(2020, 8, 19));
 
-            breakdown.Single(b => b.Weekday == WeekdayEnum.Monday).CompletionRate.Should().Be(0.0);
-            breakdown.Single(b => b.Weekday == WeekdayEnum.Tuesday).CompletionRate.Should().Be(1.0);
+            var breakdown = QuestAnalyticsCalculator.ByWeekday(
+                quest.Completions, quest.QuestOccurrences, new DateOnly(2020, 8, 17), today);
+
+            var tuesday = breakdown.Single(b => b.Weekday == WeekdayEnum.Tuesday);
+            tuesday.Completions.Should().Be(1);
+            // The denominator the FE needs: one Tuesday in a 2020-08-17..2020-08-20 window.
+            tuesday.DaysInRange.Should().Be(1);
         }
 
         [Fact]
-        public void ByWeekday_ShouldSkipMultiDayPeriods()
+        public void ByWeekday_ShouldWorkForAWeeklyTargetHabit()
         {
-            var quest = QuestTestFactory.Monthly(startDay: 1, endDay: 10);
-            QuestTestFactory.AddPeriod(quest, new DateOnly(2020, 8, 1), new DateOnly(2020, 8, 10));
+            // The case the old implementation could not report on at all: the period is the week, but the
+            // question "which days do I actually train?" is about days.
+            var quest = QuestTestFactory.TimesPerWeek(2);
+            var nowUtc = new DateTime(2020, 8, 7, 9, 0, 0, DateTimeKind.Utc);
+            var today = new DateOnly(2020, 8, 7);
 
-            QuestAnalyticsCalculator.ByWeekday(quest.QuestOccurrences, Today)
-                .Should().BeEmpty("a weekday breakdown is meaningless for a period spanning a range");
+            quest.InitializePeriods(today);
+            quest.AddCompletion(nowUtc, today, completedOn: new DateOnly(2020, 8, 5));
+            quest.AddCompletion(nowUtc, today, completedOn: today);
+
+            var breakdown = QuestAnalyticsCalculator.ByWeekday(
+                quest.Completions, quest.QuestOccurrences, new DateOnly(2020, 8, 3), today);
+
+            breakdown.Should().HaveCount(2);
+            breakdown.Sum(b => b.Completions).Should().Be(2);
+            // A Week schedule pins no weekdays, so "how many Tuesdays was I due?" has no answer.
+            breakdown.Should().OnlyContain(b => b.DaysScheduled == null);
+        }
+
+        [Fact]
+        public void ByHourOfDay_ShouldGroupByTheSnapshottedLocalTime()
+        {
+            var quest = QuestTestFactory.Daily(target: 2);
+            var nowUtc = new DateTime(2020, 8, 5, 9, 0, 0, DateTimeKind.Utc);
+
+            quest.AddCompletion(nowUtc, Today, localTime: new TimeOnly(7, 30));
+            quest.AddCompletion(nowUtc, Today, localTime: new TimeOnly(21, 15));
+
+            var byHour = QuestAnalyticsCalculator.ByHourOfDay(quest.Completions);
+
+            byHour.Select(h => h.Hour).Should().Equal(7, 21);
+        }
+
+        [Fact]
+        public void ByHourOfDay_ShouldSkipCompletionsWithNoRecordedLocalTime()
+        {
+            var quest = QuestTestFactory.Daily();
+            quest.AddCompletion(new DateTime(2020, 8, 5, 9, 0, 0, DateTimeKind.Utc), Today);
+
+            QuestAnalyticsCalculator.ByHourOfDay(quest.Completions)
+                .Should().BeEmpty("migrated rows have no local time and must not be guessed at");
         }
 
         [Fact]

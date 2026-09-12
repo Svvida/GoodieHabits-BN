@@ -1,4 +1,5 @@
-﻿using Domain.Common;
+﻿using Domain.Calculators;
+using Domain.Common;
 using Domain.Enums;
 using Domain.Events.Badges;
 using Domain.Exceptions;
@@ -23,6 +24,22 @@ namespace Domain.Models
         // Workouts — the unit every logged weight is displayed in. Like Currency, changing it does NOT convert
         // historical values; weights are stored exactly as the user typed them.
         public string WeightUnit { get; private set; } = SupportedWeightUnits.Default;
+
+        /// <summary>
+        /// Which day the user's week begins on, for Week-unit quest periods and the weekly analytics
+        /// buckets. Changing it only affects periods generated afterwards; the transition period is
+        /// clipped and prorated like any other partial period.
+        /// </summary>
+        public DayOfWeek WeekStartsOn { get; private set; } = DayOfWeek.Monday;
+
+        /// <summary>
+        /// The last local date the per-user maintenance pass has run for. The pass materializes missing
+        /// quest periods, refreshes statistics and expires goals; this watermark makes it run at most once
+        /// per user per local day, which is what lets the app stay correct on hosting with no always-on
+        /// process (see docs/quests-module-plan.md §9).
+        /// </summary>
+        public DateOnly? MaintainedThrough { get; private set; }
+
         // Stats for quests
         public int CompletedQuests { get; set; } = 0;
         public int CompletedDailyQuests { get; set; } = 0;
@@ -43,6 +60,7 @@ namespace Domain.Models
 
         public Account Account { get; set; } = null!;
         public ICollection<Quest> Quests { get; set; } = [];
+        public ICollection<QuestCompletion> QuestCompletions { get; private set; } = [];
         public ICollection<QuestLabel> Labels { get; set; } = [];
         public ICollection<UserGoal> UserGoals { get; set; } = [];
         public ICollection<UserProfile_Badge> UserProfile_Badges { get; set; } = [];
@@ -107,8 +125,11 @@ namespace Domain.Models
             TotalGoals = 0;
             ActiveGoals = 0;
 
+            MaintainedThrough = null;
+
             Labels.Clear();
             Quests.Clear();
+            QuestCompletions.Clear();
             UserProfile_Badges.Clear();
             Notifications.Clear();
             SentFriendInvitations.Clear();
@@ -142,60 +163,86 @@ namespace Domain.Models
             WeightUnit = weightUnit.Trim().ToLowerInvariant();
         }
 
-        public void ApplyQuestCompletionRewards(int xpAwarded, bool isGoalCompleted, bool isFirstTimeCompleted, bool shouldAssignRewards, QuestTypeEnum questType)
+        /// <summary>
+        /// Applies the payout for one completed quest period. Coins moved inside this method (they used to
+        /// be handed out on every tap, including ones that earned no XP, which made complete/uncomplete a
+        /// coin farm); the caller only reaches here once per period, ever.
+        /// </summary>
+        /// <summary>
+        /// Sets the day the user's week begins on. Like <see cref="UpdateCurrency"/> and
+        /// <see cref="UpdateWeightUnit"/>, it does not rewrite anything already stored — existing week
+        /// periods keep the boundaries they were generated with.
+        /// </summary>
+        public void UpdateWeekStartsOn(DayOfWeek weekStartsOn)
         {
-            if (shouldAssignRewards)
-            {
+            if (!Enum.IsDefined(weekStartsOn))
+                throw new InvalidArgumentException("WeekStartsOn must be a valid day of the week.");
+
+            WeekStartsOn = weekStartsOn;
+        }
+
+        public void ApplyQuestPeriodCompletion(
+            QuestReward reward,
+            int goalBonusXp,
+            bool isGoalCompleted,
+            bool isFirstTimeCompleted,
+            PeriodUnitEnum unit)
+        {
+            if (!reward.IsNothing)
                 CompletedQuests++;
-                TotalXp += xpAwarded;
-            }
+
+            TotalXp += reward.Xp + goalBonusXp;
+            Coins += reward.Coins;
+
             if (isFirstTimeCompleted)
                 EverCompletedExistingQuests++;
+
             if (isGoalCompleted)
                 CompletedGoals++;
+
             CurrentlyCompletedExistingQuests++;
 
-            switch (questType)
+            switch (unit)
             {
-                case QuestTypeEnum.Daily:
+                case PeriodUnitEnum.Day:
                     CompletedDailyQuests++;
                     break;
-                case QuestTypeEnum.Weekly:
+                case PeriodUnitEnum.Week:
                     CompletedWeeklyQuests++;
                     break;
-                case QuestTypeEnum.Monthly:
+                case PeriodUnitEnum.Month:
                     CompletedMonthlyQuests++;
                     break;
             }
-
-            Coins += 10;
         }
 
-        public void RevertQuestCompletion(QuestTypeEnum questType)
+        /// <summary>
+        /// Undoes the counters when a period drops back below its target. XP and coins are deliberately not
+        /// reclaimed — see <see cref="Models.QuestOccurrence.RewardGrantedAt"/>.
+        /// </summary>
+        public void RevertQuestPeriodCompletion(PeriodUnitEnum unit)
         {
             CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
-            switch (questType)
+
+            switch (unit)
             {
-                case QuestTypeEnum.Daily:
+                case PeriodUnitEnum.Day:
                     CompletedDailyQuests = Math.Max(CompletedDailyQuests - 1, 0);
                     break;
-                case QuestTypeEnum.Weekly:
+                case PeriodUnitEnum.Week:
                     CompletedWeeklyQuests = Math.Max(CompletedWeeklyQuests - 1, 0);
                     break;
-                case QuestTypeEnum.Monthly:
+                case PeriodUnitEnum.Month:
                     CompletedMonthlyQuests = Math.Max(CompletedMonthlyQuests - 1, 0);
                     break;
             }
         }
 
         public void UpdateAfterQuestDeletion(
-            bool isQuestCompleted,
             bool isQuestEverCompleted,
             bool isQuestActiveGoal)
         {
             ExistingQuests = Math.Max(ExistingQuests - 1, 0);
-            if (isQuestCompleted)
-                CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - 1, 0);
             if (isQuestEverCompleted)
                 EverCompletedExistingQuests = Math.Max(EverCompletedExistingQuests - 1, 0);
             if (isQuestActiveGoal)
@@ -239,14 +286,6 @@ namespace Domain.Models
             ActiveGoals = Math.Max(ActiveGoals - count, 0);
         }
 
-        public void DecrementCompletedQuestsAfterReset(int count)
-        {
-            if (count <= 0)
-                return;
-
-            CurrentlyCompletedExistingQuests = Math.Max(CurrentlyCompletedExistingQuests - count, 0);
-        }
-
         public int ExpireGoals(DateTime nowUtc)
         {
             int expiredCount = 0;
@@ -266,28 +305,60 @@ namespace Domain.Models
         /// </summary>
         public DateOnly LocalDateOn(DateTime instantUtc)
         {
-            var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(TimeZone)
-                ?? throw new Exceptions.InvalidTimeZoneException(Id, TimeZone);
-
-            var localDate = Instant.FromDateTimeUtc(DateTime.SpecifyKind(instantUtc, DateTimeKind.Utc))
-                .InZone(zone)
-                .Date;
-
-            return new DateOnly(localDate.Year, localDate.Month, localDate.Day);
+            try
+            {
+                return LocalCalendar.LocalDateOn(TimeZone, instantUtc);
+            }
+            catch (InvalidArgumentException)
+            {
+                throw new Exceptions.InvalidTimeZoneException(Id, TimeZone);
+            }
         }
 
-        public int ResetQuests(DateTime nowUtc)
+        /// <summary>True when the once-a-day maintenance pass has not yet run for the user's local today.</summary>
+        public bool NeedsMaintenanceOn(DateOnly today) => MaintainedThrough != today;
+
+        /// <summary>
+        /// The per-user, once-a-local-day pass that keeps derived state honest: materialize the quest
+        /// periods that have come due, refresh the statistics cache, expire goals, and recompute the
+        /// "currently completed" counter.
+        /// <para>
+        /// This exists because the API is hosted with no always-on process — an app pool that shuts down
+        /// after fifteen idle minutes cannot be relied on to run a timer. Making the work request-driven and
+        /// idempotent removes the dependency on a scheduler entirely. It replaces the old
+        /// <c>ResetQuests</c>, which had nothing left to reset once completion became derived.
+        /// </para>
+        /// <para>Requires <see cref="Quests"/> loaded with their occurrences, and <see cref="UserGoals"/>.</para>
+        /// </summary>
+        public int RunDailyMaintenance(DateTime nowUtc)
         {
-            int resetCount = 0;
             var today = LocalDateOn(nowUtc);
+
+            if (!NeedsMaintenanceOn(today))
+                return 0;
+
+            int generated = 0;
+
             foreach (var quest in Quests)
             {
-                if (quest.ResetCompletedStatus(nowUtc, today))
-                    resetCount++;
+                generated += quest.GenerateMissingPeriodsOn(today);
+                quest.RecalculateStatistics(today);
             }
-            DecrementCompletedQuestsAfterReset(resetCount);
-            return resetCount;
+
+            ExpireGoals(nowUtc);
+            RecomputeCurrentlyCompletedQuests(today);
+
+            MaintainedThrough = today;
+
+            return generated;
         }
+
+        /// <summary>
+        /// Recomputes rather than adjusts: the counter is a cache of "how many of my quests are done right
+        /// now", and deriving it from the periods is both simpler and self-healing.
+        /// </summary>
+        public void RecomputeCurrentlyCompletedQuests(DateOnly today) =>
+            CurrentlyCompletedExistingQuests = Quests.Count(q => q.IsCompletedOn(today));
 
         public void AwardBadge(Badge badge, DateTime utcNow)
         {

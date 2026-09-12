@@ -23,6 +23,14 @@ namespace Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasDefaultValue(0);
 
+            builder.Property(qs => qs.PartialCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(qs => qs.TotalCompletions)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(qs => qs.OccurrenceCount)
                 .IsRequired()
                 .HasDefaultValue(0);

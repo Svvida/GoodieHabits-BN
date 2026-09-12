@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using FluentAssertions;
 
 namespace Application.Tests.Quests
@@ -8,6 +8,11 @@ namespace Application.Tests.Quests
     /// model stored UTC instants derived from whatever timezone the profile held at generation time, a user
     /// changing timezone produced a second occurrence for a local day they already had (travelling west) or
     /// skipped a local day entirely (travelling east).
+    /// <para>
+    /// Generation now takes the user's local <c>today</c>, resolved through
+    /// <see cref="Domain.Models.UserProfile.LocalDateOn"/>, and the arithmetic below it is pure calendar
+    /// maths — which is what makes these cases impossible rather than merely fixed.
+    /// </para>
     /// </summary>
     public class QuestOccurrenceGenerationTests
     {
@@ -15,17 +20,17 @@ namespace Application.Tests.Quests
         private static readonly DateTime Aug3Noon = new(2020, 8, 3, 12, 0, 0, DateTimeKind.Utc);
 
         [Fact]
-        public void TravellingWest_ShouldNotCreateASecondOccurrenceForTheSameLocalDay()
+        public void TravellingWest_ShouldNotCreateASecondPeriodForTheSameLocalDay()
         {
             var profile = QuestTestFactory.Profile("Europe/Warsaw");
             var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 8, 1));
 
-            quest.InitializeOccurrences(Aug2Noon);
+            quest.InitializePeriods(profile.LocalDateOn(Aug2Noon));
             var periodsBefore = quest.QuestOccurrences.Select(o => o.PeriodStart).ToList();
 
             // The user lands in New York; RefreshAccessToken updates the profile timezone mid-flight.
             profile.UpdateTimeZone("America/New_York");
-            quest.GenerateMissingOccurrences(Aug2Noon);
+            quest.GenerateMissingPeriodsOn(profile.LocalDateOn(Aug2Noon));
 
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().OnlyHaveUniqueItems();
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().BeEquivalentTo(periodsBefore);
@@ -37,10 +42,10 @@ namespace Application.Tests.Quests
             var profile = QuestTestFactory.Profile("America/New_York");
             var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 8, 1));
 
-            quest.InitializeOccurrences(Aug2Noon);
+            quest.InitializePeriods(profile.LocalDateOn(Aug2Noon));
 
             profile.UpdateTimeZone("Europe/Warsaw");
-            quest.GenerateMissingOccurrences(Aug3Noon);
+            quest.GenerateMissingPeriodsOn(profile.LocalDateOn(Aug3Noon));
 
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().Equal(
                 new DateOnly(2020, 8, 1),
@@ -49,23 +54,26 @@ namespace Application.Tests.Quests
         }
 
         [Fact]
-        public void GenerateMissingOccurrences_ShouldBeIdempotent()
+        public void GenerateMissingPeriods_ShouldBeIdempotent()
         {
-            var quest = QuestTestFactory.Daily(startDate: new DateOnly(2020, 8, 1));
+            var profile = QuestTestFactory.Profile();
+            var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 8, 1));
+            var today = profile.LocalDateOn(Aug3Noon);
 
-            quest.InitializeOccurrences(Aug3Noon);
+            quest.InitializePeriods(today);
             int firstPass = quest.QuestOccurrences.Count;
 
-            quest.GenerateMissingOccurrences(Aug3Noon).Should().Be(0);
+            quest.GenerateMissingPeriodsOn(today).Should().Be(0);
             quest.QuestOccurrences.Should().HaveCount(firstPass);
         }
 
         [Fact]
         public void Generation_ShouldNotProducePeriodsBeforeStartDate()
         {
-            var quest = QuestTestFactory.Daily(startDate: new DateOnly(2020, 8, 2));
+            var profile = QuestTestFactory.Profile();
+            var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 8, 2));
 
-            quest.InitializeOccurrences(Aug3Noon);
+            quest.InitializePeriods(profile.LocalDateOn(Aug3Noon));
 
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().Equal(
                 new DateOnly(2020, 8, 2),
@@ -75,13 +83,17 @@ namespace Application.Tests.Quests
         [Fact]
         public void Generation_ShouldNotProducePeriodsAfterEndDate()
         {
+            var profile = QuestTestFactory.Profile();
             var quest = QuestTestFactory.Daily(
+                profile,
                 startDate: new DateOnly(2020, 8, 1),
                 endDate: new DateOnly(2020, 8, 2));
 
-            quest.InitializeOccurrences(Aug3Noon);
+            quest.InitializePeriods(profile.LocalDateOn(Aug3Noon));
 
-            quest.QuestOccurrences.Should().BeEmpty("the quest's active range ended before today");
+            quest.QuestOccurrences.Select(o => o.PeriodStart).Should().Equal(
+                new DateOnly(2020, 8, 1),
+                new DateOnly(2020, 8, 2));
         }
 
         [Fact]
@@ -91,7 +103,7 @@ namespace Application.Tests.Quests
             var profile = QuestTestFactory.Profile("Europe/Warsaw");
             var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 10, 24));
 
-            quest.InitializeOccurrences(new DateTime(2020, 10, 26, 12, 0, 0, DateTimeKind.Utc));
+            quest.InitializePeriods(profile.LocalDateOn(new DateTime(2020, 10, 26, 12, 0, 0, DateTimeKind.Utc)));
 
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().Equal(
                 new DateOnly(2020, 10, 24),
@@ -100,29 +112,33 @@ namespace Application.Tests.Quests
         }
 
         [Fact]
-        public void Complete_ShouldMarkTheOccurrenceCoveringTheUsersLocalToday()
+        public void Completing_ShouldCreditThePeriodCoveringTheUsersLocalToday()
         {
             var profile = QuestTestFactory.Profile("Pacific/Auckland");
             var quest = QuestTestFactory.Daily(profile, startDate: new DateOnly(2020, 8, 1));
 
             // 22:00Z on 2 Aug is already 3 Aug in Auckland (UTC+12).
             var nowUtc = new DateTime(2020, 8, 2, 22, 0, 0, DateTimeKind.Utc);
-            quest.InitializeOccurrences(nowUtc);
-            quest.Complete(nowUtc, shouldAssignRewards: false);
+            var today = profile.LocalDateOn(nowUtc);
 
-            var completed = quest.QuestOccurrences.Single(o => o.WasCompleted);
+            quest.InitializePeriods(today);
+            quest.AddCompletion(nowUtc, today);
+
+            var completed = quest.QuestOccurrences.Single(o => o.IsCompleted);
             completed.PeriodStart.Should().Be(new DateOnly(2020, 8, 3));
             completed.IsBackfilled.Should().BeFalse();
         }
 
         [Fact]
-        public void Weekly_ShouldOnlyGeneratePeriodsOnScheduledDays()
+        public void WeekdayScopedQuest_ShouldOnlyGeneratePeriodsOnScheduledDays()
         {
-            var quest = QuestTestFactory.Weekly(
+            var profile = QuestTestFactory.Profile();
+            var quest = QuestTestFactory.OnWeekdays(
                 [WeekdayEnum.Monday],
+                profile,
                 startDate: new DateOnly(2020, 8, 1));
 
-            quest.InitializeOccurrences(new DateTime(2020, 8, 12, 12, 0, 0, DateTimeKind.Utc));
+            quest.InitializePeriods(profile.LocalDateOn(new DateTime(2020, 8, 12, 12, 0, 0, DateTimeKind.Utc)));
 
             quest.QuestOccurrences.Select(o => o.PeriodStart).Should().Equal(
                 new DateOnly(2020, 8, 3),

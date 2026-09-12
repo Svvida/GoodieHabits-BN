@@ -12,11 +12,17 @@ namespace Domain.Interfaces.Repositories
         Task<List<QuestOccurrence>> GetForQuestInRangeAsync(int questId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Every occurrence belonging to a user's repeatable quests whose period overlaps the
+        /// Every occurrence belonging to a user's repeating quests whose period overlaps the
         /// inclusive date range, with the owning quest loaded for grouping and labelling.
         /// </summary>
         Task<List<QuestOccurrence>> GetForUserInRangeAsync(int userProfileId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 
         Task<List<QuestOccurrence>> GetAllOccurrencesForQuestAsync(int questId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Elapsed periods inside the catch-up window that a tap would still change — missed or partial,
+        /// never completed or skipped. This is the whole data source for the catch-up card.
+        /// </summary>
+        Task<List<QuestOccurrence>> GetCatchUpCandidatesAsync(int userProfileId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
     }
 }

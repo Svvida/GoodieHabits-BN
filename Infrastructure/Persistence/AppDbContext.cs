@@ -10,9 +10,6 @@ namespace Infrastructure.Persistence
     {
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Quest> Quests { get; set; }
-        public DbSet<MonthlyQuest_Days> MonthlyQuest_Days { get; set; }
-        public DbSet<WeeklyQuest_Day> WeeklyQuest_Days { get; set; }
-        public DbSet<SeasonalQuest_Season> SeasonalQuest_Seasons { get; set; }
         public DbSet<QuestLabel> QuestLabels { get; set; }
         public DbSet<Quest_QuestLabel> Quest_QuestLabels { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
@@ -21,6 +18,7 @@ namespace Infrastructure.Persistence
         public DbSet<UserGoal> UserGoals { get; set; }
         public DbSet<QuestStatistics> QuestStatistics { get; set; }
         public DbSet<QuestOccurrence> QuestOccurrences { get; set; }
+        public DbSet<QuestCompletion> QuestCompletions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<FriendInvitation> FriendInvitations { get; set; }
         public DbSet<UserBlock> UserBlocks { get; set; }
@@ -73,17 +71,15 @@ namespace Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
-            modelBuilder.ApplyConfiguration(new MonthlyQuest_DaysConfiguration());
             modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
             modelBuilder.ApplyConfiguration(new Quest_QuestLabelConfiguration());
             modelBuilder.ApplyConfiguration(new QuestConfiguration());
             modelBuilder.ApplyConfiguration(new QuestLabelConfiguration());
-            modelBuilder.ApplyConfiguration(new SeasonalQuest_SeasonConfiguration());
-            modelBuilder.ApplyConfiguration(new WeeklyQuest_DaysConfiguration());
             modelBuilder.ApplyConfiguration(new BadgeConfiguration());
             modelBuilder.ApplyConfiguration(new UserProfile_BadgeConfiguration());
             modelBuilder.ApplyConfiguration(new UserGoalConfiguration());
             modelBuilder.ApplyConfiguration(new QuestStatisticsConfiguration());
+            modelBuilder.ApplyConfiguration(new QuestCompletionConfiguration());
             modelBuilder.ApplyConfiguration(new QuestOccurrenceConfiguration());
             modelBuilder.ApplyConfiguration(new FriendInvitationConfiguration());
             modelBuilder.ApplyConfiguration(new UserBlockConfiguration());

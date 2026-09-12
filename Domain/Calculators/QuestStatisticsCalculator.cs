@@ -1,97 +1,114 @@
+using Domain.Enums;
 using Domain.Models;
 using Domain.ValueObjects;
 
 namespace Domain.Calculators
 {
     /// <summary>
-    /// Rolls a quest's occurrences up into its cached <see cref="Models.QuestStatistics"/> row.
+    /// Rolls a quest's periods up into its cached <see cref="Models.QuestStatistics"/> row.
     /// <para>
     /// A period counts as a failure only once it has fully elapsed relative to the user's local
-    /// <c>today</c>; the in-progress period is neither a success nor a failure until completed.
+    /// <c>today</c>; the in-progress period is neither a success nor a failure until its target is reached.
+    /// A skipped period is neither, ever.
+    /// </para>
+    /// <para>
+    /// Outcomes come from <see cref="QuestOccurrence.OutcomeOn"/> so this and the analytics endpoints can
+    /// never disagree about what "missed" means.
     /// </para>
     /// </summary>
     public static class QuestStatisticsCalculator
     {
-        public static QuestStatisticsData Calculate(IEnumerable<QuestOccurrence> occurrences, DateOnly today)
+        /// <param name="totalCompletions">
+        /// Taken from the quest rather than summed over the periods: an off-schedule completion belongs to no
+        /// period at all, so summing would quietly undercount exactly the taps worth noticing.
+        /// </param>
+        public static QuestStatisticsData Calculate(
+            IEnumerable<QuestOccurrence> occurrences,
+            DateOnly today,
+            int totalCompletions = 0)
         {
-            var data = new QuestStatisticsData();
+            var data = new QuestStatisticsData { TotalCompletions = totalCompletions };
             var ordered = occurrences.OrderBy(o => o.PeriodStart).ToList();
 
             foreach (var occurrence in ordered)
-                ProcessOccurrenceForCounts(data, occurrence, today);
+            {
+                data.OccurrenceCount++;
 
-            CalculateStreaks(data, ordered, today);
+                switch (occurrence.OutcomeOn(today))
+                {
+                    case QuestPeriodOutcomeEnum.Completed:
+                        data.CompletionCount++;
+                        if (occurrence.CompletedAt > data.LastCompletedAt || data.LastCompletedAt is null)
+                            data.LastCompletedAt = occurrence.CompletedAt;
+                        break;
+
+                    case QuestPeriodOutcomeEnum.Partial:
+                        data.PartialCount++;
+                        data.FailureCount++;
+                        break;
+
+                    case QuestPeriodOutcomeEnum.Missed:
+                        data.FailureCount++;
+                        break;
+                }
+            }
+
+            data.CurrentStreak = CurrentStreak(ordered, today);
+            data.LongestStreak = LongestStreak(ordered, today);
 
             return data;
         }
 
-        private static void ProcessOccurrenceForCounts(QuestStatisticsData data, QuestOccurrence occurrence, DateOnly today)
+        private static int CurrentStreak(List<QuestOccurrence> ordered, DateOnly today)
         {
-            data.OccurrenceCount++;
+            int streak = 0;
 
-            if (occurrence.WasCompleted)
+            // Work backwards from the most recent period.
+            for (int i = ordered.Count - 1; i >= 0; i--)
             {
-                data.CompletionCount++;
-                data.LastCompletedAt = occurrence.CompletedAt;
-            }
-            else if (occurrence.HasElapsedOn(today))
-            {
-                // Only count as a failure once the period is genuinely over.
-                data.FailureCount++;
-            }
-        }
-
-        private static void CalculateStreaks(QuestStatisticsData data, List<QuestOccurrence> ordered, DateOnly today)
-        {
-            // Elapsed periods, plus the in-progress period when it has already been completed.
-            var relevantOccurrences = ordered
-                .Where(o => o.HasElapsedOn(today) || o.WasCompleted)
-                .ToList();
-
-            if (relevantOccurrences.Count == 0)
-                return;
-
-            data.CurrentStreak = CalculateCurrentStreak(relevantOccurrences, today);
-            data.LongestStreak = CalculateLongestStreak(relevantOccurrences, today);
-        }
-
-        private static int CalculateCurrentStreak(List<QuestOccurrence> relevantOccurrences, DateOnly today)
-        {
-            int currentStreak = 0;
-
-            // Work backwards from the most recent occurrence.
-            for (int i = relevantOccurrences.Count - 1; i >= 0; i--)
-            {
-                var occurrence = relevantOccurrences[i];
-
-                if (occurrence.WasCompleted)
-                    currentStreak++;
-                else if (occurrence.HasElapsedOn(today))
-                    break; // A genuinely missed period breaks the streak.
-            }
-
-            return currentStreak;
-        }
-
-        private static int CalculateLongestStreak(List<QuestOccurrence> relevantOccurrences, DateOnly today)
-        {
-            int longestStreak = 0;
-            int currentStreak = 0;
-
-            foreach (var occurrence in relevantOccurrences)
-            {
-                if (occurrence.WasCompleted)
+                switch (ordered[i].OutcomeOn(today))
                 {
-                    currentStreak++;
-                    longestStreak = Math.Max(longestStreak, currentStreak);
-                }
-                else if (occurrence.HasElapsedOn(today))
-                {
-                    currentStreak = 0;
+                    case QuestPeriodOutcomeEnum.Completed:
+                        streak++;
+                        break;
+
+                    case QuestPeriodOutcomeEnum.Missed:
+                    case QuestPeriodOutcomeEnum.Partial:
+                        return streak;
+
+                    // Pending and Skipped periods neither extend nor break a streak.
+                    default:
+                        break;
                 }
             }
 
-            return longestStreak;
+            return streak;
+        }
+
+        private static int LongestStreak(List<QuestOccurrence> ordered, DateOnly today)
+        {
+            int longest = 0, current = 0;
+
+            foreach (var occurrence in ordered)
+            {
+                switch (occurrence.OutcomeOn(today))
+                {
+                    case QuestPeriodOutcomeEnum.Completed:
+                        current++;
+                        longest = Math.Max(longest, current);
+                        break;
+
+                    case QuestPeriodOutcomeEnum.Missed:
+                    case QuestPeriodOutcomeEnum.Partial:
+                        current = 0;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return longest;
         }
     }
 }

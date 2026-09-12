@@ -1,6 +1,7 @@
 using Domain.Calculators;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Models;
 using MediatR;
 using NodaTime;
 
@@ -13,13 +14,14 @@ namespace Application.Quests.Queries.GetQuestAnalytics
 
         public async Task<GetQuestAnalyticsResponse> Handle(GetQuestAnalyticsQuery request, CancellationToken cancellationToken)
         {
+            // One load: the statistics row comes along rather than being fetched by a second query.
             var quest = await unitOfWork.Quests
-                .GetQuestWithUserProfileAsync(request.QuestId, request.UserProfileId, cancellationToken)
+                .GetQuestByIdAsync(request.QuestId, request.UserProfileId, asNoTracking: true, cancellationToken)
                 .ConfigureAwait(false)
                 ?? throw new NotFoundException($"Quest with ID: {request.QuestId} not found.");
 
-            if (!quest.IsRepeatable())
-                throw new InvalidArgumentException("Analytics are only available for repeatable quests (Daily, Weekly, Monthly).");
+            if (!quest.Schedule.IsRepeatable)
+                throw new InvalidArgumentException("Analytics are only available for repeating quests.");
 
             var today = quest.UserProfile.LocalDateOn(clock.GetCurrentInstant().ToDateTimeUtc());
 
@@ -30,25 +32,26 @@ namespace Application.Quests.Queries.GetQuestAnalytics
                 .GetForQuestInRangeAsync(quest.Id, from, to, cancellationToken)
                 .ConfigureAwait(false);
 
-            var statistics = await unitOfWork.Quests
-                .GetQuestByIdAsync(quest.Id, request.UserProfileId, quest.QuestType, asNoTracking: true, cancellationToken)
+            var completions = await unitOfWork.QuestCompletions
+                .GetForQuestInRangeAsync(quest.Id, from, to, cancellationToken)
                 .ConfigureAwait(false);
 
             return new GetQuestAnalyticsResponse(
                 QuestId: quest.Id,
-                QuestType: quest.QuestType.ToString(),
                 Title: quest.Title,
+                StreakUnit: quest.Schedule.Unit.ToString(),
                 From: from,
                 To: to,
                 Granularity: request.Granularity.ToString(),
-                Range: QuestAnalyticsCalculator.Summarize(occurrences, today),
-                Lifetime: ToLifetimeDto(statistics?.Statistics),
+                Range: QuestAnalyticsCalculator.Summarize(occurrences, today, completions.Count),
+                Lifetime: ToLifetimeDto(quest.Statistics),
                 Calendar: QuestAnalyticsCalculator.ToCalendar(occurrences, today),
-                Trend: QuestAnalyticsCalculator.Bucket(occurrences, request.Granularity, today),
-                ByWeekday: QuestAnalyticsCalculator.ByWeekday(occurrences, today));
+                Trend: QuestAnalyticsCalculator.Bucket(occurrences, request.Granularity, today, quest.UserProfile.WeekStartsOn),
+                ByWeekday: QuestAnalyticsCalculator.ByWeekday(completions, occurrences, from, to),
+                ByHourOfDay: QuestAnalyticsCalculator.ByHourOfDay(completions));
         }
 
-        private static LifetimeQuestStatsDto? ToLifetimeDto(Domain.Models.QuestStatistics? statistics)
+        private static LifetimeQuestStatsDto? ToLifetimeDto(QuestStatistics? statistics)
         {
             if (statistics is null)
                 return null;
@@ -58,7 +61,9 @@ namespace Application.Quests.Queries.GetQuestAnalytics
             return new LifetimeQuestStatsDto(
                 statistics.CompletionCount,
                 statistics.FailureCount,
+                statistics.PartialCount,
                 statistics.OccurrenceCount,
+                statistics.TotalCompletions,
                 statistics.CurrentStreak,
                 statistics.LongestStreak,
                 evaluated == 0 ? null : Math.Round((double)statistics.CompletionCount / evaluated, 4),

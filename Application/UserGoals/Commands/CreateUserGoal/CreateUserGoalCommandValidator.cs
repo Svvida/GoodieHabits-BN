@@ -33,7 +33,9 @@ namespace Application.UserGoals.Commands.CreateUserGoal
                     if (isAlreadyActiveGoal)
                         context.AddFailure("Quest", $"Quest with ID {questId} is already an active goal.");
 
-                    if (quest.IsCompleted)
+                    // A repeating quest being done *today* is no reason to refuse a goal — it comes round
+                    // again. Only a one-time quest that has been finished is genuinely spent.
+                    if (!quest.Schedule.IsRepeatable && quest.WasEverCompleted)
                         context.AddFailure("Quest", $"Quest with ID {questId} is already completed. Cannot create a goal for it.");
                 });
 

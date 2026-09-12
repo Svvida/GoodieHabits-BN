@@ -795,6 +795,17 @@
             }
           },
           {
+            "name": "equipment",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EquipmentEnum"
+                }
+              ]
+            }
+          },
+          {
             "name": "search",
             "in": "query",
             "schema": {
@@ -1675,11 +1686,28 @@
             }
           },
           {
-            "name": "categoryId",
+            "name": "categoryIds",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "isPaid",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -2742,8 +2770,120 @@
         }
       }
     },
-    "/api/quests/{questType}/{id}": {
+    "/api/quests": {
+      "post": {
+        "tags": [
+          "Quests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateQuestRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateQuestRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateQuestRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
+        "tags": [
+          "Quests"
+        ],
+        "parameters": [
+          {
+            "name": "unit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "legacyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestDetailsDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestDetailsDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestDetailsDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quests/{id}": {
+      "put": {
         "tags": [
           "Quests"
         ],
@@ -2756,17 +2896,74 @@
               "type": "integer",
               "format": "int32"
             }
-          },
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateQuestRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateQuestRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateQuestRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Quests"
+        ],
+        "parameters": [
           {
-            "name": "questType",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/QuestTypeEnum"
-                }
-              ]
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -2806,75 +3003,11 @@
               "type": "integer",
               "format": "int32"
             }
-          },
-          {
-            "name": "questType",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/QuestTypeEnum"
-                }
-              ]
-            }
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/quests/{questType}": {
-      "get": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "questType",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/QuestTypeEnum"
-                }
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestDetailsDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestDetailsDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestDetailsDto"
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -2910,6 +3043,155 @@
                   "items": {
                     "$ref": "#/components/schemas/QuestDetailsDto"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quests/{id}/completions": {
+      "post": {
+        "tags": [
+          "Quests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AddQuestCompletionRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AddQuestCompletionRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AddQuestCompletionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestCompletionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestCompletionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestCompletionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quests/{id}/completions/{completionId}": {
+      "delete": {
+        "tags": [
+          "Quests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "completionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestDetailsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quests/catch-up": {
+      "get": {
+        "tags": [
+          "Quests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCatchUpResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCatchUpResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCatchUpResponse"
                 }
               }
             }
@@ -3063,727 +3345,6 @@
                   "items": {
                     "$ref": "#/components/schemas/QuestDetailsDto"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/{questType}/{id}/completion": {
-      "patch": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "questType",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/QuestTypeEnum"
-                }
-              ]
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/quests/one-time": {
-      "post": {
-        "tags": [
-          "Quests"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/one-time/{id}": {
-      "put": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateOneTimeQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OneTimeQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/daily": {
-      "post": {
-        "tags": [
-          "Quests"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateDailyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateDailyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateDailyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/daily/{id}": {
-      "put": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateDailyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateDailyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateDailyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DailyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/weekly": {
-      "post": {
-        "tags": [
-          "Quests"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/weekly/{id}": {
-      "put": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateWeeklyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeeklyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/monthly": {
-      "post": {
-        "tags": [
-          "Quests"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/monthly/{id}": {
-      "put": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateMonthlyQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MonthlyQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/seasonal": {
-      "post": {
-        "tags": [
-          "Quests"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quests/seasonal/{id}": {
-      "put": {
-        "tags": [
-          "Quests"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateSeasonalQuestRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonalQuestDetailsDto"
                 }
               }
             }
@@ -5111,37 +4672,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            },
-            "text/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateQuestCompletionRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6638,6 +6168,31 @@
         },
         "additionalProperties": false
       },
+      "AddQuestCompletionRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "AnalyticsGranularityEnum": {
         "enum": [
           "Day",
@@ -6808,6 +6363,61 @@
         },
         "additionalProperties": false
       },
+      "CatchUpDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "quests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatchUpQuestDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatchUpQuestDto": {
+        "type": "object",
+        "properties": {
+          "questId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "emoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "progress": {
+            "type": "number",
+            "format": "double"
+          },
+          "target": {
+            "type": "number",
+            "format": "double"
+          },
+          "outcome": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CategoryBreakdownDto": {
         "type": "object",
         "properties": {
@@ -6922,56 +6532,6 @@
         },
         "additionalProperties": false
       },
-      "CreateDailyQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "CreateExerciseRequest": {
         "type": "object",
         "properties": {
@@ -7040,114 +6600,6 @@
         },
         "additionalProperties": false
       },
-      "CreateMonthlyQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "startDay": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "endDay": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateOneTimeQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "CreateQuestLabelRequest": {
         "type": "object",
         "properties": {
@@ -7175,6 +6627,77 @@
           },
           "backgroundColor": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateQuestRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "emoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "labels": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "schedule": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestScheduleRequest"
+              }
+            ],
+            "nullable": true
+          },
+          "target": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestTargetRequest"
+              }
+            ],
             "nullable": true
           }
         },
@@ -7226,60 +6749,6 @@
             "items": {
               "$ref": "#/components/schemas/RoutineExerciseInput"
             },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateSeasonalQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "season": {
-            "type": "string",
             "nullable": true
           }
         },
@@ -7367,58 +6836,51 @@
         },
         "additionalProperties": false
       },
-      "CreateWeeklyQuestRequest": {
+      "CurrentPeriodDto": {
         "type": "object",
         "properties": {
-          "title": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "progress": {
+            "type": "number",
+            "format": "double"
+          },
+          "target": {
+            "type": "number",
+            "format": "double"
+          },
+          "remaining": {
+            "type": "number",
+            "format": "double"
+          },
+          "outcome": {
             "type": "string",
             "nullable": true
           },
-          "description": {
-            "type": "string",
-            "nullable": true
+          "remainingDays": {
+            "type": "integer",
+            "format": "int32"
           },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
+          "isAtRisk": {
+            "type": "boolean"
           },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
+          "todayProgress": {
+            "type": "number",
+            "format": "double"
           },
-          "emoji": {
-            "type": "string",
-            "nullable": true
+          "canCompleteToday": {
+            "type": "boolean"
           },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
+          "completions": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "weekdays": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PeriodCompletionDto"
             },
             "nullable": true
           }
@@ -7443,78 +6905,6 @@
           "completionRate": {
             "type": "number",
             "format": "double",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DailyQuestDetailsDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questType": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "lastCompletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuestLabelDto"
-            },
-            "nullable": true
-          },
-          "statistics": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RepeatableQuestStatisticsDto"
-              }
-            ],
             "nullable": true
           }
         },
@@ -7557,7 +6947,9 @@
           "Machine",
           "Cable",
           "ResistanceBand",
-          "Other"
+          "Other",
+          "Calisthenics",
+          "Rings"
         ],
         "type": "string"
       },
@@ -7842,6 +7234,23 @@
         },
         "additionalProperties": false
       },
+      "GetCatchUpResponse": {
+        "type": "object",
+        "properties": {
+          "graceDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatchUpDayDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "GetHabitsOverviewResponse": {
         "type": "object",
         "properties": {
@@ -7874,6 +7283,14 @@
               "$ref": "#/components/schemas/DailyCompletionRateDto"
             },
             "nullable": true
+          },
+          "periodic": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestAnalyticsSummary"
+              }
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -7885,11 +7302,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "questType": {
+          "title": {
             "type": "string",
             "nullable": true
           },
-          "title": {
+          "streakUnit": {
             "type": "string",
             "nullable": true
           },
@@ -7939,6 +7356,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/QuestWeekdayBreakdown"
+            },
+            "nullable": true
+          },
+          "byHourOfDay": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestHourBreakdown"
             },
             "nullable": true
           }
@@ -8052,7 +7476,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "questType": {
+          "streakUnit": {
             "type": "string",
             "nullable": true
           },
@@ -8107,7 +7531,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "partialCount": {
+            "type": "integer",
+            "format": "int32"
+          },
           "occurrenceCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCompletions": {
             "type": "integer",
             "format": "int32"
           },
@@ -8193,86 +7625,6 @@
           "refreshToken": {
             "type": "string",
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "MonthlyQuestDetailsDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questType": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "lastCompletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuestLabelDto"
-            },
-            "nullable": true
-          },
-          "statistics": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RepeatableQuestStatisticsDto"
-              }
-            ],
-            "nullable": true
-          },
-          "startDay": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "endDay": {
-            "type": "integer",
-            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -8437,66 +7789,20 @@
         },
         "additionalProperties": false
       },
-      "OneTimeQuestDetailsDto": {
+      "PeriodCompletionDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int32"
           },
-          "questType": {
+          "completedOn": {
             "type": "string",
-            "nullable": true
+            "format": "date"
           },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "lastCompletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuestLabelDto"
-            },
-            "nullable": true
+          "amount": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -8587,7 +7893,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "partialPeriods": {
+            "type": "integer",
+            "format": "int32"
+          },
           "pendingPeriods": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skippedPeriods": {
             "type": "integer",
             "format": "int32"
           },
@@ -8599,6 +7913,15 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "progressRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalCompletions": {
+            "type": "integer",
+            "format": "int32"
           },
           "currentStreak": {
             "type": "integer",
@@ -8634,6 +7957,14 @@
               }
             ]
           },
+          "progress": {
+            "type": "number",
+            "format": "double"
+          },
+          "target": {
+            "type": "number",
+            "format": "double"
+          },
           "completedAtUtc": {
             "type": "string",
             "format": "date-time",
@@ -8645,16 +7976,98 @@
         },
         "additionalProperties": false
       },
-      "QuestDetailsDto": {
+      "QuestCompletionDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int32"
           },
-          "questType": {
+          "questId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occurrenceId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "localTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "isBackfilled": {
+            "type": "boolean"
+          },
+          "isOffSchedule": {
+            "type": "boolean"
+          },
+          "source": {
             "type": "string",
             "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuestCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "quest": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestDetailsDto"
+              }
+            ],
+            "nullable": true
+          },
+          "completion": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestCompletionDto"
+              }
+            ],
+            "nullable": true
+          },
+          "wasAlreadyRecorded": {
+            "type": "boolean"
+          },
+          "periodCompleted": {
+            "type": "boolean"
+          },
+          "xpAwarded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coinsAwarded": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuestDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
           },
           "title": {
             "type": "string",
@@ -8678,9 +8091,6 @@
             "type": "string",
             "nullable": true
           },
-          "isCompleted": {
-            "type": "boolean"
-          },
           "priority": {
             "type": "string",
             "nullable": true
@@ -8694,9 +8104,49 @@
             "format": "time",
             "nullable": true
           },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "schedule": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestScheduleDto"
+              }
+            ],
+            "nullable": true
+          },
+          "target": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestTargetDto"
+              }
+            ],
+            "nullable": true
+          },
+          "isCompleted": {
+            "type": "boolean"
+          },
+          "currentPeriod": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrentPeriodDto"
+              }
+            ],
+            "nullable": true
+          },
           "lastCompletedAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "statistics": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepeatableQuestStatisticsDto"
+              }
+            ],
             "nullable": true
           },
           "labels": {
@@ -8704,6 +8154,10 @@
             "items": {
               "$ref": "#/components/schemas/QuestLabelDto"
             },
+            "nullable": true
+          },
+          "legacyQuestType": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -8747,6 +8201,20 @@
         },
         "additionalProperties": false
       },
+      "QuestHourBreakdown": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "QuestLabelDto": {
         "type": "object",
         "properties": {
@@ -8769,9 +8237,140 @@
         "enum": [
           "Completed",
           "Missed",
-          "Pending"
+          "Pending",
+          "Partial",
+          "Skipped"
         ],
         "type": "string"
+      },
+      "QuestScheduleDto": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "interval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekdays": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "monthWindowStartDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "monthWindowEndDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "yearWindowStart": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "yearWindowEnd": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuestScheduleRequest": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "interval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekdays": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "monthWindowStartDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "monthWindowEndDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "yearWindowStart": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "yearWindowEnd": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuestTargetDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "mode": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxCompletionsPerDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuestTargetRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "mode": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxCompletionsPerDay": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "QuestTrendBucket": {
         "type": "object",
@@ -8804,16 +8403,6 @@
         },
         "additionalProperties": false
       },
-      "QuestTypeEnum": {
-        "enum": [
-          "OneTime",
-          "Daily",
-          "Weekly",
-          "Monthly",
-          "Seasonal"
-        ],
-        "type": "string"
-      },
       "QuestWeekdayBreakdown": {
         "type": "object",
         "properties": {
@@ -8824,21 +8413,21 @@
               }
             ]
           },
-          "completedPeriods": {
+          "completions": {
             "type": "integer",
             "format": "int32"
           },
-          "missedPeriods": {
+          "daysWithActivity": {
             "type": "integer",
             "format": "int32"
           },
-          "evaluatedPeriods": {
+          "daysInRange": {
             "type": "integer",
             "format": "int32"
           },
-          "completionRate": {
-            "type": "number",
-            "format": "double",
+          "daysScheduled": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -8967,7 +8556,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "partialCount": {
+            "type": "integer",
+            "format": "int32"
+          },
           "occurrenceCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCompletions": {
             "type": "integer",
             "format": "int32"
           },
@@ -8978,6 +8575,11 @@
           "longestStreak": {
             "type": "integer",
             "format": "int32"
+          },
+          "lastCompletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -9052,74 +8654,6 @@
             "nullable": true
           },
           "note": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "SeasonalQuestDetailsDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questType": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "lastCompletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuestLabelDto"
-            },
-            "nullable": true
-          },
-          "season": {
             "type": "string",
             "nullable": true
           }
@@ -9947,56 +9481,6 @@
         },
         "additionalProperties": false
       },
-      "UpdateDailyQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "UpdateExerciseRequest": {
         "type": "object",
         "properties": {
@@ -10074,127 +9558,10 @@
         },
         "additionalProperties": false
       },
-      "UpdateMonthlyQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "startDay": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "endDay": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateOneTimeQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "UpdatePaidStatusRequest": {
         "type": "object",
         "properties": {
           "isPaid": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateQuestCompletionRequest": {
-        "type": "object",
-        "properties": {
-          "isCompleted": {
             "type": "boolean"
           }
         },
@@ -10232,52 +9599,7 @@
         },
         "additionalProperties": false
       },
-      "UpdateRecurringTransactionRequest": {
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "note": {
-            "type": "string",
-            "nullable": true
-          },
-          "dayOfMonth": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateRoutineRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "exercises": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RoutineExerciseInput"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateSeasonalQuestRequest": {
+      "UpdateQuestRequest": {
         "type": "object",
         "properties": {
           "title": {
@@ -10315,6 +9637,11 @@
             "format": "time",
             "nullable": true
           },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "labels": {
             "uniqueItems": true,
             "type": "array",
@@ -10324,8 +9651,70 @@
             },
             "nullable": true
           },
-          "season": {
+          "schedule": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestScheduleRequest"
+              }
+            ],
+            "nullable": true
+          },
+          "target": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestTargetRequest"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateRecurringTransactionRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
             "type": "string",
+            "nullable": true
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateRoutineRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutineExerciseInput"
+            },
             "nullable": true
           }
         },
@@ -10412,64 +9801,6 @@
           },
           "isPaid": {
             "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateWeeklyQuestRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "labels": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "weekdays": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "nullable": true
           }
         },
@@ -10674,86 +10005,6 @@
           "Saturday"
         ],
         "type": "string"
-      },
-      "WeeklyQuestDetailsDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questType": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "emoji": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "priority": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "scheduledTime": {
-            "type": "string",
-            "format": "time",
-            "nullable": true
-          },
-          "lastCompletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuestLabelDto"
-            },
-            "nullable": true
-          },
-          "statistics": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RepeatableQuestStatisticsDto"
-              }
-            ],
-            "nullable": true
-          },
-          "weekdays": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
       },
       "WipeoutDataRequest": {
         "type": "object",
@@ -11334,10 +10585,10 @@
   },
   "security": [
     {
-      "Bearer": [ ]
+      "Bearer": []
     },
     {
-      "x-time-zone": [ ]
+      "x-time-zone": []
     }
   ]
 }

@@ -1,6 +1,7 @@
-﻿using Application.Badges;
+using Application.Badges;
 using Application.Common;
 using Application.Quests.Dtos;
+using Application.Quests.Utilities;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -10,25 +11,27 @@ using NodaTime;
 
 namespace Application.Quests.Commands.CreateQuest
 {
-    public class CreateQuestCommandHandler<TCommand, TResponse>(
+    public class CreateQuestCommandHandler(
         IUnitOfWork unitOfWork,
-        IQuestMapper questMappingService,
-        IBadgeAwardingService badgeAwardingService)
-        : IRequestHandler<TCommand, TResponse>
-        where TCommand : CreateQuestCommand, IRequest<TResponse> where TResponse : QuestDetailsDto
+        IQuestMapper questMapper,
+        IBadgeAwardingService badgeAwardingService,
+        IClock clock)
+        : IRequestHandler<CreateQuestCommand, QuestDetailsDto>
     {
-
-        public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken)
+        public async Task<QuestDetailsDto> Handle(CreateQuestCommand command, CancellationToken cancellationToken)
         {
-            var userProfile = await unitOfWork.UserProfiles.GetUserProfileWithBadgesAsync(command.UserProfileId, cancellationToken)
+            var userProfile = await unitOfWork.UserProfiles.GetUserProfileWithBadgesAsync(command.UserProfileId, cancellationToken).ConfigureAwait(false)
                 ?? throw new NotFoundException($"User Profile with ID: {command.UserProfileId} not found.");
 
-            DateTime nowUtc = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc();
+            var nowUtc = clock.GetCurrentInstant().ToDateTimeUtc();
+            var today = userProfile.LocalDateOn(nowUtc);
 
             var quest = Quest.Create(
                 title: command.Title,
                 userProfile: userProfile,
-                questType: command.QuestType,
+                schedule: QuestScheduleTranslator.ToSchedule(command.Schedule),
+                target: QuestScheduleTranslator.ToTarget(command.Target),
+                nowUtc: nowUtc,
                 description: command.Description,
                 priority: EnumHelper.ParseNullable<PriorityEnum>(command.Priority),
                 emoji: command.Emoji,
@@ -36,20 +39,15 @@ namespace Application.Quests.Commands.CreateQuest
                 endDate: command.EndDate,
                 difficulty: EnumHelper.ParseNullable<DifficultyEnum>(command.Difficulty),
                 scheduledTime: command.ScheduledTime,
-                labelIds: command.Labels,
-                nowUtc: nowUtc
-            );
-
-            await HandleQuestSpecificsAsync(quest, command, cancellationToken).ConfigureAwait(false);
+                durationMinutes: command.DurationMinutes,
+                labelIds: command.Labels);
 
             await unitOfWork.Quests.AddAsync(quest, cancellationToken).ConfigureAwait(false);
 
-            if (quest.IsRepeatable())
-            {
-                quest.SetNextResetAt(nowUtc);
-                quest.InitializeOccurrences(nowUtc);
-                quest.RecalculateStatistics(nowUtc);
-            }
+            // Materialize from the quest's start (or today) so the first period exists before the user can
+            // reach for it — there is no reset job to do this later.
+            quest.InitializePeriods(today);
+            quest.RecalculateStatistics(today);
 
             userProfile.UpdateAfterQuestCreation();
 
@@ -57,18 +55,7 @@ namespace Application.Quests.Commands.CreateQuest
 
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            var questDetailsDto = questMappingService.MapToDto(quest);
-
-            return (TResponse)questDetailsDto;
-        }
-
-        /// <summary>
-        /// A hook for derived classes to implement quest-type-specific logic.
-        /// </summary>
-        protected virtual Task HandleQuestSpecificsAsync(Quest quest, TCommand command, CancellationToken cancellationToken)
-        {
-            // This method can be overridden in derived handlers to handle specific quest types
-            return Task.CompletedTask;
+            return questMapper.MapToDto(quest, today);
         }
     }
 }
