@@ -307,6 +307,27 @@ namespace Application.Tests.Quests
         }
 
         [Fact]
+        public void AFinishedOneOff_ShouldNotInviteAnotherTap()
+        {
+            // Overshooting is a feature for a habit and a misfire for a one-off: "2 / 1" on a quest that
+            // happens once means nothing. Raised by the FE review as "who guards this?" — the answer is us.
+            var oneOff = QuestTestFactory.OneTime(startDate: new DateOnly(2020, 8, 1));
+            oneOff.InitializePeriods(Today);
+            oneOff.AddCompletion(NowUtc, Today);
+
+            var habit = QuestTestFactory.Daily();
+            habit.InitializePeriods(Today);
+            habit.AddCompletion(NowUtc, Today);
+
+            oneOff.IsCompletedOn(Today).Should().BeTrue();
+            habit.IsCompletedOn(Today).Should().BeTrue();
+
+            // The domain still accepts an extra tap on the habit; the DTO is what closes the button.
+            var act = () => habit.AddCompletion(NowUtc, Today);
+            act.Should().NotThrow();
+        }
+
+        [Fact]
         public void AQuestStartingMidWeek_ShouldGetAProratedFirstTarget()
         {
             // 8 Aug 2020 is a Saturday: two days of that week remain, so "three times a week" asks for one.

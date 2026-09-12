@@ -1,3 +1,4 @@
+using Application.Quests.Dtos;
 using Application.Quests.Services;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -26,7 +27,7 @@ namespace Application.Quests.Queries.GetCatchUp
 
             // Only elapsed periods: a period still running is not a missed tap, it is just today's work.
             var candidates = await unitOfWork.QuestOccurrences
-                .GetCatchUpCandidatesAsync(request.UserProfileId, earliest, today.AddDays(-1), cancellationToken)
+                .GetCatchUpCandidatesAsync(request.UserProfileId, earliest, today.AddDays(-1), request.IncludeCompleted, cancellationToken)
                 .ConfigureAwait(false);
 
             var days = new List<CatchUpDayDto>();
@@ -44,7 +45,11 @@ namespace Application.Quests.Queries.GetCatchUp
                         period.PeriodEnd,
                         period.Progress,
                         period.TargetAmount,
-                        period.OutcomeOn(today).ToString()))
+                        period.OutcomeOn(today).ToString(),
+                        [.. period.Completions
+                            .OrderBy(c => c.CompletedOn)
+                            .ThenBy(c => c.CompletedAt)
+                            .Select(c => new PeriodCompletionDto(c.Id, c.CompletedOn, c.Amount))]))
                     .ToList();
 
                 if (quests.Count > 0)

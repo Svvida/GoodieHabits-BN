@@ -150,10 +150,18 @@ namespace Api.Controllers
         /// Periods from the last couple of days that a tap would still fix — the "did you do these?" card.
         /// An empty list means there is nothing to ask about.
         /// </summary>
+        /// <param name="includeCompleted">
+        /// Also return periods in the window that are already done, so a catch-up tap made in an earlier
+        /// session can still be undone. Off by default, which keeps "empty means hide the card" true.
+        /// </param>
         [HttpGet("catch-up")]
-        public async Task<ActionResult<GetCatchUpResponse>> GetCatchUp(CancellationToken cancellationToken = default)
+        public async Task<ActionResult<GetCatchUpResponse>> GetCatchUp(
+            [FromQuery] bool includeCompleted = false,
+            CancellationToken cancellationToken = default)
         {
-            return Ok(await sender.Send(new GetCatchUpQuery(JwtHelpers.GetCurrentUserProfileId(User)), cancellationToken));
+            var query = new GetCatchUpQuery(JwtHelpers.GetCurrentUserProfileId(User), includeCompleted);
+
+            return Ok(await sender.Send(query, cancellationToken));
         }
 
         /// <summary>

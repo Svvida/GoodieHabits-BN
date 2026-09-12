@@ -83,7 +83,7 @@ namespace Application.Quests
                 return BuildCurrentPeriodDto(
                     period.PeriodStart, period.PeriodEnd, period.Progress, period.TargetAmount,
                     period.OutcomeOn(today), today, quest.Target.MaxCompletionsPerDay,
-                    period.Completions);
+                    period.Completions, quest.Schedule.IsRepeatable);
             }
 
             if (quest.PeriodWindowOn(today) is not QuestPeriodWindow window)
@@ -94,7 +94,7 @@ namespace Application.Quests
             return BuildCurrentPeriodDto(
                 window.Start, window.End, 0m, quest.Target.ProratedAmount(window.Days, window.FullDays),
                 QuestPeriodOutcomeEnum.Pending, today, quest.Target.MaxCompletionsPerDay,
-                []);
+                [], quest.Schedule.IsRepeatable);
         }
 
         private static CurrentPeriodDto BuildCurrentPeriodDto(
@@ -105,7 +105,8 @@ namespace Application.Quests
             QuestPeriodOutcomeEnum outcome,
             DateOnly today,
             int? maxPerDay,
-            IEnumerable<QuestCompletion> completions)
+            IEnumerable<QuestCompletion> completions,
+            bool isRepeatable)
         {
             decimal remaining = Math.Max(0m, target - progress);
             int remainingDays = Math.Max(0, end.DayNumber - today.DayNumber + 1);
@@ -127,8 +128,28 @@ namespace Application.Quests
                 RemainingDays: remainingDays,
                 IsAtRisk: IsAtRisk(remaining, remainingDays, maxPerDay, isSingleDayPeriod: start == end),
                 TodayProgress: todaysCompletions.Sum(c => c.Amount),
-                CanCompleteToday: maxPerDay is not int cap || todaysCompletions.Count < cap,
+                CanCompleteToday: CanCompleteToday(outcome, maxPerDay, todaysCompletions.Count, isRepeatable),
                 Completions: [.. ordered.Select(c => new PeriodCompletionDto(c.Id, c.CompletedOn, c.Amount))]);
+        }
+
+        /// <summary>
+        /// Whether the client should keep the complete button enabled.
+        /// <para>
+        /// Overshooting a target is a feature for a habit — a third workout in a "twice a week" week is
+        /// real and worth recording. It is not a feature for a one-off: "2 / 1" on a quest that happens
+        /// once is just a misfire, so a finished non-recurring period closes the button.
+        /// </para>
+        /// </summary>
+        private static bool CanCompleteToday(
+            QuestPeriodOutcomeEnum outcome,
+            int? maxPerDay,
+            int completionsToday,
+            bool isRepeatable)
+        {
+            if (!isRepeatable && outcome == QuestPeriodOutcomeEnum.Completed)
+                return false;
+
+            return maxPerDay is not int cap || completionsToday < cap;
         }
 
         /// <summary>

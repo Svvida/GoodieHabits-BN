@@ -50,13 +50,21 @@ namespace Infrastructure.Persistence.Repositories
             int userProfileId,
             DateOnly from,
             DateOnly to,
+            bool includeCompleted = false,
             CancellationToken cancellationToken = default)
         {
-            return await _context.QuestOccurrences
+            var query = _context.QuestOccurrences
                 .Where(qo => qo.Quest.UserProfileId == userProfileId)
                 .Where(qo => qo.PeriodStart <= to && qo.PeriodEnd >= from)
-                .Where(qo => qo.CompletedAt == null && qo.SkippedAt == null)
+                .Where(qo => qo.SkippedAt == null);
+
+            if (!includeCompleted)
+                query = query.Where(qo => qo.CompletedAt == null);
+
+            return await query
                 .Include(qo => qo.Quest)
+                // The ids here are what let the client undo a catch-up tap it made in an earlier session.
+                .Include(qo => qo.Completions)
                 .OrderBy(qo => qo.PeriodStart)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
