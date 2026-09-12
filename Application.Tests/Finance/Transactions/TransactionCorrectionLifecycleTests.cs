@@ -161,7 +161,7 @@ namespace Application.Tests.Finance.Transactions
             var (profile, parent, _) = await ArrangeCorrectedDinnerAsync();
 
             var page = await _list.Handle(
-                new GetTransactionsQuery(profile.Id, null, null, null, null, 1, 20), CancellationToken.None);
+                new GetTransactionsQuery(profile.Id, null, null, null, null, null, null, 1, 20), CancellationToken.None);
 
             page.TotalCount.Should().Be(1);
             page.Items.Should().ContainSingle();
@@ -177,7 +177,7 @@ namespace Application.Tests.Finance.Transactions
 
             // January only — the correction is dated in February.
             var page = await _list.Handle(
-                new GetTransactionsQuery(profile.Id, new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 31), null, null, 1, 20),
+                new GetTransactionsQuery(profile.Id, new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 31), null, null, null, null, 1, 20),
                 CancellationToken.None);
 
             page.Items.Should().ContainSingle();

@@ -22,13 +22,21 @@ namespace Domain.Interfaces.Repositories
         /// Filtered, paged list of the user's transactions plus the total matching count. Corrections are
         /// excluded and returned embedded in their parent instead, so a correction dated in another month can
         /// never be paged away from the transaction it belongs to.
+        /// <para>
+        /// <paramref name="categoryIds"/> is matched as-is: expanding a main category to its sub-categories is
+        /// the caller's rule, not this method's. <paramref name="search"/> is a free-text term matched against
+        /// the note, the category name and the notes of the row's own corrections — everything the client
+        /// renders on the row, so "I can see it, therefore search finds it" holds.
+        /// </para>
         /// </summary>
         Task<(IReadOnlyList<FinanceTransaction> Items, int TotalCount)> GetUserTransactionsAsync(
             int userProfileId,
             DateOnly? from,
             DateOnly? to,
             FinanceTransactionTypeEnum? type,
-            int? categoryId,
+            IReadOnlyCollection<int>? categoryIds,
+            bool? isPaid,
+            string? search,
             int page,
             int pageSize,
             CancellationToken cancellationToken = default);
