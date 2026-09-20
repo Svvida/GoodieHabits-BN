@@ -132,6 +132,10 @@ teraz odhaczenie niesie własną datę, więc **działa też dla questów dzienn
 
 **Okno: 2 dni wstecz** (dziś, wczoraj, przedwczoraj). Poza tym oknem → `400`.
 
+⚠️ To okno ogranicza **na który dzień** można zapisać odhaczenie (`completedOn`), a **nie** jak długo po
+terminie wolno skończyć zadanie. Quest jednorazowy z terminem sprzed miesiąca dalej da się odhaczyć
+(patrz §5) — po prostu zapisuje się na dzisiaj.
+
 ```
 GET /api/quests/catch-up
 → { "graceDays": 2,
@@ -168,6 +172,11 @@ currentPeriod: {
 ```
 
 - **`currentPeriod === null`** → quest dziś nie jest zaplanowany. Pusty stan, **nie** czerwony.
+- **Quest jednorazowy (`unit: 'None'`) ma dokładnie jeden okres na całe życie**, więc `currentPeriod`
+  nigdy nie jest dla niego `null`, a `isCompleted` znaczy „to zadanie jest zrobione" — i **zostaje `true`
+  po minięciu terminu**. Nie trzeba tego wnioskować z `lastCompletedAt`.
+  Zaległy, niezrobiony jednorazowy ma `outcome: 'Missed'` i `remainingDays: 0` — to jest Wasz stan
+  „po terminie".
 - **`isAtRisk`** → zostało tyle do zrobienia, że potrzeba każdego pozostałego dnia. Dla okresów
   jednodniowych **zawsze `false`** (tam „jeszcze nie zrobione” nic nie znaczy). Używajcie do podpowiedzi
   typu „jeszcze 2 treningi, zostały 2 dni”.
@@ -246,6 +255,8 @@ dziesięciokrotnie więcej niż codzienna siłownia, tylko dlatego że cel jest 
 - Pierwsze tapnięcie przy celu 2 → `xpAwarded: 0`. Dopiero drugie (domykające) płaci.
 - Dłuższy okres jest wart więcej (dzień 1×, tydzień 3×, miesiąc 8×, rok 20×).
 - **Raz na okres, na zawsze.** Cofnięcie i ponowne odhaczenie nie płaci drugi raz.
+- **Jednorazowy po terminie** nadal można odhaczyć; traci tylko bonus 5 XP „na czas" (10 zamiast 15)
+  i dostaje `isBackfilled: true`.
 - Odhaczenie w dniu, w którym quest nie był zaplanowany, zapisuje się, ale nie płaci.
 
 `periodCompleted: true` w odpowiedzi to dobry moment na animację/celebrację.

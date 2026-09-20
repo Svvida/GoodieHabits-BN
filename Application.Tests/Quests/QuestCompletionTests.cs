@@ -327,6 +327,66 @@ namespace Application.Tests.Quests
             act.Should().NotThrow();
         }
 
+        // ───────────────────── one-offs: a task, not a habit ─────────────────────
+
+        [Fact]
+        public void AFinishedOneOff_ShouldStayCompletedAfterItsDeadlinePasses()
+        {
+            // Raised by the FE review: isCompleted was answering "is today's period done", and a one-off
+            // whose end date has passed owns no period covering today — so a finished task silently
+            // reverted to incomplete and the client had to infer the truth from lastCompletedAt.
+            var quest = QuestTestFactory.OneTime(
+                startDate: new DateOnly(2020, 8, 1),
+                endDate: new DateOnly(2020, 8, 3));
+
+            quest.InitializePeriods(new DateOnly(2020, 8, 2));
+            quest.AddCompletion(
+                new DateTime(2020, 8, 2, 9, 0, 0, DateTimeKind.Utc),
+                new DateOnly(2020, 8, 2));
+
+            quest.IsCompletedOn(new DateOnly(2020, 8, 2)).Should().BeTrue();
+
+            // A week later the deadline is long gone; the task is still done.
+            quest.IsCompletedOn(new DateOnly(2020, 8, 10)).Should().BeTrue();
+            quest.CurrentPeriod(new DateOnly(2020, 8, 10)).Should().NotBeNull();
+        }
+
+        [Fact]
+        public void AnOverdueOneOff_ShouldStillBeCompletable()
+        {
+            // The worse half of the same bug: with no period covering today the completion was recorded as
+            // off-schedule, so a task finished after its deadline could never be marked done at all.
+            var quest = QuestTestFactory.OneTime(
+                startDate: new DateOnly(2020, 8, 1),
+                endDate: new DateOnly(2020, 8, 3));
+
+            quest.InitializePeriods(new DateOnly(2020, 8, 3));
+
+            var lateDay = new DateOnly(2020, 8, 20);
+            var result = quest.AddCompletion(new DateTime(2020, 8, 20, 9, 0, 0, DateTimeKind.Utc), lateDay);
+
+            result.Period.Should().NotBeNull("an overdue task still belongs to its own period");
+            result.Completion.IsOffSchedule.Should().BeFalse();
+            result.PeriodCompleted.Should().BeTrue();
+            quest.IsCompletedOn(lateDay).Should().BeTrue();
+
+            // Honest about lateness: recorded after the period elapsed, and the on-time bonus is withheld.
+            result.Period!.IsBackfilled.Should().BeTrue();
+        }
+
+        [Fact]
+        public void AnOpenEndedOneOff_ShouldBeCompletableAtAnyTime()
+        {
+            var quest = QuestTestFactory.OneTime(startDate: new DateOnly(2020, 8, 1));
+            quest.InitializePeriods(Today);
+
+            var muchLater = new DateOnly(2021, 5, 17);
+            var result = quest.AddCompletion(new DateTime(2021, 5, 17, 9, 0, 0, DateTimeKind.Utc), muchLater);
+
+            result.PeriodCompleted.Should().BeTrue();
+            quest.IsCompletedOn(muchLater).Should().BeTrue();
+        }
+
         [Fact]
         public void AQuestStartingMidWeek_ShouldGetAProratedFirstTarget()
         {

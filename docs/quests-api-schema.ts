@@ -147,6 +147,10 @@ export interface QuestStatisticsDto {
  *
  * Note this is returned even before the backend has materialized the period, so you can always show
  * "0 / 2" on the first day of a new habit.
+ *
+ * A one-off quest (`unit: "None"`) owns exactly ONE period for its whole life, so this is never null for
+ * it and never changes identity — including after its deadline. An overdue, unfinished one-off reads
+ * `outcome: "Missed"` with `remainingDays: 0`, which is your "overdue" state.
  */
 export interface CurrentPeriodDto {
   start: IsoDate;
@@ -204,7 +208,12 @@ export interface QuestDetailsDto {
   schedule: QuestSchedule;
   target: QuestTarget;
 
-  /** DERIVED from the period covering today — there is no stored completed flag any more. */
+  /**
+   * DERIVED — there is no stored completed flag any more.
+   * For a recurring quest: "the period I am in has reached its target".
+   * For a one-off (`unit: "None"`): "this task is done", full stop — it stays true after the deadline
+   * passes, so you never have to infer it from `lastCompletedAt`.
+   */
   isCompleted: boolean;
   currentPeriod: CurrentPeriodDto | null;
 
@@ -505,6 +514,12 @@ export interface GetHabitsOverviewResponse {
 // ─────────────────────────────── Routes ───────────────────────────────────
 
 /**
+ * ⚠️ AN OVERDUE ONE-OFF IS STILL COMPLETABLE. A task with a deadline that slipped can be ticked whenever
+ * it actually gets done — the completion lands on the task's own period (not off-schedule), flips
+ * `isCompleted`, and is flagged `isBackfilled`. The on-time XP bonus is withheld, which is the only
+ * consequence of being late. The 2-day catch-up window limits which DAY a completion may be attributed
+ * to (`completedOn`), not how long after a deadline a task may be finished.
+ *
  * ⚠️ OVERSHOOTING is deliberate for habits — a third workout in a "twice a week" week is real and gets
  * recorded (earning nothing extra). It is NOT allowed to look inviting on a one-off: once a `None`-unit
  * quest is complete, `canCompleteToday` goes false, so you do not need to guard that case yourself.

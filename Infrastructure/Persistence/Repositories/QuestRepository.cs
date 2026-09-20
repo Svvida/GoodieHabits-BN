@@ -155,7 +155,8 @@ namespace Infrastructure.Persistence.Repositories
         /// <para>
         /// The occurrence include is <b>filtered to a two-day window</b> around the server's date, which is
         /// wide enough to contain the user's current period in any timezone while keeping a five-year-old
-        /// habit's history out of a list query. This is safe only because these paths are read-only:
+        /// habit's history out of a list query — plus, unconditionally, the single period of a
+        /// non-recurring quest, which is the one period that stays relevant long after it has elapsed. This is safe only because these paths are read-only:
         /// anything that generates periods must load every one of them, or its in-memory de-duplication
         /// would miss and collide with the unique index.
         /// </para>
@@ -169,7 +170,11 @@ namespace Infrastructure.Persistence.Repositories
             return query
                 .Include(q => q.UserProfile)
                 .Include(q => q.Statistics)
-                .Include(q => q.QuestOccurrences.Where(o => o.PeriodEnd >= earliest && o.PeriodStart <= latest))
+                // A non-recurring quest owns exactly one period and it never moves, so the date window
+                // would hide it the moment its deadline passed — taking "is this task done" with it.
+                .Include(q => q.QuestOccurrences.Where(o =>
+                    o.Quest.Schedule.Unit == PeriodUnitEnum.None ||
+                    (o.PeriodEnd >= earliest && o.PeriodStart <= latest)))
                     // The current period's taps: their ids are what makes undo work after a restart, and
                     // their dates are what makes the per-day cap enforceable in the UI.
                     .ThenInclude(o => o.Completions)

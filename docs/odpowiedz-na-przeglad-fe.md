@@ -1,4 +1,4 @@
-# Odpowiedź BE na przegląd kontraktu questów (FE-1 … FE-13)
+# Odpowiedź BE na przegląd kontraktu questów (FE-1 … FE-14)
 
 Data: 12.09.2026 · Dotyczy: „Przegląd kontraktu questów”, wersja 1 i 2, FE (Swida)
 
@@ -283,3 +283,66 @@ Jedyna rzecz, o której warto pamiętać (i którą sami wypunktowaliście): bra
 `RowVersion` i filtrowanym indeksie. Zgadzamy się z Waszą oceną ryzyka — dwa równoczesne tapnięcia w tym
 samym okresie wymagają dwóch urządzeń naraz, a retry z kolejki i tak jest zdeduplikowany po
 `clientRequestId`. Zamkniemy to przy okazji lokalnej bazy, która i tak jest potrzebna przed krokiem 2.
+
+
+---
+
+# Runda 3 — FE-14: `isCompleted` przy questach jednorazowych
+
+## FE-14 ✅ ZROBIONE — i było gorzej, niż zgłaszaliście
+
+Mieliście rację co do znaczenia: **`isCompleted` dla questa jednorazowego powinno znaczyć „jego jedyny
+okres został zaliczony", a nie „dzisiejszy okres jest zaliczony"**. Poprawione — nie musicie już wnioskować
+niczego z `lastCompletedAt`.
+
+Przyczyna: `CurrentPeriod` szukał okresu, który **pokrywa dzisiejszy dzień**. Quest jednorazowy z terminem
+w przeszłości nie ma takiego okresu, więc pole wracało jako `false`.
+
+**Ale ten sam warunek powodował drugi, poważniejszy błąd**, o który zapytaliście w drugim zdaniu:
+odhaczenie zaległego questa jednorazowego trafiało jako **off-schedule** (`OccurrenceId = null`), czyli
+zadanie po terminie **nie dało się w ogóle ukończyć** — zostawało „Missed" na zawsze. Tego byście nie
+zobaczyli w kontrakcie; wyszło dopiero przy odtworzeniu scenariusza na produkcyjnych danych.
+
+### Odpowiedzi na Wasze pytania
+
+**Czy zaległy jednorazowy jest blokowany po przekroczeniu 2-dniowego okna?**
+Nie — i nie powinien być. **Okno nadrabiania ogranicza, na który *dzień* można zapisać odhaczenie
+(`completedOn`), a nie jak długo po terminie wolno skończyć zadanie.** Okno chroni wiarygodność serii
+przy nawykach; quest jednorazowy nie ma serii, więc ten argument go nie dotyczy.
+
+Zadanie z terminem to nie nawyk z oknem: przegapienie terminu nie może uniemożliwiać zapisania, że
+jednak się je zrobiło. Zaległy jednorazowy odhaczacie normalnie, dzisiaj.
+
+**Czy bez `endDate` można odhaczyć w dowolnym momencie?**
+Tak. Okres biegnie wtedy do `9999-12-31`, więc nigdy nie wygasa.
+
+### Co widać w API (sprawdzone na produkcyjnych danych, quest z terminem sprzed 10 dni)
+
+Przed odhaczeniem:
+
+```
+isCompleted: false, outcome: "Missed", remainingDays: 0, canCompleteToday: true
+```
+
+Po odhaczeniu dzisiaj, 10 dni po terminie:
+
+```
+isOffSchedule: false      // trafia na własny okres zadania, nie obok
+periodCompleted: true
+isCompleted: true         // i zostaje true przy kolejnym GET
+outcome: "Completed", isBackfilled: true
+xp: 10, coins: 10         // bonus 5 XP „na czas" słusznie przepadł (byłoby 15)
+canCompleteToday: false   // skończonego jednorazowego nie da się odhaczyć drugi raz (FE-12)
+```
+
+`outcome: "Missed"` + `remainingDays: 0` to Wasz stan „po terminie" — nie trzeba niczego dokładać.
+
+### Jeszcze jedno, o czym nie wiedzieliście
+
+Sama poprawka w domenie nie wystarczyła: ścieżka odczytu filtruje okresy do **dwudniowego okna** wokół
+dzisiaj (żeby lista nie ciągnęła pięcioletniej historii nawyku). To okno ukrywało okres jednorazowego
+zaraz po jego wygaśnięciu, więc `currentPeriod` wracało `null` mimo poprawnej domeny. Filtr ma teraz jawny
+wyjątek dla `unit: 'None'`.
+
+**Wniosek dla Was:** `currentPeriod` **nigdy nie jest `null` dla questa jednorazowego** i nie zmienia
+tożsamości przez całe jego życie. Możecie na tym polegać.

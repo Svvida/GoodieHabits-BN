@@ -241,12 +241,28 @@ namespace Domain.Models
         private DayOfWeek WeekStartsOn => UserProfile?.WeekStartsOn ?? DayOfWeek.Monday;
 
         /// <summary>The period covering the user's local today, if any has been materialized.</summary>
+        /// <summary>
+        /// The period the answer is about right now.
+        /// <para>
+        /// For a recurring quest that is the period covering <paramref name="today"/>. A non-recurring
+        /// quest has exactly <em>one</em> period for its whole life, so that one is always the answer —
+        /// asking whether it "covers today" is the wrong question, and answering it makes a one-off whose
+        /// end date has passed look like it was never done.
+        /// </para>
+        /// </summary>
         public QuestOccurrence? CurrentPeriod(DateOnly today) =>
-            QuestOccurrences.FirstOrDefault(p => p.Covers(today));
+            Schedule.IsRepeatable
+                ? QuestOccurrences.FirstOrDefault(p => p.Covers(today))
+                : SinglePeriod;
+
+        /// <summary>The one period a non-recurring quest owns, if it has been materialized yet.</summary>
+        private QuestOccurrence? SinglePeriod =>
+            QuestOccurrences.OrderBy(p => p.PeriodStart).FirstOrDefault();
 
         /// <summary>
-        /// The derived replacement for the old <c>IsCompleted</c> column: true when the period the user is
-        /// currently in has reached its target.
+        /// The derived replacement for the old <c>IsCompleted</c> column. For a habit it means "the period
+        /// I am in has reached its target"; for a one-off it means "this task is done", which is the only
+        /// reading that survives its deadline passing.
         /// </summary>
         public bool IsCompletedOn(DateOnly today) => CurrentPeriod(today)?.IsCompleted ?? false;
 
@@ -321,6 +337,14 @@ namespace Domain.Models
         /// A partial period asks for proportionally less. Without this, a "three times a week" quest created
         /// on a Saturday would open its life with a guaranteed failure.
         /// </summary>
+        /// <summary>
+        /// The whole active range of a non-recurring quest, which is its only period. Taken from the bounds
+        /// rather than from the calculator's date-scoped entry points, because those refuse a date outside
+        /// the quest's range — the exact case this exists to serve.
+        /// </summary>
+        private QuestPeriodWindow SinglePeriodWindow =>
+            new(Bounds.EffectiveFrom, Bounds.ActiveTo ?? DateOnly.MaxValue);
+
         private decimal ProratedTargetFor(QuestPeriodWindow window) =>
             Target.ProratedAmount(window.Days, window.FullDays);
 
@@ -344,6 +368,12 @@ namespace Domain.Models
         /// </summary>
         private QuestOccurrence? GetOrMaterializePeriodFor(DateOnly date)
         {
+            // A one-off is a task with a deadline, not a habit with a window: missing the deadline must not
+            // make it impossible to record that you did the thing. Its single period accepts the completion
+            // whenever it arrives — late, which the reward already reflects, but recorded.
+            if (!Schedule.IsRepeatable)
+                return SinglePeriod ?? AddPeriod(SinglePeriodWindow);
+
             if (QuestOccurrences.FirstOrDefault(p => p.Covers(date)) is QuestOccurrence existing)
                 return existing;
 

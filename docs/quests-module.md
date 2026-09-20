@@ -97,6 +97,24 @@ happened today. Found by the FE review, not by our tests.
 `canCompleteToday` is computed server-side on purpose: "today" depends on the profile timezone, which
 only the server resolves, and a client-side flag does not survive a restart.
 
+### A one-off has one period, and it is always "the current one"
+
+`CurrentPeriod` asks "which period covers today?" only for recurring quests. A non-recurring quest owns
+exactly one period for its whole life, so that one is always the answer. Resolving it by date instead
+produced two bugs the FE review caught: a finished task reverted to `isCompleted: false` the day after its
+deadline (no period covered today), and — worse — completing an overdue task recorded an *off-schedule*
+completion, so it could never be marked done at all.
+
+The corollary is that a one-off accepts its completion whenever it arrives. A task with a deadline is not
+a habit with a window: missing the deadline must not make it impossible to record that you did the thing.
+Lateness shows up where it belongs — `IsBackfilled` on the period, and the on-time XP bonus withheld by
+`QuestRewardCalculator`. The catch-up window still bounds which *day* a completion may be attributed to;
+it says nothing about how long after a deadline a task may be finished.
+
+⚠️ The read path has to cooperate: `WithDisplayIncludes` filters occurrences to a two-day window, which
+would hide a one-off's period the moment it elapsed. It carries an explicit exemption for
+`Schedule.Unit == None`.
+
 ### Analytics tap counts come from the log, never from periods
 
 `TotalCompletions` is passed into `QuestStatisticsCalculator.Calculate` and
