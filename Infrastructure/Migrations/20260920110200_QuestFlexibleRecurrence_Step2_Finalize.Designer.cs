@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260912125101_QuestFlexibleRecurrence_Step2_Finalize")]
+    [Migration("20260920110200_QuestFlexibleRecurrence_Step2_Finalize")]
     partial class QuestFlexibleRecurrence_Step2_Finalize
     {
         /// <inheritdoc />

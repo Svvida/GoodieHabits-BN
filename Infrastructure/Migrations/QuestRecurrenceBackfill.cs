@@ -27,8 +27,13 @@ namespace Infrastructure.Migrations
         {
             ClassifySchedules(migrationBuilder);
             BackfillPeriods(migrationBuilder);
-            BackfillCompletionLog(migrationBuilder);
+
+            // Order matters: the non-repeatable pass INSERTS periods (carrying their own CompletedAt), so
+            // the completion log has to be written after them or those rows never get one. The first run of
+            // this backfill had these two the other way round and left 17 completed one-off quests with no
+            // log entry — invisible in totals and in the weekday/hour breakdowns.
             BackfillNonRepeatablePeriods(migrationBuilder);
+            BackfillCompletionLog(migrationBuilder);
         }
 
         /// <summary>
@@ -135,7 +140,8 @@ namespace Infrastructure.Migrations
         }
 
         /// <summary>
-        /// One completion row per completed period, so streaks, totals and the weekday breakdown keep
+        /// One completion row per completed period — whether it was completed the old way, by an earlier
+        /// step of this backfill, or by the new API — so streaks, totals and the weekday breakdown keep
         /// working. <c>LocalTime</c> stays null: recovering the user's wall-clock hour would need the
         /// timezone they held at the time, and guessing it is worse than reporting nothing — the hour-of-day
         /// breakdown skips rows without it by design.
@@ -168,8 +174,11 @@ namespace Infrastructure.Migrations
                     qo.CompletedAt
                 FROM QuestOccurrences qo
                 INNER JOIN Quests q ON q.Id = qo.QuestId
-                WHERE qo.WasCompleted = 1
-                  AND qo.CompletedAt IS NOT NULL
+                -- Keyed on CompletedAt, not on the legacy WasCompleted flag: periods this migration
+                -- inserts for one-off quests never carry that flag, and a period completed through the new
+                -- API does not set it either. NOT EXISTS keeps it idempotent and leaves new-API taps alone,
+                -- since those already wrote their own log row.
+                WHERE qo.CompletedAt IS NOT NULL
                   AND NOT EXISTS (SELECT 1 FROM QuestCompletions qc WHERE qc.OccurrenceId = qo.Id);");
         }
 

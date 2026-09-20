@@ -14,6 +14,12 @@ namespace Infrastructure.Migrations
     /// <c>QuestType</c> with schedules still unset would leave every quest unschedulable and unrecoverable
     /// without a restore.
     /// </para>
+    /// <para>
+    /// ⚠️ Its id was moved from <c>20260912125101</c> to <c>20260920110200</c> so that it sorts after
+    /// <c>Step1b_SweepBackfill</c>. Migrations apply in id order, and this one drops the very columns the
+    /// sweep reads — with the original id, a plain <c>database update</c> would have run them the wrong way
+    /// round. Safe to renumber because it had not been applied anywhere.
+    /// </para>
     /// </summary>
     /// <inheritdoc />
     public partial class QuestFlexibleRecurrence_Step2_Finalize : Migration
