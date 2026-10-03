@@ -21,17 +21,26 @@ namespace Api.Controllers
     [Route("api/finance/transactions")]
     public class FinanceTransactionsController(ISender sender, IMapper mapper) : ControllerBase
     {
+        /// <summary>
+        /// Filtered, paged history. Repeat <c>categoryIds</c> per value (<c>?categoryIds=3&amp;categoryIds=7</c>);
+        /// a main category also covers its sub-categories, so pass a sub's own id to narrow to just that sub.
+        /// <paramref name="search"/> is free text matched against the note, the category name and the row's
+        /// corrections' notes. Every filter narrows the same list.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<PagedResult<TransactionDto>>> GetAsync(
             [FromQuery] DateOnly? from = null,
             [FromQuery] DateOnly? to = null,
             [FromQuery] FinanceTransactionTypeEnum? type = null,
-            [FromQuery] int? categoryId = null,
+            [FromQuery] int[]? categoryIds = null,
+            [FromQuery] bool? isPaid = null,
+            [FromQuery] string? search = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
             CancellationToken cancellationToken = default)
         {
-            var query = new GetTransactionsQuery(User.GetCurrentUserProfileId(), from, to, type, categoryId, page, pageSize);
+            var query = new GetTransactionsQuery(
+                User.GetCurrentUserProfileId(), from, to, type, categoryIds, isPaid, search, page, pageSize);
             return Ok(await sender.Send(query, cancellationToken).ConfigureAwait(false));
         }
 

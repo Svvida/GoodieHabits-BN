@@ -32,6 +32,18 @@ namespace Infrastructure.Persistence.Configuration
                 .HasDefaultValue(SupportedWeightUnits.Default)
                 .HasMaxLength(3);
 
+            // Quest week periods and the weekly analytics buckets both start here.
+            builder.Property(p => p.WeekStartsOn)
+                .HasConversion<string>()
+                .HasMaxLength(10)
+                .HasDefaultValue(DayOfWeek.Monday)
+                .IsRequired();
+
+            // Watermark for the once-a-local-day maintenance pass.
+            builder.Property(p => p.MaintainedThrough)
+                .HasColumnType("date")
+                .IsRequired(false);
+
             builder.Property(p => p.Nickname)
                 .IsRequired(true)
                 .HasMaxLength(30);

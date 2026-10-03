@@ -17,7 +17,7 @@ namespace Application.Badges.Strategies
 
             foreach (var goal in quest.UserGoal)
             {
-                if (goal.GoalType == GoalTypeEnum.Yearly && quest.IsCompleted)
+                if (goal.GoalType == GoalTypeEnum.Yearly && goal.IsAchieved)
                 {
                     var badge = allBadges.First(b => b.Type == badgeType);
                     userProfile.AwardBadge(badge, DateTime.UtcNow);

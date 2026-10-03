@@ -113,7 +113,7 @@ month-over-month deltas when the payback lands in a later month.
   ⚠️ *Do not "fix" this to an Income-typed counter-entry:* `GetBudgetProgressQueryHandler` filters
   `Type = Expense`, so such a row would be silently dropped and budget progress would stay wrong while every
   other number got fixed. Inheriting also keeps `CreateTransaction`'s category/type consistency check valid
-  unchanged, and makes `?categoryId=` return parent and corrections together.
+  unchanged, and makes `?categoryIds=` return parent and corrections together.
 - **The reserved `FinanceTransactionTypeEnum.Transfer` slot stays reserved** for the wallets backlog item. A
   correction must not consume it.
 - **Netting is materialized on the parent** as `CorrectedAmount`, maintained by domain methods
@@ -178,6 +178,47 @@ month-over-month deltas when the payback lands in a later month.
   Revisit past ~5 years of history, or if it shows up in profiling.
 - The grouped query sums `Amount - CorrectedAmount` over `CorrectsTransactionId == null` rows as plain column
   expressions so it translates to SQL — **do not** load transaction rows and fold in memory.
+
+### Filtering and searching history
+
+- **`categoryIds` is a set, and a main category in it means everything filed under it.** Passing a main
+  expands to that main plus its sub-categories; passing a sub's own id narrows to exactly that sub. This is
+  not a new rule — it is the reading `GetBudgetProgressQueryHandler` already gives a budget, and "Home" must
+  not cover the Rent sub on the dashboard while excluding it in history. Expansion lives in the **handler**
+  (one `GetSubCategoryIdsAsync` call, the tree being two levels deep); the repository matches the set it is
+  handed. No ownership check is needed on the ids because the query is scoped to the caller's transactions
+  regardless of what lands in the set.
+  ⚠️ *A separate `parentCategoryIds` param was rejected*: it would give two ways to say almost the same thing
+  and would still leave a bare main id in `categoryIds` behaving surprisingly. If "the main itself, not its
+  subs" is ever needed, the additive escape hatch is an `includeSubCategories=false` flag defaulting to true,
+  not a second id list.
+- **`categoryIds` replaced the singular `categoryId`** (breaking, FE updated in step). Repeat the key per
+  value: `?categoryIds=3&categoryIds=7`. Uncategorized rows are excluded whenever the set is non-empty; an
+  empty or absent set means "no category filter", not "uncategorized only".
+- **`isPaid` is a plain tri-state filter** (`true` / `false` / absent). `isPaid=false` is the "what do I still
+  owe" view the module already feeds by materializing recurring expenses unpaid; it changes no aggregate,
+  because `isPaid` stays pure metadata everywhere else.
+- **One free-text `search` query param on `GET /transactions`, not a `/search` endpoint.** It composes with
+  `from`/`to`/`type`/`categoryIds`/`isPaid` instead of shadowing them, so the FE's history screen and its
+  search box are the same call with one more parameter, and paging/`totalCount` stay correct because the term
+  is applied before the `Count`.
+- **It matches everything the row displays: the note, the category name, and the notes of the row's own
+  corrections.** The rule is *"if the user can see the text, search finds it"*. The category arm is what lets a
+  single box stand in for "pick a category" in the common case (typing `Rent` finds the Rent category's rows
+  as well as notes mentioning rent) while `categoryIds` stays available for the exact version. The corrections
+  arm exists because a matching correction must surface its **parent** — corrections are never top-level
+  rows, so without it searching `refund` returns nothing while the word sits visibly on the screen.
+- **Amount is deliberately not searched.** Folding numbers into a text box makes results feel arbitrary; if
+  amount search is wanted it belongs in explicit `minAmount`/`maxAmount` filters.
+- **Non-sargable by design, and that is fine here.** A contains-search cannot seek, but it never scans the
+  table either: `UserProfileId` (plus the date range when the client sends one) seeks
+  `IX(UserProfileId, OccurredOn)` first and the term only filters what survives, so cost tracks *one user's*
+  rows in range — a few thousand at most, over an `nvarchar(250)` column. If it ever did need help the ladder
+  is a filtered index, then full-text; full-text means a catalog plus backup/restore baggage and is not worth
+  it for this.
+- **Case sensitivity is the database collation's business** (case-insensitive by default), matching the
+  workouts exercise search. ⚠️ EF Core InMemory is case-**sensitive**, so handler tests must match exact case
+  or they pin behaviour production does not have.
 
 ### Recurring transactions
 
@@ -257,7 +298,7 @@ All routes are `[Authorize]`, identity via `User.GetCurrentUserProfileId()`. Enu
 | Route | Verbs |
 |---|---|
 | `api/finance/categories` | `GET` (tree: system + own) · `POST` · `PUT /{id}` · `DELETE` (bulk, id array in body) |
-| `api/finance/transactions` | `GET` (filters `from`/`to`/`type`/`categoryId` + paging) · `GET /{id}` · `POST` · `PUT /{id}` · `DELETE /{id}` |
+| `api/finance/transactions` | `GET` (filters `from`/`to`/`type`/`categoryIds`/`isPaid`/`search` + paging) · `GET /{id}` · `POST` · `PUT /{id}` · `DELETE /{id}` |
 | `api/finance/transactions/{id}/corrections` | `POST` (returns the **parent**) |
 | `api/finance/transactions/{id}/paid-status` | `PATCH` |
 | `api/finance/budgets` | `GET` (by period) · `POST` · `PUT /{id}` · `DELETE /{id}` |

@@ -1,34 +1,21 @@
-﻿namespace Application.Quests.Commands.CreateQuest
+using Application.Quests.Dtos;
+
+namespace Application.Quests.Commands.CreateQuest
 {
-    public abstract record UpdateQuestRequest
+    /// <summary>Body of <c>POST /api/quests</c>.</summary>
+    public record CreateQuestRequest
     {
         public string Title { get; init; } = null!;
-        public string? Description { get; init; } = null;
-        public DateOnly? StartDate { get; init; } = null;
-        public DateOnly? EndDate { get; init; } = null;
-        public string? Emoji { get; init; } = null;
-        public string? Priority { get; init; } = null;
-        public string? Difficulty { get; init; } = null;
-        public TimeOnly? ScheduledTime { get; init; } = null;
+        public string? Description { get; init; }
+        public DateOnly? StartDate { get; init; }
+        public DateOnly? EndDate { get; init; }
+        public string? Emoji { get; init; }
+        public string? Priority { get; init; }
+        public string? Difficulty { get; init; }
+        public TimeOnly? ScheduledTime { get; init; }
+        public int? DurationMinutes { get; init; }
         public HashSet<int> Labels { get; init; } = [];
-    }
-
-    public record CreateOneTimeQuestRequest : UpdateQuestRequest;
-    public record CreateDailyQuestRequest : UpdateQuestRequest;
-
-    public record CreateWeeklyQuestRequest : UpdateQuestRequest
-    {
-        public HashSet<string> Weekdays { get; init; } = [];
-    }
-
-    public record CreateMonthlyQuestRequest : UpdateQuestRequest
-    {
-        public int StartDay { get; init; }
-        public int EndDay { get; init; }
-    }
-
-    public record CreateSeasonalQuestRequest : UpdateQuestRequest
-    {
-        public string Season { get; init; } = null!;
+        public QuestScheduleRequest Schedule { get; init; } = new();
+        public QuestTargetRequest? Target { get; init; }
     }
 }

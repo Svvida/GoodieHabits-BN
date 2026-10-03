@@ -1,6 +1,7 @@
 ﻿using Domain.Enums;
 using Domain.Interfaces.Repositories;
 using Domain.Models;
+using Domain.ValueObjects;
 using Infrastructure.Persistence.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -69,16 +70,43 @@ namespace Infrastructure.Persistence.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<UserProfile>> GetProfilesWithQuestsToResetAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+        public async Task<MaintenanceWatermark> GetMaintenanceWatermarkAsync(int userProfileId, CancellationToken cancellationToken = default)
         {
-            // EndDate is a calendar date, so it is only a loose pre-filter here (widened by a day to
-            // cover local-vs-UTC date skew); Quest.ResetCompletedStatus re-checks against the user's
-            // real local date. NextResetAt is a genuine instant and is compared exactly.
-            var earliestEndDate = DateOnly.FromDateTime(nowUtc).AddDays(-1);
+            return await _context.UserProfiles
+                .AsNoTracking()
+                .Where(up => up.Id == userProfileId)
+                .Select(up => new MaintenanceWatermark(up.TimeZone, up.MaintainedThrough))
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<UserProfile?> GetProfileForMaintenanceAsync(int userProfileId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserProfiles
+                .Where(up => up.Id == userProfileId)
+                // Every occurrence of every quest: generation de-duplicates in memory against this
+                // collection, and a partial load would emit a row that collides with the unique index.
+                .Include(up => up.Quests).ThenInclude(q => q.QuestOccurrences)
+                .Include(up => up.Quests).ThenInclude(q => q.Statistics)
+                // Needed for the recalculated TotalCompletions; without it every quest reports zero taps.
+                .Include(up => up.Quests).ThenInclude(q => q.Completions)
+                .Include(up => up.UserGoals)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<UserProfile>> GetProfilesNeedingMaintenanceAsync(DateOnly utcToday, CancellationToken cancellationToken = default)
+        {
+            // Widened by a day because each user's local date may lead or trail the server's; the domain
+            // re-checks against the real local date and no-ops if it is already up to date.
+            var earliest = utcToday.AddDays(-1);
 
             return await _context.UserProfiles
-                .Include(a => a.Quests.Where(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateOnly.MaxValue) >= earliestEndDate)))
-                .Where(a => a.Quests.Any(q => q.IsCompleted && (q.NextResetAt.HasValue && q.NextResetAt <= nowUtc) && ((q.EndDate ?? DateOnly.MaxValue) >= earliestEndDate)))
+                .Where(up => up.MaintainedThrough == null || up.MaintainedThrough < earliest)
+                .Include(up => up.Quests).ThenInclude(q => q.QuestOccurrences)
+                .Include(up => up.Quests).ThenInclude(q => q.Statistics)
+                .Include(up => up.Quests).ThenInclude(q => q.Completions)
+                .Include(up => up.UserGoals)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

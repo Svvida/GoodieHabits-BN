@@ -1,7 +1,9 @@
 using Application.Quests.Queries.GetHabitsOverview;
-using Domain.Enums;
+using Application.Quests.Services;
 using Domain.Models;
+using Domain.ValueObjects;
 using FluentAssertions;
+using Moq;
 
 namespace Application.Tests.Quests.Queries.GetHabitsOverview
 {
@@ -11,16 +13,30 @@ namespace Application.Tests.Quests.Queries.GetHabitsOverview
         private static readonly DateOnly From = new(2023, 10, 1);
         private static readonly DateOnly To = new(2023, 10, 26);
 
-        private GetHabitsOverviewQueryHandler CreateHandler() => new(_unitOfWork, _clockMock.Object);
+        private GetHabitsOverviewQueryHandler CreateHandler() =>
+            new(_unitOfWork, NoOpMaintenance(), _clockMock.Object);
+
+        /// <summary>
+        /// The handler triggers the daily maintenance pass; these tests seed periods directly, so it has
+        /// nothing to do and is stubbed out rather than exercised here.
+        /// </summary>
+        private static IUserMaintenanceService NoOpMaintenance()
+        {
+            var mock = new Mock<IUserMaintenanceService>();
+            mock.Setup(m => m.EnsureMaintainedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            return mock.Object;
+        }
 
         [Fact]
         public async Task Handle_ShouldReturnOneEntryPerQuest_NotPerOccurrence()
         {
             var profile = await AddProfileAsync();
             var quest = AddQuest(profile, "Read a book");
-            quest.AddOccurrence(new DateOnly(2023, 10, 20), new DateOnly(2023, 10, 20));
-            quest.AddOccurrence(new DateOnly(2023, 10, 21), new DateOnly(2023, 10, 21));
-            quest.AddOccurrence(new DateOnly(2023, 10, 22), new DateOnly(2023, 10, 22));
+            AddPeriod(quest, new DateOnly(2023, 10, 20));
+            AddPeriod(quest, new DateOnly(2023, 10, 21));
+            AddPeriod(quest, new DateOnly(2023, 10, 22));
             await _context.SaveChangesAsync();
 
             var result = await CreateHandler().Handle(
@@ -41,9 +57,9 @@ namespace Application.Tests.Quests.Queries.GetHabitsOverview
             var profile = await AddProfileAsync();
             var first = AddQuest(profile, "Read a book");
             var second = AddQuest(profile, "Stretch");
-            first.AddOccurrence(new DateOnly(2023, 10, 20), new DateOnly(2023, 10, 20));
-            first.AddOccurrence(new DateOnly(2023, 10, 21), new DateOnly(2023, 10, 21));
-            second.AddOccurrence(new DateOnly(2023, 10, 20), new DateOnly(2023, 10, 20));
+            AddPeriod(first, new DateOnly(2023, 10, 20));
+            AddPeriod(first, new DateOnly(2023, 10, 21));
+            AddPeriod(second, new DateOnly(2023, 10, 20));
             await _context.SaveChangesAsync();
 
             var result = await CreateHandler().Handle(
@@ -67,11 +83,15 @@ namespace Application.Tests.Quests.Queries.GetHabitsOverview
             var quest = Quest.Create(
                 title: title,
                 userProfile: profile,
-                questType: QuestTypeEnum.Daily,
+                schedule: QuestSchedule.Daily(),
+                target: QuestTarget.Once(),
                 nowUtc: _fixedTestInstant.ToDateTimeUtc());
 
             _context.Quests.Add(quest);
             return quest;
         }
+
+        private static void AddPeriod(Quest quest, DateOnly day) =>
+            quest.QuestOccurrences.Add(QuestOccurrence.Create(quest, day, day, 1m));
     }
 }

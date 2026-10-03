@@ -49,7 +49,9 @@ namespace Infrastructure.Persistence.Repositories
             DateOnly? from,
             DateOnly? to,
             FinanceTransactionTypeEnum? type,
-            int? categoryId,
+            IReadOnlyCollection<int>? categoryIds,
+            bool? isPaid,
+            string? search,
             int page,
             int pageSize,
             CancellationToken cancellationToken = default)
@@ -66,8 +68,29 @@ namespace Infrastructure.Persistence.Repositories
                 query = query.Where(t => t.OccurredOn <= to.Value);
             if (type.HasValue)
                 query = query.Where(t => t.Type == type.Value);
-            if (categoryId.HasValue)
-                query = query.Where(t => t.CategoryId == categoryId.Value);
+            if (categoryIds is { Count: > 0 })
+                query = query.Where(t => t.CategoryId != null && categoryIds.Contains(t.CategoryId.Value));
+            if (isPaid.HasValue)
+                query = query.Where(t => t.IsPaid == isPaid.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+
+                // Matches everything the client renders on a row: its note, its category, and the notes of its
+                // corrections (searching "refund" has to find the parent whose correction says so). The category
+                // arm is what lets a single search box stand in for "pick a category" in the common case.
+                //
+                // Deliberately not sargable — a contains-search cannot seek — but it is never a table scan
+                // either: UserProfileId (plus the date range when one is sent) seeks IX(UserProfileId,
+                // OccurredOn) first and this only filters what survives, so cost tracks one user's rows in
+                // range. Case sensitivity follows the database collation (CI by default), exactly like the
+                // exercise search; EF Core InMemory is case-SENSITIVE, so tests must match on exact case.
+                query = query.Where(t =>
+                    (t.Note != null && t.Note.Contains(term))
+                    || (t.Category != null && t.Category.Name.Contains(term))
+                    || t.Corrections.Any(c => c.Note != null && c.Note.Contains(term)));
+            }
 
             var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 

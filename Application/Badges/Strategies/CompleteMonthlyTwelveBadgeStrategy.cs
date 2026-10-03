@@ -12,7 +12,7 @@ namespace Application.Badges.Strategies
             var badgeType = BadgeTypeEnum.CompleteMonthlyTwelve;
             if (userProfile.UserProfile_Badges.Any(upb => upb.Badge.Type == badgeType))
                 return;
-            if (quest is null || quest.QuestType != QuestTypeEnum.Monthly)
+            if (quest is null || quest.Schedule.Unit != PeriodUnitEnum.Month)
                 return;
             if (quest.Statistics is not null && quest.Statistics.LongestStreak >= 12)
             {

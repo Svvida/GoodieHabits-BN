@@ -14,6 +14,7 @@ using Application.Common.Interfaces.Notifications;
 using Application.FriendInvitations.Commands.UpdateInvitationStatus;
 using Application.FriendInvitations.Commands.UpdateInvitationStatus.Strategies;
 using Application.Quests;
+using Application.Quests.Services;
 using Application.Statistics.Calculators;
 using Application.UserProfiles.Nickname;
 using Domain.Common;
@@ -54,7 +55,7 @@ namespace Api
             var builder = WebApplication.CreateBuilder(args);
 
             Log.Information("Active Environment: {Environment}", builder.Environment.EnvironmentName);
-            Log.Information("Using Connection String: {ConnectionString}", builder.Configuration.GetConnectionString("DefaultConnection"));
+            //Log.Information("Using Connection String: {ConnectionString}", builder.Configuration.GetConnectionString("DefaultConnection"));
 
             // Configure Host
             ConfigureHost(builder);
@@ -195,6 +196,7 @@ namespace Api
             builder.Services.AddSingleton<IClock>(SystemClock.Instance); // Use NodaTime's SystemClock
             builder.Services.AddScoped<INicknameGenerator, NicknameGenerator>();
             builder.Services.AddScoped<IQuestMapper, QuestMapper>();
+            builder.Services.AddScoped<IUserMaintenanceService, UserMaintenanceService>();
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IForgotPasswordEmailSender, ForgotPasswordEmailSender>();
             builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
@@ -331,10 +333,10 @@ namespace Api
             builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
             // Register Startup Tasks
-            builder.Services.AddHostedService<ResetQuestsTask>();
-            builder.Services.AddHostedService<ExpireGoalsTask>();
-            builder.Services.AddHostedService<ProcessOccurrencesTask>();
-            builder.Services.AddHostedService<RecalculateRepeatableQuestStatisticsTask>();
+            // One pass replaces the quest reset, occurrence generation, statistics and goal-expiry tasks.
+            // It is a safety net: correctness comes from IUserMaintenanceService on the read path, because
+            // this app pool shuts down after fifteen idle minutes and cannot be relied on to tick.
+            builder.Services.AddHostedService<RunMaintenanceTask>();
             builder.Services.AddHostedService<GenerateRecurringTransactionsTask>();
         }
 

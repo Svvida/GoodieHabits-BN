@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Repositories.Common;
@@ -8,104 +8,60 @@ namespace Infrastructure.Persistence.Repositories
 {
     public class QuestRepository(AppDbContext context) : BaseRepository<Quest>(context), IQuestRepository
     {
+        /// <summary>
+        /// Quests whose active range covers today. The schedule's own rules (weekdays, intervals, month and
+        /// year windows) are applied in memory by the caller rather than mirrored here: a second copy of the
+        /// scheduling logic in SQL is exactly what drifted apart before, and a user has tens of quests.
+        /// </summary>
         public async Task<IEnumerable<Quest>> GetActiveQuestsForDisplayAsync(
             int userProfileId,
             DateOnly today,
-            WeekdayEnum userLocalWeekday,
-            int userLocalDayOfMonth,
-            SeasonEnum currentSeason,
             CancellationToken cancellationToken = default)
         {
-            var baseQuery = _context.Quests
-                .Where(q => q.UserProfileId == userProfileId)
-                .Where(q =>
-                    // ONE TIME
-                    q.QuestType == QuestTypeEnum.OneTime &&
-                        (q.StartDate ?? DateOnly.MinValue) <= today &&
-                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
-                        (q.StartDate.HasValue || q.EndDate.HasValue)
-
-                    // DAILY
-                    || q.QuestType == QuestTypeEnum.Daily &&
-                        (q.StartDate ?? DateOnly.MinValue) <= today &&
-                        (q.EndDate ?? DateOnly.MaxValue) >= today
-
-                    // WEEKLY
-                    || q.QuestType == QuestTypeEnum.Weekly &&
-                        (q.StartDate ?? DateOnly.MinValue) <= today &&
-                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
-                        q.WeeklyQuest_Days.Any(wd => wd.Weekday == userLocalWeekday)
-
-                    // MONTHLY
-                    || q.QuestType == QuestTypeEnum.Monthly &&
-                        (q.StartDate ?? DateOnly.MinValue) <= today &&
-                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
-                        (q.MonthlyQuest_Days!.StartDay <= userLocalDayOfMonth && q.MonthlyQuest_Days.EndDay >= userLocalDayOfMonth)
-
-                    // SEASONAL
-                    || q.QuestType == QuestTypeEnum.Seasonal &&
-                        (q.StartDate ?? DateOnly.MinValue) <= today &&
-                        (q.EndDate ?? DateOnly.MaxValue) >= today &&
-                        q.SeasonalQuest_Season!.Season == currentSeason
-                )
-                .Include(q => q.Statistics)
-                .Include(q => q.WeeklyQuest_Days)
-                .Include(q => q.MonthlyQuest_Days)
-                .Include(q => q.SeasonalQuest_Season)
-                .Include(q => q.Quest_QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel)
-                .AsNoTracking();
-
-            return await baseQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await WithDisplayIncludes(_context.Quests
+                    .Where(q => q.UserProfileId == userProfileId)
+                    .Where(q => (q.StartDate ?? DateOnly.MinValue) <= today &&
+                                (q.EndDate ?? DateOnly.MaxValue) >= today))
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetQuestsByTypeForDisplayAsync(
+        public async Task<IEnumerable<Quest>> GetQuestsForDisplayAsync(
             int userProfileId,
-            QuestTypeEnum questType,
+            PeriodUnitEnum? unit,
+            QuestTypeEnum? legacyType,
             CancellationToken cancellationToken = default)
         {
-            var query = _context.Quests
-                .Where(q => q.UserProfileId == userProfileId && q.QuestType == questType)
-                .Include(q => q.Quest_QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel)
-                .AsNoTracking();
+            var query = _context.Quests.Where(q => q.UserProfileId == userProfileId);
 
-            if (questType == QuestTypeEnum.Daily)
-                query = query.Include(q => q.Statistics);
+            if (unit.HasValue)
+                query = query.Where(q => q.Schedule.Unit == unit.Value);
 
-            else if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
+            // The retired quest types, expressed against the schedule that replaced them. Weekly is the only
+            // interesting one: it split, so it has to gather both halves back together.
+            query = legacyType switch
+            {
+                QuestTypeEnum.OneTime => query.Where(q => q.Schedule.Unit == PeriodUnitEnum.None),
+                QuestTypeEnum.Daily => query.Where(q => q.Schedule.Unit == PeriodUnitEnum.Day && q.Schedule.Weekdays == null),
+                QuestTypeEnum.Weekly => query.Where(q =>
+                    q.Schedule.Unit == PeriodUnitEnum.Week ||
+                    (q.Schedule.Unit == PeriodUnitEnum.Day && q.Schedule.Weekdays != null)),
+                QuestTypeEnum.Monthly => query.Where(q => q.Schedule.Unit == PeriodUnitEnum.Month),
+                QuestTypeEnum.Seasonal => query.Where(q => q.Schedule.Unit == PeriodUnitEnum.Year),
+                _ => query
+            };
 
-            else if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
-
-            else if (questType == QuestTypeEnum.Seasonal)
-                query = query.Include(q => q.SeasonalQuest_Season);
-
-            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await WithDisplayIncludes(query)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdAsync(int questId, int userProfileId, QuestTypeEnum questType, bool asNoTracking, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestByIdAsync(int questId, int userProfileId, bool asNoTracking, CancellationToken cancellationToken = default)
         {
-            var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType && q.UserProfileId == userProfileId);
-
-            query = query
-                .Include(q => q.UserProfile)
-                .Include(q => q.Quest_QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel);
-
-            if (questType == QuestTypeEnum.Daily)
-                query = query.Include(q => q.Statistics);
-
-            else if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
-
-            else if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
-
-            else if (questType == QuestTypeEnum.Seasonal)
-                query = query.Include(q => q.SeasonalQuest_Season);
+            var query = WithDisplayIncludes(_context.Quests
+                .Where(q => q.Id == questId && q.UserProfileId == userProfileId));
 
             if (asNoTracking)
                 query = query.AsNoTracking();
@@ -113,105 +69,43 @@ namespace Infrastructure.Persistence.Repositories
             return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdForCompletionUpdateAsync(int questId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestForCompletionAsync(int questId, int userProfileId, CancellationToken cancellationToken = default)
         {
-            var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType);
-
-            query = query
+            return await _context.Quests
+                .Where(q => q.Id == questId && q.UserProfileId == userProfileId)
+                // Every period and every completion, not just recent ones: the entity de-duplicates periods
+                // in memory against this collection, and resolves idempotency keys against that one, so a
+                // partial load would produce a row colliding with a unique index.
                 .Include(q => q.QuestOccurrences)
+                .Include(q => q.Completions)
+                .Include(q => q.Statistics)
+                .Include(q => q.Quest_QuestLabels)
+                    .ThenInclude(ql => ql.QuestLabel)
                 .Include(q => q.UserProfile)
                     .ThenInclude(up => up.UserProfile_Badges)
-                        .ThenInclude(upb => upb.Badge);
-
-            if (questType == QuestTypeEnum.Daily)
-                query = query.Include(q => q.Statistics);
-
-            if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days).Include(q => q.Statistics);
-
-            else if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days).Include(q => q.Statistics);
-
-            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        .ThenInclude(upb => upb.Badge)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public async Task<Quest?> GetQuestByIdForUpdateAsync(int questId, int userProfileId, QuestTypeEnum questType, CancellationToken cancellationToken = default)
+        public async Task<Quest?> GetQuestByIdForUpdateAsync(int questId, int userProfileId, CancellationToken cancellationToken = default)
         {
-            var query = _context.Quests
-                .Where(q => q.Id == questId && q.QuestType == questType && q.UserProfileId == userProfileId);
-
-            query = query
+            return await _context.Quests
+                .Where(q => q.Id == questId && q.UserProfileId == userProfileId)
                 .Include(q => q.QuestOccurrences)
+                    .ThenInclude(qo => qo.Completions)
+                .Include(q => q.Statistics)
                 .Include(q => q.UserProfile)
                 .Include(q => q.Quest_QuestLabels)
-                    .ThenInclude(ql => ql.QuestLabel);
-
-            if (questType == QuestTypeEnum.Monthly)
-                query = query.Include(q => q.MonthlyQuest_Days);
-
-            else if (questType == QuestTypeEnum.Weekly)
-                query = query.Include(q => q.WeeklyQuest_Days);
-
-            else if (questType == QuestTypeEnum.Seasonal)
-                query = query.Include(q => q.SeasonalQuest_Season);
-
-
-            return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForStatsProcessingAsync(DateOnly utcToday, CancellationToken cancellationToken = default)
-        {
-            // Bounds are widened by a day on each side because each user's local "today" may differ
-            // from the server's UTC date; the domain re-checks the real local date per quest.
-            return await _context.Quests
-                .Where(q => q.QuestType == QuestTypeEnum.Daily ||
-                            q.QuestType == QuestTypeEnum.Weekly ||
-                            q.QuestType == QuestTypeEnum.Monthly)
-                .Where(q => (q.EndDate ?? DateOnly.MaxValue) >= utcToday.AddDays(-1) &&
-                            (q.StartDate ?? DateOnly.MinValue) <= utcToday.AddDays(1))
-                .Include(q => q.UserProfile)
-                .Include(q => q.Statistics)
-                .Include(q => q.QuestOccurrences)
-                .ToListAsync(cancellationToken)
+                    .ThenInclude(ql => ql.QuestLabel)
+                .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Quest>> GetRepeatableQuestsForOccurrencesProcessingAsync(DateOnly utcToday, CancellationToken cancellationToken = default)
-        {
-            var query =
-                from quest in _context.Quests
-                let latestPeriodEnd = _context.QuestOccurrences
-                    .Where(qo => qo.QuestId == quest.Id)
-                    .Max(qo => (DateOnly?)qo.PeriodEnd)
-                where quest.QuestType == QuestTypeEnum.Daily ||
-                      quest.QuestType == QuestTypeEnum.Weekly ||
-                      quest.QuestType == QuestTypeEnum.Monthly
-                where (quest.EndDate ?? DateOnly.MaxValue) >= utcToday.AddDays(-1) &&
-                      (quest.StartDate ?? DateOnly.MinValue) <= utcToday.AddDays(1)
-                where latestPeriodEnd == null || latestPeriodEnd < utcToday.AddDays(1)
-                select quest;
-
-            return await query
-                .Include(q => q.UserProfile)
-                // All occurrences, not just the latest: generation dedupes against this collection in
-                // memory, and a partial load would let it emit rows that collide with the unique index.
-                .Include(q => q.QuestOccurrences)
-                .Include(q => q.WeeklyQuest_Days)
-                .Include(q => q.MonthlyQuest_Days)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<bool> IsQuestOwnedByUserAsync(
-            int questId,
-            int userProfileId,
-            CancellationToken cancellationToken = default)
+        public async Task<bool> IsQuestOwnedByUserAsync(int questId, int userProfileId, CancellationToken cancellationToken = default)
         {
             return await _context.Quests
-                .AnyAsync(q => q.Id == questId &&
-                        q.UserProfileId == userProfileId,
-                        cancellationToken)
+                .AnyAsync(q => q.Id == questId && q.UserProfileId == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -224,14 +118,13 @@ namespace Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return await _context.Quests
-                .Where(q => q.UserProfileId == userProfileId &&
-                            !q.IsCompleted &&
-                            (q.EndDate ?? DateOnly.MaxValue) >= today &&
-                            !activeUserGoalsIds.Contains(q.Id))
-                .Include(q => q.WeeklyQuest_Days)
-                .Include(q => q.MonthlyQuest_Days)
-                .Include(q => q.SeasonalQuest_Season)
+            // "Already completed" is no longer a column. A repeating quest is always eligible while it is
+            // active; a one-time one is spent once it has ever been completed.
+            return await WithDisplayIncludes(_context.Quests
+                    .Where(q => q.UserProfileId == userProfileId &&
+                                (q.EndDate ?? DateOnly.MaxValue) >= today &&
+                                !activeUserGoalsIds.Contains(q.Id))
+                    .Where(q => q.Schedule.Unit != PeriodUnitEnum.None || !q.WasEverCompleted))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -253,6 +146,40 @@ namespace Infrastructure.Persistence.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync(q => q.Id == questId && q.UserProfileId == userProfileId, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// What every read path needs: the profile (for the local date the DTO is built against), the
+        /// period around today, the statistics cache and the labels. One include list instead of the
+        /// per-type branching the old repository carried.
+        /// <para>
+        /// The occurrence include is <b>filtered to a two-day window</b> around the server's date, which is
+        /// wide enough to contain the user's current period in any timezone while keeping a five-year-old
+        /// habit's history out of a list query — plus, unconditionally, the single period of a
+        /// non-recurring quest, which is the one period that stays relevant long after it has elapsed. This is safe only because these paths are read-only:
+        /// anything that generates periods must load every one of them, or its in-memory de-duplication
+        /// would miss and collide with the unique index.
+        /// </para>
+        /// </summary>
+        private static IQueryable<Quest> WithDisplayIncludes(IQueryable<Quest> query)
+        {
+            var utcToday = DateOnly.FromDateTime(DateTime.UtcNow);
+            var earliest = utcToday.AddDays(-1);
+            var latest = utcToday.AddDays(1);
+
+            return query
+                .Include(q => q.UserProfile)
+                .Include(q => q.Statistics)
+                // A non-recurring quest owns exactly one period and it never moves, so the date window
+                // would hide it the moment its deadline passed — taking "is this task done" with it.
+                .Include(q => q.QuestOccurrences.Where(o =>
+                    o.Quest.Schedule.Unit == PeriodUnitEnum.None ||
+                    (o.PeriodEnd >= earliest && o.PeriodStart <= latest)))
+                    // The current period's taps: their ids are what makes undo work after a restart, and
+                    // their dates are what makes the per-day cap enforceable in the UI.
+                    .ThenInclude(o => o.Completions)
+                .Include(q => q.Quest_QuestLabels)
+                    .ThenInclude(ql => ql.QuestLabel);
         }
     }
 }

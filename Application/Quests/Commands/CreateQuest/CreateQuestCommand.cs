@@ -1,37 +1,27 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Quests.Dtos;
-using Domain.Enums;
 
 namespace Application.Quests.Commands.CreateQuest
 {
-    public abstract record CreateQuestCommand
+    /// <summary>
+    /// Creates any quest. This single command replaces the five <c>Create{OneTime,Daily,Weekly,Monthly,
+    /// Seasonal}QuestCommand</c> records and their parallel handlers, validators and DTOs — the shape they
+    /// varied on is now data, in <see cref="Schedule"/>.
+    /// </summary>
+    public record CreateQuestCommand : ICommand<QuestDetailsDto>
     {
         public string Title { get; init; } = null!;
-        public string? Description { get; init; } = null;
-        public DateOnly? StartDate { get; init; } = null;
-        public DateOnly? EndDate { get; init; } = null;
-        public string? Emoji { get; init; } = null;
-        public string? Priority { get; init; } = null;
-        public string? Difficulty { get; init; } = null;
-        public TimeOnly? ScheduledTime { get; init; } = null;
+        public string? Description { get; init; }
+        public DateOnly? StartDate { get; init; }
+        public DateOnly? EndDate { get; init; }
+        public string? Emoji { get; init; }
+        public string? Priority { get; init; }
+        public string? Difficulty { get; init; }
+        public TimeOnly? ScheduledTime { get; init; }
+        public int? DurationMinutes { get; init; }
         public HashSet<int> Labels { get; init; } = [];
+        public QuestScheduleRequest Schedule { get; init; } = new();
+        public QuestTargetRequest? Target { get; init; }
         public int UserProfileId { get; init; }
-        public QuestTypeEnum QuestType { get; init; }
-    }
-
-    public record CreateOneTimeQuestCommand : CreateQuestCommand, ICommand<OneTimeQuestDetailsDto>;
-    public record CreateDailyQuestCommand : CreateQuestCommand, ICommand<DailyQuestDetailsDto>;
-    public record CreateWeeklyQuestCommand : CreateQuestCommand, ICommand<WeeklyQuestDetailsDto>
-    {
-        public HashSet<string> Weekdays { get; init; } = [];
-    }
-    public record CreateMonthlyQuestCommand : CreateQuestCommand, ICommand<MonthlyQuestDetailsDto>
-    {
-        public int StartDay { get; init; }
-        public int EndDay { get; init; }
-    }
-    public record CreateSeasonalQuestCommand : CreateQuestCommand, ICommand<SeasonalQuestDetailsDto>
-    {
-        public string Season { get; init; } = null!;
     }
 }

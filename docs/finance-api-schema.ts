@@ -168,7 +168,17 @@ export interface GetTransactionsQueryParams {
   from?: string;                 // "YYYY-MM-DD"
   to?: string;                   // "YYYY-MM-DD"
   type?: FinanceTransactionType;
-  categoryId?: number;
+  // Serialize as a repeated key: ?categoryIds=3&categoryIds=7 (max 50 ids). OR-ed together, and a MAIN
+  // category also covers its sub-categories - the same rollup a budget on that main gets - so send a sub's
+  // own id when you mean just that sub. Rows with no category are excluded while this is non-empty.
+  categoryIds?: number[];
+  // Tri-state: omit for everything, false for "still owed" (recurring expenses arrive unpaid), true for settled.
+  isPaid?: boolean;
+  // Free text, max 250 chars. Matches the note, the CATEGORY NAME, and the notes of the row's corrections
+  // (a matching correction returns its parent, since corrections are never top-level rows). Substring match,
+  // case-insensitive, ANDed with every other filter; `totalCount` reflects the narrowed set. Blank is ignored.
+  // Amount is not searched - use the date/type/category filters for that kind of narrowing.
+  search?: string;
   page: number;                  // 1-based
   pageSize: number;              // 1..100
 }

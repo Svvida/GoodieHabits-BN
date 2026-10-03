@@ -13,6 +13,7 @@ namespace Infrastructure.Persistence
         private IUserGoalRepository? _userGoalRepository;
         private IQuestRepository? _questRepository;
         private IQuestOccurrenceRepository? _questOccurrenceRepository;
+        private IQuestCompletionRepository? _questCompletionRepository;
         private IQuestLabelRepository? _questLabelRepository;
         private INotificationRepository? _notificationRepository;
         private IBadgeRepository? _badgeRepository;
@@ -36,6 +37,7 @@ namespace Infrastructure.Persistence
         public IUserGoalRepository UserGoals => _userGoalRepository ??= new UserGoalRepository(_context);
         public IQuestRepository Quests => _questRepository ??= new QuestRepository(_context);
         public IQuestOccurrenceRepository QuestOccurrences => _questOccurrenceRepository ??= new QuestOccurrenceRepository(_context);
+        public IQuestCompletionRepository QuestCompletions => _questCompletionRepository ??= new QuestCompletionRepository(_context);
         public IQuestLabelRepository QuestLabels => _questLabelRepository ??= new QuestLabelRepository(_context);
         public INotificationRepository Notifications => _notificationRepository ??= new NotificationRepository(_context);
         public IBadgeRepository Badges => _badgeRepository ??= new BadgeRepository(_context);
